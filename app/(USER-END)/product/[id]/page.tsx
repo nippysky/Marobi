@@ -18,13 +18,14 @@ export async function generateStaticParams() {
   return allProducts.map((p) => ({ id: p.id }));
 }
 
-export default async function ProductPage(
-  props: { params: { id: string } } | Promise<{ params: { id: string } }>
-) {
-  // Await props so that Next.js’s “lazy” params type is satisfied
-  const { params } = await props;
-  const { id } = params;
-
+export default async function ProductPage({
+  params,
+}: {
+  // Next.js 15 expects `params` as a Promise<{ id: string }>
+  params: Promise<{ id: string }>;
+}) {
+  // Await the promise to get the actual `{ id }` object
+  const { id } = await params;
   const product = getProductById(id);
 
   if (!product) {
