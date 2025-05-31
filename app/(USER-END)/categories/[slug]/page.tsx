@@ -1,4 +1,3 @@
-// app/categories/[slug]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -8,10 +7,6 @@ import { CATEGORIES, getCategoryBySlug } from "@/lib/constants/categories";
 import Header from "@/components/shared/header";
 import ProductCard from "@/components/shared/product-card";
 
-interface CategoryPageProps {
-  params: { slug: string };
-}
-
 /**
  * Next.js will pre-render one page per category slug at build time.
  */
@@ -19,8 +14,12 @@ export async function generateStaticParams() {
   return CATEGORIES.map((cat) => ({ slug: cat.slug }));
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  // Await params before destructuring
+export default async function CategoryPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  // Destructure slug directly from params
   const { slug } = await params;
   const category = getCategoryBySlug(slug);
 
