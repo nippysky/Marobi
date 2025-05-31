@@ -20,7 +20,7 @@ export default async function CategoryPage({
   params: { slug: string };
 }) {
   // Destructure slug directly from params
-  const { slug } = await params;
+  const { slug } = params;
   const category = getCategoryBySlug(slug);
 
   // If slug doesn’t match any category, show 404
