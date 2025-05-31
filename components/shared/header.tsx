@@ -6,13 +6,13 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Search as SearchIcon,
-  ChevronDown,
   PencilRuler,
   UserRound,
   Heart,
-  ShoppingBag,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { CurrencySelector } from "./currency-selector";
+import { CartSheet } from "./cart-sheet";
 
 // A simple black circle “M!” icon. Replace with your SVG if desired.
 const BrandIcon: React.FC = () => (
@@ -153,19 +153,7 @@ export const Header: React.FC = () => {
           {/* Right group: Currency, Search Icon, Other Icons */}
           <div className="flex items-center space-x-6">
             {/* Currency */}
-            <button
-              type="button"
-              className="
-                flex items-center
-                text-sm font-medium
-                text-gray-700 dark:text-gray-300
-                hover:text-gray-900 dark:hover:text-gray-100
-                focus:outline-none
-              "
-            >
-              <span>NGN</span>
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </button>
+            <CurrencySelector />
 
             {/* Search Icon */}
             <motion.div
@@ -206,22 +194,7 @@ export const Header: React.FC = () => {
               <Heart className="w-5 h-5" />
             </Link>
 
-            <Link
-              href="/cart"
-              className="relative text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              <span
-                className="
-                  absolute -top-1 -right-1 
-                  inline-flex items-center justify-center 
-                  px-1.5 py-0.5 text-xs font-bold leading-none 
-                  text-white bg-green-500 rounded-full
-                "
-              >
-                0
-              </span>
-            </Link>
+            <CartSheet />
           </div>
         </motion.div>
 
@@ -271,19 +244,7 @@ export const Header: React.FC = () => {
 
             {/* Column 3: Icons */}
             <div className="flex items-center justify-end space-x-6">
-              <button
-                type="button"
-                className="
-                  flex items-center
-                  text-sm font-medium
-                  text-gray-700 dark:text-gray-300
-                  hover:text-gray-900 dark:hover:text-gray-100
-                  focus:outline-none
-                "
-              >
-                <span>NGN</span>
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </button>
+              <CurrencySelector />
 
               <Link
                 href="/size-chart"
@@ -306,22 +267,7 @@ export const Header: React.FC = () => {
                 <Heart className="w-5 h-5" />
               </Link>
 
-              <Link
-                href="/cart"
-                className="relative text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                <span
-                  className="
-                    absolute -top-1 -right-1 
-                    inline-flex items-center justify-center 
-                    px-1.5 py-0.5 text-xs font-bold leading-none 
-                    text-white bg-green-500 rounded-full
-                  "
-                >
-                  0
-                </span>
-              </Link>
+              <CartSheet />
             </div>
           </div>
 
