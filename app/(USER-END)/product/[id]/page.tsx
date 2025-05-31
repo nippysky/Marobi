@@ -10,10 +10,6 @@ import { getCategoryBySlug } from "@/lib/constants/categories";
 import ReviewCard from "@/components/ReviewCard";
 import ProductDetailHero from "@/components/ProductDetailsHero";
 
-interface ProductPageProps {
-  params: { id: string };
-}
-
 /**
  * Pre-render one page per product ID at build time.
  */
@@ -22,8 +18,13 @@ export async function generateStaticParams() {
   return allProducts.map((p) => ({ id: p.id }));
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params; // no "use client" here
+export default async function ProductPage(
+  props: { params: { id: string } } | Promise<{ params: { id: string } }>
+) {
+  // Await props so that Next.js’s “lazy” params type is satisfied
+  const { params } = await props;
+  const { id } = params;
+
   const product = getProductById(id);
 
   if (!product) {
