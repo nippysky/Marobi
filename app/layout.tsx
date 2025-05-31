@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
+import { CurrencyProvider } from "@/lib/context/currencyContext";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -81,14 +82,16 @@ export default function RootLayout({
       <body
         className={`${openSans.variable} antialiased w-full max-w-[1920px] mx-auto`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <React.Fragment>{children}</React.Fragment>
-        </ThemeProvider>
+        <CurrencyProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <React.Fragment>{children}</React.Fragment>
+          </ThemeProvider>
+        </CurrencyProvider>
         <Toaster />
       </body>
     </html>

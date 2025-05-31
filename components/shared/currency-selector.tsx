@@ -1,18 +1,19 @@
-// components/CurrencySelector.tsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { Currency, useCurrency } from "@/lib/context/currencyContext";
 
-const currencies = ["NGN", "USD", "EUR", "GBP"];
+const currencies: Currency[] = ["NGN", "USD", "EUR", "GBP"];
 
 export const CurrencySelector: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState("NGN");
+  const { currency, setCurrency } = useCurrency(); // get + set from context
+
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (
@@ -41,7 +42,7 @@ export const CurrencySelector: React.FC = () => {
           focus:outline-none
         "
       >
-        <span>{selected}</span>
+        <span>{currency}</span>
         <ChevronDown className="w-4 h-4 ml-1" />
       </button>
 
@@ -61,7 +62,7 @@ export const CurrencySelector: React.FC = () => {
               <li key={cur}>
                 <button
                   onClick={() => {
-                    setSelected(cur);
+                    setCurrency(cur); // update context
                     setOpen(false);
                   }}
                   className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"

@@ -11,6 +11,7 @@ import {
   Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
 import { CartSheet } from "./cart-sheet";
 
@@ -21,12 +22,14 @@ const BrandIcon: React.FC = () => (
   </div>
 );
 
+// Build navItems so that “All Products” → “/all-products”
+// then each category → `/categories/${slug}`
 const navItems: { label: string; href: string }[] = [
   { label: "All Products", href: "/all-products" },
-  { label: "Corporate Wears", href: "/corporate-wears" },
-  { label: "African Print", href: "/african-print" },
-  { label: "Casual Looks", href: "/casual-looks" },
-  { label: "I Have an Event", href: "/i-have-an-event" },
+  ...CATEGORIES.map((cat) => ({
+    label: cat.name,
+    href: `/categories/${cat.slug}`,
+  })),
 ];
 
 export const Header: React.FC = () => {
@@ -106,7 +109,7 @@ export const Header: React.FC = () => {
       <div className="w-full max-w-[1920px] mx-auto">
         {/* ────────────────────────────────────────────────────
             SINGLE ROW when collapsed:
-            [ Logo Icon ] [ Nav Links ] [ NGN ] [Search Icon] [SizeChart] [User] [Heart] [Cart]
+            [ Logo Icon ] [ Nav Links ] [ CurrencySelector ] [ Search Icon ] [ SizeChart ] [ User ] [ Heart ] [ CartSheet ]
         ──────────────────────────────────────────────────── */}
         <motion.div
           className={`
@@ -150,9 +153,8 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Right group: Currency, Search Icon, Other Icons */}
+          {/* Right group: CurrencySelector, Search Icon, Other Icons */}
           <div className="flex items-center space-x-6">
-            {/* Currency */}
             <CurrencySelector />
 
             {/* Search Icon */}
@@ -200,7 +202,7 @@ export const Header: React.FC = () => {
 
         {/* ────────────────────────────────────────────────────
             TWO ROWS when expanded:
-            ROW 1: [ “MAROB!” text ] [ centered search input ] [ Icons... ]
+            ROW 1: [ “MAROB!” text ] [ centered search input ] [ CurrencySelector, SizeChart, User, Heart, CartSheet ]
             ROW 2: [ Nav Links centered ]
         ──────────────────────────────────────────────────── */}
         <motion.div className={`${isCollapsed ? "hidden" : "block"} `}>

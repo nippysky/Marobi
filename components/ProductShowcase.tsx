@@ -1,9 +1,8 @@
-// components/ProductShowcase.tsx
 "use client";
 
 import React from "react";
 import Link from "next/link";
-import { ProductCard } from "./shared/product-card";
+import ProductCardShowcase from "./shared/product-card-showcase";
 
 type Product = {
   id: string;
@@ -54,7 +53,7 @@ export const ProductShowcase: React.FC<ShowcaseProps> = ({ categories }) => {
           ─────────────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {category.products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCardShowcase key={product.id} product={product} />
             ))}
           </div>
 

@@ -1,49 +1,54 @@
-// components/shared/ProductCard.tsx
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import React, { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton"; // adjust path if needed
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   imageUrl: string;
+  price: number;
+  category: string;
 }
 
-type ProductCardProps = {
+interface ProductCardProps {
   product: Product;
-};
+}
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Track whether the image has finished loading
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <Link href={`/product/${product.id}`} className="group block">
-      <div className="aspect-[4/5] relative w-full overflow-hidden rounded-lg bg-gray-100">
-        {/* 1. Skeleton placeholder */}
+    <div className="group">
+      {/* 1. Skeleton placeholder (shown while image loading) */}
+      <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100">
         {isLoading && <Skeleton className="absolute inset-0 h-full w-full" />}
 
-        {/* 2. Next.js Image (with onLoad instead of onLoadingComplete) */}
+        {/* 2. Actual Image */}
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
           className={`
             object-cover
-            transition-transform duration-300 ease-in-out
+            transition-transform duration-300 ease-in-out 
             ${isLoading ? "opacity-0" : "opacity-100 group-hover:scale-105"}
           `}
-          onLoad={() => {
-            // Once the image is fully loaded, hide the skeleton
-            setIsLoading(false);
-          }}
-          // Because we're using `fill`, Next.js infers width/height from the parent container's aspect ratio.
+          onLoad={() => setIsLoading(false)}
         />
       </div>
-    </Link>
+
+      {/* 3. Name (single‐line, truncated) */}
+      <h2 className="mt-2 text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+        {product.name}
+      </h2>
+
+      {/* 4. Price */}
+      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        NGN {product.price}
+      </p>
+    </div>
   );
 };
 
