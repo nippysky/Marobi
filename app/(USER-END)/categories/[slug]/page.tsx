@@ -14,13 +14,14 @@ export async function generateStaticParams() {
   return CATEGORIES.map((cat) => ({ slug: cat.slug }));
 }
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  // Destructure slug directly from params
+export default async function CategoryPage(
+  props: { params: { slug: string } } | Promise<{ params: { slug: string } }>
+) {
+  // Await the props so that Next.js’s “lazy” params type is satisfied
+  const { params } = await props;
   const { slug } = params;
+
+  // Look up our category by slug
   const category = getCategoryBySlug(slug);
 
   // If slug doesn’t match any category, show 404
@@ -41,7 +42,7 @@ export default async function CategoryPage({
           className="text-sm text-gray-600 dark:text-gray-400 mb-6"
           aria-label="Breadcrumb"
         >
-          <ol className="inline-flex items-center space-x-1">
+          <ol className="inline-flex flex-wrap items-center space-x-1">
             <li>
               <Link href="/" className="hover:underline">
                 Home
@@ -58,7 +59,7 @@ export default async function CategoryPage({
             <li>
               <span className="mx-2">/</span>
             </li>
-            <li className="font-semibold text-gray-900 dark:text-gray-100">
+            <li className="font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
               {category.name}
             </li>
           </ol>
