@@ -291,7 +291,7 @@ export const ALL_PRODUCTS: Product[] = [
 
 /** Fetch “all” or “by category” */
 export function getProductsByCategory(slug: string): Product[] {
-  if (slug === "all-products") {
+  if ( slug === "corporate-wears" || slug === "casual-looks" || slug === "i-have-an-event" || slug === "african-print") {
     return ALL_PRODUCTS;
   }
   return ALL_PRODUCTS.filter((p) => p.category === slug);

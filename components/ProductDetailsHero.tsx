@@ -31,7 +31,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
       {/* ─── Left Column: Featured Image ───────────────────────────────────────── */}
       <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100">
         <Image
@@ -79,7 +79,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
         </div>
 
         {/* ───── Category / Size Chart / In Stock ───── */}
-        <div className="flex items-center space-x-6 text-sm text-gray-700 dark:text-gray-300 mt-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 text-sm text-gray-700 dark:text-gray-300 mt-5">
           <Link
             href={`/categories/${product.category}`}
             className="flex items-center gap-1 underline"
@@ -114,7 +114,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
         {/* ───── Price & Base Price ───── */}
         <div className="space-y-1 mt-5">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             NGN {product.price.toLocaleString()}
           </p>
           {product.basePrice && (

@@ -45,7 +45,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </h2>
 
       {/* 4. Price */}
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mt-1 text-[1rem] text-gray-600 dark:text-gray-400">
         NGN {product.price}
       </p>
     </div>
