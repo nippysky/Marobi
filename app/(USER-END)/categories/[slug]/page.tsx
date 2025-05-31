@@ -14,14 +14,14 @@ export async function generateStaticParams() {
   return CATEGORIES.map((cat) => ({ slug: cat.slug }));
 }
 
-export default async function CategoryPage(
-  props: { params: { slug: string } } | Promise<{ params: { slug: string } }>
-) {
-  // Await the props so that Next.js’s “lazy” params type is satisfied
-  const { params } = await props;
-  const { slug } = params;
-
-  // Look up our category by slug
+export default async function CategoryPage({
+  params,
+}: {
+  // Note: Next.js 15 expects `params` to be a Promise
+  params: Promise<{ slug: string }>;
+}) {
+  // Await the promise to get the actual `{ slug }` object
+  const { slug } = await params;
   const category = getCategoryBySlug(slug);
 
   // If slug doesn’t match any category, show 404
