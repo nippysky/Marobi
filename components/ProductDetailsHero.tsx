@@ -8,7 +8,8 @@ import { Product } from "@/lib/products";
 import { getCategoryBySlug } from "@/lib/constants/categories";
 import OptionSelectors from "./OptionSelectors";
 import { BiCategory } from "react-icons/bi";
-import { BadgeCheck, PencilRuler } from "lucide-react";
+import { BadgeCheck, PencilRuler, Play } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -17,8 +18,8 @@ interface ProductDetailHeroProps {
 /**
  * This client component renders:
  * - Left column: large featured image (stateful swap)
- * - Right column: “More Photos” thumbnails, category / size‐chart / stock,
- *   title, description, price, size/color/quantity selectors, and buttons
+ * - Right column: “More Photos” thumbnails (now in a 2-column responsive grid),
+ *   category / size‐chart / stock, title, description, price, size/color/quantity selectors, and buttons
  */
 export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   product,
@@ -42,21 +43,21 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
         />
       </div>
 
-      {/* ─── Right Column: More Photos + Meta + Details ───────────────────────── */}
+      {/* ─── Right Column: More Photos (now a grid) + Meta + Details ───────────────────────── */}
       <div className="flex flex-col space-y-6">
-        {/* ───── “More Photos” Thumbnails Row ───── */}
+        {/* ───── “More Photos” Responsive Grid ───── */}
         <div className="space-y-2">
           <p className="text-base font-medium text-gray-700 dark:text-gray-300">
             More Photos
           </p>
-          <div className="flex space-x-3">
+          <div className="grid grid-cols-3 gap-3">
             {product.moreImages.map((thumbUrl, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setFeaturedImage(thumbUrl)}
                 className={`
-                  relative w-60 h-[300px] flex-shrink-0 overflow-hidden rounded-lg bg-gray-100
+                  relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
                   ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
                 `}
               >
@@ -69,6 +70,12 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
               </button>
             ))}
           </div>
+
+          {/* Video If any */}
+          <Button variant={"outline"} className=" w-full mt-3">
+            <Play />
+            Play Video
+          </Button>
         </div>
 
         {/* ───── Category / Size Chart / In Stock ───── */}

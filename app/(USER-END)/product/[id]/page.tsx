@@ -46,27 +46,36 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <main className="mt-10 space-y-12">
         {/* ───── Breadcrumb ───── */}
         <nav
-          className="text-sm text-gray-600 dark:text-gray-400"
+          className="text-sm text-gray-600 dark:text-gray-400 mb-4"
           aria-label="Breadcrumb"
         >
-          <ol className="inline-flex items-center space-x-1">
-            <li>
+          <ol className="flex flex-wrap items-center space-x-1 space-y-1 sm:space-y-0">
+            {/* Home */}
+            <li className="flex items-center whitespace-nowrap">
               <Link href="/" className="hover:underline">
                 Home
               </Link>
             </li>
-            <li>
+
+            {/* Separator */}
+            <li className="flex items-center whitespace-nowrap">
               <span className="mx-2">/</span>
             </li>
-            <li>
+
+            {/* Categories */}
+            <li className="flex items-center whitespace-nowrap">
               <Link href="/categories" className="hover:underline">
                 Categories
               </Link>
             </li>
-            <li>
+
+            {/* Separator */}
+            <li className="flex items-center whitespace-nowrap">
               <span className="mx-2">/</span>
             </li>
-            <li>
+
+            {/* Category Name */}
+            <li className="flex items-center whitespace-nowrap">
               <Link
                 href={`/categories/${product.category}`}
                 className="hover:underline"
@@ -74,10 +83,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {categoryName}
               </Link>
             </li>
-            <li>
+
+            {/* Separator */}
+            <li className="flex items-center whitespace-nowrap">
               <span className="mx-2">/</span>
             </li>
-            <li className="font-semibold text-gray-900 dark:text-gray-100">
+
+            {/* Current Product */}
+            <li className="flex items-center font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
               {product.name}
             </li>
           </ol>
@@ -86,12 +99,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
         {/* ───── Hero Section (Left: Featured Image; Right: Thumbnails + Details) ───── */}
         <ProductDetailHero product={product} />
 
-        {/* ───── Reviews Section ───── */}
+        {/* ───── Reviews Section (now responsive grid) ───── */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Reviews
           </h2>
-          <div className="flex space-x-4 overflow-x-auto pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
               {
                 author: "Collins Jr",
@@ -103,6 +116,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 content: "This dress made me feel elegant all night!",
               },
               { author: "Sandra O", content: "Quality and fit are top-notch." },
+              {
+                author: "Kim A",
+                content: "Absolutely beautiful craftsmanship!",
+              },
             ].map((rev, idx) => (
               <ReviewCard key={idx} author={rev.author} content={rev.content} />
             ))}
@@ -110,7 +127,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
 
         {/* ───── More from This Category ───── */}
-        <section className="space-y-4">
+        <section className="space-y-4 pb-20">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             More {categoryName} Looks
           </h2>
