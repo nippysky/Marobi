@@ -20,6 +20,12 @@ import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { CartSheet } from "./cart-sheet";
 
+// shadcn UI tooltip components
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 // A simple black circle “M!” icon.
 const BrandIcon: React.FC = () => (
@@ -44,7 +50,7 @@ export const Header: React.FC = () => {
   const { openSizeChart } = useSizeChart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // mounted flag for client-only rendering of wishlist badge
+  // mounted flag for client-only rendering of badges
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -111,6 +117,12 @@ export const Header: React.FC = () => {
     },
   };
 
+  // Placeholder user logic; replace with real auth hook
+  const user = null as { name: string } | null;
+  const accountTooltip = user
+    ? `Hello, ${user.name}`
+    : "Login to your account";
+
   return (
     <>
       <motion.header
@@ -176,57 +188,104 @@ export const Header: React.FC = () => {
                 <CurrencySelector />
 
                 {/* Search Icon opens SearchModal */}
-                <motion.div
-                  variants={searchIconVariants}
-                  initial="expanded"
-                  animate={isCollapsed ? "collapsed" : "expanded"}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchOpen(true)}
-                    className="
-                      text-gray-600 dark:text-gray-300
-                      hover:text-gray-800 dark:hover:text-gray-100
-                      p-2
-                    "
-                  >
-                    <SearchIcon className="w-5 h-5" />
-                  </button>
-                </motion.div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div
+                      variants={searchIconVariants}
+                      initial="expanded"
+                      animate={isCollapsed ? "collapsed" : "expanded"}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setIsSearchOpen(true)}
+                        className="
+                          text-gray-600 dark:text-gray-300
+                          hover:text-gray-800 dark:hover:text-gray-100
+                          p-2
+                        "
+                      >
+                        <SearchIcon className="w-5 h-5" />
+                      </button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Search Products</p>
+                  </TooltipContent>
+                </Tooltip>
 
                 {/* Size Chart Icon now opens SizeChartModal */}
-                <button
-                  onClick={openSizeChart}
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
-                  aria-label="Open size chart"
-                >
-                  <PencilRuler className="w-5 h-5" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={openSizeChart}
+                      className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                      aria-label="Open size chart"
+                    >
+                      <PencilRuler className="w-5 h-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View Size Chart</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                <Link
-                  href="/account"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                >
-                  <UserRound className="w-5 h-5" />
-                </Link>
+                {/* Account Icon with conditional tooltip */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href="/account"
+                      className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                    >
+                      <UserRound className="w-5 h-5" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{accountTooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                {/* Wishlist Icon with count */}
-                <div className="relative">
-                  <Link
-                    href="/wishlist"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  >
-                    <Heart className="w-5 h-5" />
-                  </Link>
-                  {mounted && wishlistCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </div>
+                {/* Wishlist Icon with count & tooltip */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* Wrap the icon in a fixed-size relative container */}
+                    <div className="relative inline-block p-2">
+                      <Link
+                        href="/wishlist"
+                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                      >
+                        <Heart className="w-5 h-5" />
+                      </Link>
+                      {mounted && wishlistCount > 0 && (
+                        <span
+                          className="
+                            absolute 
+                            top-0 right-0
+                            bg-green-500 text-white text-xs font-bold 
+                            rounded-full w-4 h-4 flex items-center justify-center 
+                            -translate-y-1/2 translate-x-1/2
+                          "
+                        >
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View Wishlist</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                {/* CartSheet trigger */}
-                <CartSheet />
+                {/* CartSheet trigger with tooltip */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <CartSheet />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View Cart</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </motion.div>
 
@@ -281,38 +340,78 @@ export const Header: React.FC = () => {
                   <CurrencySelector />
 
                   {/* Size Chart Icon */}
-                  <button
-                    onClick={openSizeChart}
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
-                    aria-label="Open size chart"
-                  >
-                    <PencilRuler className="w-5 h-5" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={openSizeChart}
+                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                        aria-label="Open size chart"
+                      >
+                        <PencilRuler className="w-5 h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View Size Chart</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-                  <Link
-                    href="/account"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  >
-                    <UserRound className="w-5 h-5" />
-                  </Link>
+                  {/* Account Icon */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href="/account"
+                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                      >
+                        <UserRound className="w-5 h-5" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{accountTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-                  {/* Wishlist Icon with count */}
-                  <div className="relative">
-                    <Link
-                      href="/wishlist"
-                      className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                    >
-                      <Heart className="w-5 h-5" />
-                    </Link>
-                    {mounted && wishlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </div>
+                  {/* Wishlist Icon */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {/* Same fixed-size relative container here */}
+                      <div className="relative inline-block p-2">
+                        <Link
+                          href="/wishlist"
+                          className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                        >
+                          <Heart className="w-5 h-5" />
+                        </Link>
+                        {mounted && wishlistCount > 0 && (
+                          <span
+                            className="
+                              absolute 
+                              top-1 right-1
+                              bg-green-500 text-white text-xs font-bold 
+                              rounded-full w-4 h-4 flex items-center justify-center 
+                              -translate-y-1/2 translate-x-1/2
+                            "
+                          >
+                            {wishlistCount}
+                          </span>
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View Wishlist</p>
+                    </TooltipContent>
+                  </Tooltip>
 
                   {/* CartSheet trigger */}
-                  <CartSheet />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <CartSheet />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View Cart</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -364,16 +463,32 @@ export const Header: React.FC = () => {
               <CurrencySelector />
 
               {/* Mobile Search Icon (opens SearchModal) */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
-                aria-label="Open search"
-              >
-                <SearchIcon className="w-5 h-5" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsSearchOpen(true)}
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                    aria-label="Open search"
+                  >
+                    <SearchIcon className="w-5 h-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Search Products</p>
+                </TooltipContent>
+              </Tooltip>
 
               {/* CartSheet trigger */}
-              <CartSheet />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <CartSheet />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View Cart</p>
+                </TooltipContent>
+              </Tooltip>
 
               {/* Mobile Menu Sheet (now in a separate file) */}
               <MobileMenuSheet />
