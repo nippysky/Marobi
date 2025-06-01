@@ -15,7 +15,7 @@ type Slide = {
 const slides: Slide[] = [
   {
     backgroundUrl:
-      "https://static.vecteezy.com/system/resources/thumbnails/060/183/196/small_2x/elegant-emerald-green-and-gold-banner-background-vector.jpg",
+      "https://images.unsplash.com/photo-1599830378110-b3b6b256240a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8Z3JlZW4lMjBsYW5zY2FwZSUyMHdlYiUyMGJhbm5lcnxlbnwwfHwwfHx8MA%3D%3D",
     heading: "Let Marob! Make You Look Good!",
     subtext: "Discover curated women’s fashion, just for you.",
     buttonText: "Shop with us",
@@ -23,7 +23,7 @@ const slides: Slide[] = [
   },
   {
     backgroundUrl:
-      "https://png.pngtree.com/thumb_back/fw800/background/20240914/pngtree-background-of-large-faceted-green-emeralds-gems-for-jewelry-store-banner-image_16210112.jpg",
+      "https://plus.unsplash.com/premium_photo-1673515787201-4a7ab2160002?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8Z3JlZW4lMjBsYW5zY2FwZSUyMHdlYiUyMGJhbm5lcnxlbnwwfHwwfHx8MA%3D%3D",
     heading: "Style Meets Comfort.",
     subtext: "Feel fabulous in every outfit you wear.",
     buttonText: "Browse Collections",
@@ -31,7 +31,7 @@ const slides: Slide[] = [
   },
   {
     backgroundUrl:
-      "https://img.freepik.com/free-vector/gradient-emerald-background_23-2150328767.jpg?semt=ais_hybrid&w=740",
+      "https://images.unsplash.com/photo-1677611998429-1baa4371456b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyZWVuJTIwbGFuc2NhcGUlMjB3ZWIlMjBiYW5uZXJ8ZW58MHx8MHx8fDA%3D",
     heading: "Elevate Your Wardrobe.",
     subtext: "New arrivals every week—stay ahead of trends.",
     buttonText: "View New Arrivals",
