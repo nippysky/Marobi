@@ -25,6 +25,7 @@ export const SizeChartModal: React.FC = () => {
         <>
           {/* Backdrop */}
           <motion.div
+                 style={{ zIndex: 600000000 }}
             key="sc-backdrop"
             className="fixed inset-0 z-50 bg-black/50"
             variants={backdropVariants}

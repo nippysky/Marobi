@@ -144,35 +144,23 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
           />
 
           {/* ───── Buy Now & Add to Cart Buttons ───── */}
-          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 mt-5">
-            <button
-              type="button"
-              className="
-                w-full
-                rounded-md
-                border border-gray-300 dark:border-gray-600
-                bg-white dark:bg-gray-800
-                py-3
-                text-center text-sm font-semibold text-gray-800 dark:text-gray-200
-                hover:bg-gray-100 dark:hover:bg-gray-700
-              "
+          <section className="w-full">
+
+          <div className=" mt-5 w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button  className="w-full"
             >
               Buy Now
-            </button>
-            <button
-              type="button"
-              className="
-                w-full
-                rounded-md
-                bg-green-500
-                py-3
-                text-center text-sm font-semibold text-white
-                hover:bg-green-600
-              "
+            </Button>
+            <Button className="w-full" variant={"outline"} onClick={() => alert('Added to cart')}
             >
               Add to Cart
-            </button>
+            </Button>
           </div>
+
+          <Button className="w-full mt-5" variant={"secondary"}>
+            Add to Wishlist
+          </Button>
+          </section>
         </div>
       </div>
 
