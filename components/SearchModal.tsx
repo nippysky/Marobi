@@ -72,12 +72,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
         </div>
 
         {/* Search Input */}
-        <div className="px-4 py-3">
-          <Input
-            placeholder="Type to search..."
-            autoFocus
-            className="w-full rounded-md bg-gray-100 dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 border border-transparent text-sm py-2"
-          />
+        <div className="px-4 py-3 flex justify-center">
+          <div className="w-full max-w-lg">
+            <Input
+              placeholder="Type to search..."
+              autoFocus
+              className="
+                w-full
+                rounded-full
+                text-center
+                placeholder-gray-500 dark:placeholder-gray-400
+                bg-gray-100 dark:bg-gray-800
+                focus:ring-0 focus:ring-offset-0 border-transparent
+                text-sm py-2
+              "
+            />
+          </div>
         </div>
 
         {/* (Optional) Results / Scrollable Content */}

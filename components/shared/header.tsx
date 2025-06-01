@@ -14,10 +14,10 @@ import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
 import { CartSheet } from "./cart-sheet";
-import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { SearchModal } from "../SearchModal";
 import { SizeChartModal } from "../SizeChartModal";
 import { MobileMenuSheet } from "./mobile-menu-sheet";
+import { useSizeChart } from "@/lib/context/sizeChartcontext";
 
 // A simple black circle “M!” icon.
 const BrandIcon: React.FC = () => (
@@ -39,8 +39,7 @@ const navItems: { label: string; href: string }[] = [
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { openSizeChart, openSizeChart: openSC } = useSizeChart();
-  const { openSizeChart: openSCFromHeader } = useSizeChart();
+  const { openSizeChart } = useSizeChart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Scroll listener toggles collapsed state
@@ -186,7 +185,7 @@ export const Header: React.FC = () => {
 
                 {/* Size Chart Icon now opens SizeChartModal */}
                 <button
-                  onClick={openSCFromHeader}
+                  onClick={openSizeChart}
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
                   aria-label="Open size chart"
                 >
@@ -244,13 +243,15 @@ export const Header: React.FC = () => {
                   >
                     <Input
                       placeholder="…Search for products"
+                      onFocus={() => setIsSearchOpen(true)}
                       className="
                         w-full rounded-full text-center
                         placeholder-gray-500 dark:placeholder-gray-400
                         bg-gray-100 dark:bg-gray-800
                         focus:ring-0 focus:ring-offset-0 border-transparent
-                        text-sm py-2
+                        text-sm py-2 cursor-pointer
                       "
+                      readOnly
                     />
                   </motion.div>
                 </div>
@@ -261,7 +262,7 @@ export const Header: React.FC = () => {
 
                   {/* Size Chart Icon */}
                   <button
-                    onClick={openSCFromHeader}
+                    onClick={openSizeChart}
                     className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
                     aria-label="Open size chart"
                   >
@@ -323,7 +324,7 @@ export const Header: React.FC = () => {
            * Mobile/Tablet Header: visible on screens < lg
            * ───────────────────────────────────────────────────────
            */}
-          <div className="flex lg:hidden items-center justify-between h-16 px-4">
+          <div className="flex lg:hidden items-center justify-between h-16">
             {/* Brand icon on the left */}
             <Link href="/">
               <BrandIcon />
