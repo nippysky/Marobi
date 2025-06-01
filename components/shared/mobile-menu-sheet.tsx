@@ -1,48 +1,99 @@
-// components/MobileMenuSheet.tsx
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sheet,
-  SheetContent,
   SheetTrigger,
+  SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu as MenuIcon } from "lucide-react";
-import Link from "next/link";
+import {
+  AlignJustify,
+  UserRound,
+  Heart,
+  ShoppingCart,
+  PencilRuler,
+} from "lucide-react";
+import { CATEGORIES } from "@/lib/constants/categories";
+import { useSizeChart } from "@/lib/context/sizeChartcontext";
 
 const navItems: { label: string; href: string }[] = [
   { label: "All Products", href: "/all-products" },
-  { label: "Corporate Wears", href: "/corporate-wears" },
-  { label: "African Print", href: "/african-print" },
-  { label: "Casual Looks", href: "/casual-looks" },
-  { label: "I Have an Event", href: "/i-have-an-event" },
+  ...CATEGORIES.map((cat) => ({
+    label: cat.name,
+    href: `/categories/${cat.slug}`,
+  })),
 ];
 
 export const MobileMenuSheet: React.FC = () => {
+  const pathname = usePathname() || "/";
+  const { openSizeChart } = useSizeChart();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">
-          <MenuIcon className="w-6 h-6" />
-        </button>
+        <AlignJustify className="w-5 h-5 cursor-pointer" />
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-[80vw] sm:w-[60vw]">
+      <SheetContent side="right" className="w-72">
         <SheetHeader>
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
-        <div className="mt-6 px-4 space-y-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="block text-lg font-medium text-gray-800 dark:text-gray-200 hover:underline"
-            >
-              {item.label}
-            </Link>
-          ))}
+
+        {/* Remove any Search <Input> here — we’re only showing links now */}
+
+        {/* Nav Links */}
+        <nav className="mt-6 px-4 space-y-4">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`
+                  block text-base font-medium
+                  text-gray-700 dark:text-gray-300
+                  hover:underline
+                  ${isActive ? "underline font-semibold" : ""}
+                `}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Divider */}
+        <div className="my-6 border-t border-gray-200 dark:border-gray-700" />
+
+        <div className="px-4 space-y-4">
+          {/* Size Chart Button */}
+          <button
+            onClick={openSizeChart}
+            className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
+          >
+            <PencilRuler className="w-5 h-5" />
+            <span>Size Chart</span>
+          </button>
+
+          <Link
+            href="/account"
+            className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
+          >
+            <UserRound className="w-5 h-5" />
+            <span>Account</span>
+          </Link>
+
+          <Link
+            href="/wishlist"
+            className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
+          >
+            <Heart className="w-5 h-5" />
+            <span>Wishlist</span>
+          </Link>
         </div>
       </SheetContent>
     </Sheet>

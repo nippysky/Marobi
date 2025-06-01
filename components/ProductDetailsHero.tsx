@@ -10,6 +10,7 @@ import OptionSelectors from "./OptionSelectors";
 import { BiCategory } from "react-icons/bi";
 import { BadgeCheck, PencilRuler, Play } from "lucide-react";
 import { Button } from "./ui/button";
+import { useSizeChart } from "@/lib/context/sizeChartcontext";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -29,6 +30,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   // Lookup category name
   const categoryMeta = getCategoryBySlug(product.category);
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
+
+  // Hook to open the Size Chart modal
+  const { openSizeChart } = useSizeChart();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
@@ -88,13 +92,14 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             {categoryName}
           </Link>
 
-          <Link
-            href="/size-chart"
+          {/* Changed from Link to button to open the SizeChartModal */}
+          <button
+            onClick={openSizeChart}
             className="flex items-center gap-1 underline"
           >
             <PencilRuler className="w-5 h-5" />
             See Size Chart
-          </Link>
+          </button>
 
           <div className="flex items-center gap-1">
             <BadgeCheck className="w-5 h-5" />

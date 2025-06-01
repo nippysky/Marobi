@@ -9,22 +9,15 @@ import {
   PencilRuler,
   UserRound,
   Heart,
-  ShoppingCart,
-  AlignJustify,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
 import { CartSheet } from "./cart-sheet";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { SearchModal } from "../SearchModal";
+import { SizeChartModal } from "../SizeChartModal";
+import { MobileMenuSheet } from "./mobile-menu-sheet";
 
 // A simple black circle “M!” icon.
 const BrandIcon: React.FC = () => (
@@ -46,7 +39,9 @@ const navItems: { label: string; href: string }[] = [
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // <-- control modal
+  const { openSizeChart, openSizeChart: openSC } = useSizeChart();
+  const { openSizeChart: openSCFromHeader } = useSizeChart();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Scroll listener toggles collapsed state
   useEffect(() => {
@@ -170,6 +165,7 @@ export const Header: React.FC = () => {
               <div className="flex items-center space-x-6">
                 <CurrencySelector />
 
+                {/* Search Icon opens SearchModal */}
                 <motion.div
                   variants={searchIconVariants}
                   initial="expanded"
@@ -177,24 +173,25 @@ export const Header: React.FC = () => {
                 >
                   <button
                     type="button"
+                    onClick={() => setIsSearchOpen(true)}
                     className="
                       text-gray-600 dark:text-gray-300
                       hover:text-gray-800 dark:hover:text-gray-100
                       p-2
                     "
-                    onClick={() => setIsSearchOpen(true)}
-                    aria-label="Open search"
                   >
                     <SearchIcon className="w-5 h-5" />
                   </button>
                 </motion.div>
 
-                <Link
-                  href="/size-chart"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                {/* Size Chart Icon now opens SizeChartModal */}
+                <button
+                  onClick={openSCFromHeader}
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                  aria-label="Open size chart"
                 >
                   <PencilRuler className="w-5 h-5" />
-                </Link>
+                </button>
 
                 <Link
                   href="/account"
@@ -262,12 +259,14 @@ export const Header: React.FC = () => {
                 <div className="flex items-center justify-end space-x-6">
                   <CurrencySelector />
 
-                  <Link
-                    href="/size-chart"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                  {/* Size Chart Icon */}
+                  <button
+                    onClick={openSCFromHeader}
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                    aria-label="Open size chart"
                   >
                     <PencilRuler className="w-5 h-5" />
-                  </Link>
+                  </button>
 
                   <Link
                     href="/account"
@@ -330,19 +329,14 @@ export const Header: React.FC = () => {
               <BrandIcon />
             </Link>
 
-            {/* Right side: Currency, Search Icon, Cart, Hamburger */}
-            <div className="flex items-center space-x-4">
+            {/* Right side: Currency, Cart, Search Icon, Hamburger */}
+            <div className="flex items-center space-x-2">
               <CurrencySelector />
 
-              {/* New Search Icon (mobile) */}
+              {/* Mobile Search Icon (opens SearchModal) */}
               <button
-                type="button"
                 onClick={() => setIsSearchOpen(true)}
-                className="
-                  text-gray-600 dark:text-gray-300
-                  hover:text-gray-800 dark:hover:text-gray-100
-                  p-2
-                "
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
                 aria-label="Open search"
               >
                 <SearchIcon className="w-5 h-5" />
@@ -351,80 +345,18 @@ export const Header: React.FC = () => {
               {/* CartSheet trigger */}
               <CartSheet />
 
-              {/* Hamburger – opens mobile nav sheet */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <AlignJustify className="w-5 h-5 cursor-pointer" />
-                </SheetTrigger>
-
-                <SheetContent side="right" className="w-72">
-                  <SheetHeader>
-                    <SheetTitle>Menu</SheetTitle>
-                    <SheetDescription className="hidden">
-                      Browse categories and account items
-                    </SheetDescription>
-                  </SheetHeader>
-
-                  {/* 
-                    Removed the <Input> from here per request.
-                    Nav Links only:
-                  */}
-                  <nav className="mt-4 px-4 space-y-4">
-                    {navItems.map((item) => {
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={`
-                            block text-base font-medium
-                            text-gray-700 dark:text-gray-300
-                            hover:underline
-                            ${isActive ? "underline font-semibold" : ""}
-                          `}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })}
-                  </nav>
-
-                  {/* Divider */}
-                  <div className="my-6 border-t border-gray-200 dark:border-gray-700" />
-
-                  {/* Other Links: Account, Size Chart, Wishlist */}
-                  <div className="px-4 space-y-4">
-                    <Link
-                      href="/account"
-                      className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
-                    >
-                      <UserRound className="w-5 h-5" />
-                      <span>Account</span>
-                    </Link>
-                    <Link
-                      href="/size-chart"
-                      className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
-                    >
-                      <PencilRuler className="w-5 h-5" />
-                      <span>Size Chart</span>
-                    </Link>
-                    <Link
-                      href="/wishlist"
-                      className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
-                    >
-                      <Heart className="w-5 h-5" />
-                      <span>Wishlist</span>
-                    </Link>
-                  </div>
-                </SheetContent>
-              </Sheet>
+              {/* Mobile Menu Sheet (now in a separate file) */}
+              <MobileMenuSheet />
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Render the SearchModal whenever isSearchOpen is true */}
+      {/* SearchModal (desktop + mobile) */}
       {isSearchOpen && <SearchModal onClose={() => setIsSearchOpen(false)} />}
+
+      {/* SizeChartModal (anywhere in the app) */}
+      <SizeChartModal />
     </>
   );
 };
