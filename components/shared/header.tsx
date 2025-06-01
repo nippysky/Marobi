@@ -13,11 +13,13 @@ import {
 import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
-import { CartSheet } from "./cart-sheet";
 import { SearchModal } from "../SearchModal";
 import { SizeChartModal } from "../SizeChartModal";
 import { MobileMenuSheet } from "./mobile-menu-sheet";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
+import { useWishlistStore } from "@/lib/store/wishlistStore";
+import { CartSheet } from "./cart-sheet";
+
 
 // A simple black circle “M!” icon.
 const BrandIcon: React.FC = () => (
@@ -41,6 +43,15 @@ export const Header: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { openSizeChart } = useSizeChart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // mounted flag for client-only rendering of wishlist badge
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Read wishlist count from store
+  const wishlistCount = useWishlistStore((s) => s.items.length);
 
   // Scroll listener toggles collapsed state
   useEffect(() => {
@@ -199,13 +210,22 @@ export const Header: React.FC = () => {
                   <UserRound className="w-5 h-5" />
                 </Link>
 
-                <Link
-                  href="/wishlist"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                >
-                  <Heart className="w-5 h-5" />
-                </Link>
+                {/* Wishlist Icon with count */}
+                <div className="relative">
+                  <Link
+                    href="/wishlist"
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                  >
+                    <Heart className="w-5 h-5" />
+                  </Link>
+                  {mounted && wishlistCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </div>
 
+                {/* CartSheet trigger */}
                 <CartSheet />
               </div>
             </motion.div>
@@ -276,13 +296,22 @@ export const Header: React.FC = () => {
                     <UserRound className="w-5 h-5" />
                   </Link>
 
-                  <Link
-                    href="/wishlist"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  >
-                    <Heart className="w-5 h-5" />
-                  </Link>
+                  {/* Wishlist Icon with count */}
+                  <div className="relative">
+                    <Link
+                      href="/wishlist"
+                      className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      <Heart className="w-5 h-5" />
+                    </Link>
+                    {mounted && wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </div>
 
+                  {/* CartSheet trigger */}
                   <CartSheet />
                 </div>
               </div>

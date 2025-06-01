@@ -1,5 +1,8 @@
+"use client"
+
 import React from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function AuthPrompt() {
   return (
@@ -12,15 +15,15 @@ export default function AuthPrompt() {
           You need an account to view and edit your billing information.
         </p>
         <div className="flex flex-col space-y-4">
-          <Link href="/auth/login" className="block w-full text-center py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-      
+          <Link href="/auth/login" passHref>
+            <Button className="w-full" variant="default">
               Log In
-     
+            </Button>
           </Link>
-          <Link href="/auth/register" className="block w-full text-center py-3 bg-green-600 text-white rounded-md hover:bg-green-700">
-     
+          <Link href="/auth/register" passHref>
+            <Button className="w-full" variant="secondary">
               Register
-
+            </Button>
           </Link>
         </div>
       </div>

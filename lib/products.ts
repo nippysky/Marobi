@@ -1,4 +1,11 @@
 
+export interface Review {
+  userId: string;
+  rating: number;      // 1–5 stars
+  comment: string;
+  date: string;        // ISO date or whatever format you prefer
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -8,8 +15,12 @@ export interface Product {
   category: string;
   description: string;
   inStock: number;
-  moreImages: string[]; // additional photos for the gallery
+  moreImages: string[];
+  reviews?: Review[];   // ← new optional field for future use
 }
+
+// ... ALL_PRODUCTS, getProductsByCategory, getProductById, etc. remain unchanged ...
+
 
 // Example dummy dataset:
 export const ALL_PRODUCTS: Product[] = [
