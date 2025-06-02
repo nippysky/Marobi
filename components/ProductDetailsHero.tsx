@@ -10,14 +10,13 @@ import type { Product } from "@/lib/products";
 import { getCategoryBySlug } from "@/lib/constants/categories";
 import OptionSelectors from "./OptionSelectors";
 import { BiCategory } from "react-icons/bi";
-import { BadgeCheck, PencilRuler, Play } from "lucide-react";
+import { BadgeCheck, Heart, PencilRuler, Play, Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import { VideoModal } from "./YoutubeVideoModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
-
-
+import { BsBag } from "react-icons/bs";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -76,54 +75,54 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             src={featuredImage}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-cover object-center"
             priority
+            unoptimized
           />
         </div>
 
         {/* ─── Right Column: More Photos + Meta + Details ───────────────────────── */}
         <div className="flex flex-col space-y-6">
           {/* ───── “More Photos” Responsive Grid ───── */}
-    {/* ───── “More Photos” Responsive Grid ───── */}
-<div className="space-y-2">
-  <p className="text-base font-medium text-gray-700 dark:text-gray-300">
-    More Photos
-  </p>
-  <div className="grid grid-cols-3 gap-3">
-    {product.moreImages.map((thumbUrl, idx) => (
-      <button
-        key={idx}
-        type="button"
-        onClick={() => setFeaturedImage(thumbUrl)}
-        className={`
+          {/* ───── “More Photos” Responsive Grid ───── */}
+          <div className="space-y-2">
+            <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+              More Photos
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {product.moreImages.map((thumbUrl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setFeaturedImage(thumbUrl)}
+                  className={`
           relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
           ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
         `}
-      >
-        <Image
-          src={thumbUrl}
-          alt={`${product.name} thumbnail ${idx + 1}`}
-          fill
-          className="object-cover"
-        />
-      </button>
-    ))}
-  </div>
+                >
+                  <Image
+                    src={thumbUrl}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
 
-  {/* Video If any */}
-  <Button
-    variant="outline"
-    className="w-full mt-3"
-    onClick={() => setIsVideoOpen(true)}
-  >
-    <Play />
-    Play Video
-  </Button>
-</div>
-
+            {/* Video If any */}
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={() => setIsVideoOpen(true)}
+            >
+              <Play />
+              Play Video
+            </Button>
+          </div>
 
           {/* ───── Category / Size Chart / In Stock ───── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 text-sm text-gray-700 dark:text-gray-300 mt-5">
+          <div className=" grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
             <Link
               href={`/categories/${product.category}`}
               className="flex items-center gap-1 underline"
@@ -132,14 +131,13 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
               {categoryName}
             </Link>
 
-            <Button
-              variant="link"
+            <button
               onClick={openSizeChart}
-              className="flex items-center gap-1 underline p-0"
+              className="flex items-center gap-1 underline"
             >
               <PencilRuler className="w-5 h-5" />
               See Size Chart
-            </Button>
+            </button>
 
             <div className="flex items-center gap-1">
               <BadgeCheck className="w-5 h-5" />
@@ -180,6 +178,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
           <section className="w-full">
             <div className="mt-5 w-full grid grid-cols-1 md:grid-cols-2 gap-3">
               <Button className="w-full" onClick={handleBuyNow}>
+                <Tag />
                 Buy Now
               </Button>
               <Button
@@ -187,6 +186,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                 variant="outline"
                 onClick={handleAddToCart}
               >
+                <BsBag />
                 Add to Cart
               </Button>
             </div>
@@ -197,6 +197,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
               variant="secondary"
               onClick={handleAddToWishlist}
             >
+              <Heart />
               {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
             </Button>
           </section>

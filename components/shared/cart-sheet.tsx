@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ShoppingCart, X } from "lucide-react";
 import {
   Sheet,
@@ -11,19 +12,18 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/lib/store/cartStore";
+import { useCartStore, CartItem } from "@/lib/store/cartStore";
 import { BsBag } from "react-icons/bs";
 
 export function CartSheet() {
-  // Local mounted flag to avoid hydration mismatch
+  // Prevent hydration mismatch
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Get cart items array
+  // Now each CartItem has: product, quantity, color, size
   const items = useCartStore((s) => s.items);
-  // Get computed totals as numbers
   const totalItemsCount = useCartStore((s) => s.totalItems());
   const totalAmountValue = useCartStore((s) => s.totalAmount());
   const removeFromCart = useCartStore((s) => s.removeFromCart);
@@ -32,7 +32,7 @@ export function CartSheet() {
     <Sheet>
       <SheetTrigger asChild>
         <button className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">
-         <BsBag className="w-5 h-5" />
+          <BsBag className="w-5 h-5" />
           {mounted && totalItemsCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
               {totalItemsCount}
@@ -53,39 +53,61 @@ export function CartSheet() {
           </div>
         ) : (
           <div className="flex flex-col h-full">
-            <div className="flex-1 divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="p-4 flex items-start">
-                  <div className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1"
-                      title={product.name}
-                    >
-                      {product.name}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      NGN {product.price.toLocaleString()} × {quantity}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => removeFromCart(product.id)}
-                    className="ml-2 p-1 text-gray-500 hover:text-red-600"
-                    aria-label="Remove item"
+            {/* ─── Cart Items ─── */}
+            <div className="flex-1 overflow-y-auto px-2 py-4">
+              <div className="flex flex-col space-y-4">
+                {items.map(({ product, quantity, color, size }: CartItem) => (
+                  <div
+                    key={`${product.id}-${color}-${size}`}
+                    className="flex items-start bg-white dark:bg-gray-800 rounded-lg shadow-sm"
                   >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    {/* Entire “content” area is clickable */}
+                    <Link
+                      href={`/product/${product.id}`}
+                      className="flex-1 flex items-start space-x-3 p-3"
+                    >
+                      {/* Product Image */}
+                      <div className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+
+                      {/* Textual Details */}
+                      <div className="flex-1 flex flex-col">
+                        <p
+                          className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1"
+                          title={product.name}
+                        >
+                          {product.name}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          NGN {product.price.toLocaleString()} × {quantity}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          Color: <span className="font-medium">{color}</span> |
+                          Size: <span className="font-medium">{size}</span>
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* Remove Button */}
+                    <button
+                      onClick={() => removeFromCart(product.id, color, size)}
+                      className="m-3 p-1 text-gray-500 hover:text-red-600"
+                      aria-label="Remove item"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
+            {/* ─── Total & Checkout ─── */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 Total: NGN {totalAmountValue.toLocaleString()}
@@ -93,7 +115,7 @@ export function CartSheet() {
               <Button
                 className="w-full mt-3"
                 onClick={() => {
-                  /* In production, route to /checkout here */
+                  /* e.g. router.push("/checkout") */
                 }}
               >
                 Proceed to Checkout

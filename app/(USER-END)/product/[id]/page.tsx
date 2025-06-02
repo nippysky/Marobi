@@ -4,15 +4,13 @@ import React from "react";
 
 import Header from "@/components/shared/header";
 import ProductCard from "@/components/shared/product-card";
-import { getProductById, getProductsByCategory, Product } from "@/lib/products";
+import { getProductById, getProductsByCategory } from "@/lib/products";
 import { getCategoryBySlug } from "@/lib/constants/categories";
 
-import ReviewCard from "@/components/ReviewCard";
 import ProductDetailHero from "@/components/ProductDetailsHero";
+import { getCurrentUser } from "@/lib/session";
+import ReviewSection from "@/components/ReviewSection";
 
-/**
- * Pre-render one page per product ID at build time.
- */
 export async function generateStaticParams() {
   const allProducts = getProductsByCategory("all-products");
   return allProducts.map((p) => ({ id: p.id }));
@@ -21,10 +19,8 @@ export async function generateStaticParams() {
 export default async function ProductPage({
   params,
 }: {
-  // Next.js 15 expects `params` as a Promise<{ id: string }>
   params: Promise<{ id: string }>;
 }) {
-  // Await the promise to get the actual `{ id }` object
   const { id } = await params;
   const product = getProductById(id);
 
@@ -32,14 +28,17 @@ export default async function ProductPage({
     notFound();
   }
 
-  // Lookup the category name for breadcrumb and “More from Category”
+  // Lookup category metadata for breadcrumbs and related section:
   const categoryMeta = getCategoryBySlug(product.category);
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
 
-  // Fetch related products (exclude current)
+  // Fetch related products (exclude current):
   const relatedProducts = getProductsByCategory(product.category).filter(
     (p) => p.id !== product.id
   );
+
+  // NEW: Fetch the current user (or null if not logged in)
+  const user = await getCurrentUser();
 
   return (
     <section className="flex flex-col lg:px-20 md:px-10 px-5">
@@ -101,32 +100,8 @@ export default async function ProductPage({
         {/* ───── Hero Section (Left: Featured Image; Right: Thumbnails + Details) ───── */}
         <ProductDetailHero product={product} />
 
-        {/* ───── Reviews Section (now responsive grid) ───── */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Reviews
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[
-              {
-                author: "Collins Jr",
-                content:
-                  "I so much love the fact that the gown is well fitted.",
-              },
-              {
-                author: "Adaobi K",
-                content: "This dress made me feel elegant all night!",
-              },
-              { author: "Sandra O", content: "Quality and fit are top-notch." },
-              {
-                author: "Kim A",
-                content: "Absolutely beautiful craftsmanship!",
-              },
-            ].map((rev, idx) => (
-              <ReviewCard key={idx} author={rev.author} content={rev.content} />
-            ))}
-          </div>
-        </section>
+        {/* ───── Reviews Section ───── */}
+        <ReviewSection id={product.id} user={user} />
 
         {/* ───── More from This Category ───── */}
         <section className="space-y-4 pb-20">
@@ -134,7 +109,7 @@ export default async function ProductPage({
             More {categoryName} Looks
           </h2>
           <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {relatedProducts.map((prod) => (
+            {relatedProducts.slice(0, 8).map((prod) => (
               <Link
                 key={prod.id}
                 href={`/product/${prod.id}`}
