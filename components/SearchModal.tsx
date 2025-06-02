@@ -35,7 +35,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
       {/* Backdrop */}
       <motion.div
         key="backdrop"
-        className="fixed inset-0 z-50 bg-black/50 overflow-x-hidden"
+        className="fixed inset-0 z-50 bg-black/50 overflow-hidden"
         variants={backdropVariants}
         initial="hidden"
         animate="visible"
@@ -47,7 +47,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
       {/* Modal Container */}
       <motion.div
         key="container"
-        className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-black overflow-x-hidden"
+        className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-black overflow-hidden"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -76,7 +76,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
           <div className="w-full max-w-md mx-auto">
             <Input
               placeholder="Type to search..."
-              autoFocus
               className="
                 w-full
                 rounded-full
@@ -91,7 +90,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
         </div>
 
         {/* (Optional) Results / Scrollable Content */}
-        <div className="flex-1 px-4 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 px-4 overflow-y-auto">
           {/* Replace this with immediate search results as needed */}
           <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
             Start typing above to see results…

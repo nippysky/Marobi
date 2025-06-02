@@ -1,43 +1,50 @@
 // components/OptionSelectors.tsx
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 interface OptionSelectorsProps {
   sizes: string[];
   colors: string[];
   maxQuantity: number;
-  onQuantityChange?: (q: number) => void;
+
+  // Controlled props from parent
+  selectedSize: string;
+  onSizeChange: (value: string) => void;
+
+  selectedColor: string;
+  onColorChange: (value: string) => void;
+
+  selectedQuantity: number;
+  onQuantityChange: (q: number) => void;
 }
 
 const OptionSelectors: React.FC<OptionSelectorsProps> = ({
   sizes,
   colors,
   maxQuantity,
+
+  selectedSize,
+  onSizeChange,
+
+  selectedColor,
+  onColorChange,
+
+  selectedQuantity,
   onQuantityChange,
 }) => {
-  const [selectedSize, setSelectedSize] = useState<string>("");
-  const [selectedColor, setSelectedColor] = useState<string>("");
-  const [quantity, setQuantity] = useState<number>(1);
-
   const decrement = () => {
-    setQuantity((q) => {
-      const newQ = Math.max(1, q - 1);
-      onQuantityChange?.(newQ);
-      return newQ;
-    });
+    const newQ = Math.max(1, selectedQuantity - 1);
+    onQuantityChange(newQ);
   };
 
   const increment = () => {
-    setQuantity((q) => {
-      const newQ = Math.min(maxQuantity, q + 1);
-      onQuantityChange?.(newQ);
-      return newQ;
-    });
+    const newQ = Math.min(maxQuantity, selectedQuantity + 1);
+    onQuantityChange(newQ);
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0 my-5 relative">
+    <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0 my-5">
       {/* Size dropdown */}
       <div className="flex-1 flex flex-col">
         <label
@@ -49,7 +56,7 @@ const OptionSelectors: React.FC<OptionSelectorsProps> = ({
         <select
           id="size"
           value={selectedSize}
-          onChange={(e) => setSelectedSize(e.target.value)}
+          onChange={(e) => onSizeChange(e.target.value)}
           className="
             w-full rounded-md border border-gray-300 dark:border-gray-600
             bg-white dark:bg-gray-800
@@ -78,7 +85,7 @@ const OptionSelectors: React.FC<OptionSelectorsProps> = ({
         <select
           id="color"
           value={selectedColor}
-          onChange={(e) => setSelectedColor(e.target.value)}
+          onChange={(e) => onColorChange(e.target.value)}
           className="
             w-full rounded-md border border-gray-300 dark:border-gray-600
             bg-white dark:bg-gray-800
@@ -116,7 +123,7 @@ const OptionSelectors: React.FC<OptionSelectorsProps> = ({
             id="quantity"
             type="text"
             readOnly
-            value={quantity}
+            value={selectedQuantity}
             className="
               w-12 text-center
               border-t border-b border-gray-300 dark:border-gray-600
@@ -132,6 +139,7 @@ const OptionSelectors: React.FC<OptionSelectorsProps> = ({
             +
           </button>
         </div>
+        <p className="text-xs text-gray-500">(Max: {maxQuantity})</p>
       </div>
     </div>
   );

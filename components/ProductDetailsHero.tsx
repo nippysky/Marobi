@@ -1,3 +1,5 @@
+// components/ProductDetailsHero.tsx
+
 "use client";
 
 import React, { useState } from "react";
@@ -22,12 +24,6 @@ interface ProductDetailHeroProps {
   product: Product;
 }
 
-/**
- * This client component renders:
- * - Left column: large featured image (stateful swap)
- * - Right column: “More Photos” thumbnails, category/size‐chart/stock, title, description,
- *   price, size/color/quantity selectors, and buttons for Buy/Add to Cart/Add to Wishlist.
- */
 export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   product,
 }) => {
@@ -40,15 +36,49 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
 
-  // Handler for “Add to Cart” (toast only)
+  // NEW: Local state for selected options
+  const [selectedSize, setSelectedSize] = useState<string | "">("");
+  const [selectedColor, setSelectedColor] = useState<string | "">("");
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+
+  // Handler for “Add to Cart” with validation
   const handleAddToCart = () => {
-    addToCart(product);
+    if (!selectedSize) {
+      toast.error("Please select a size.");
+      return;
+    }
+    if (!selectedColor) {
+      toast.error("Please select a color.");
+      return;
+    }
+    if (selectedQuantity < 1) {
+      toast.error("Quantity must be at least 1.");
+      return;
+    }
+    // Add to cart for each unit
+    for (let i = 0; i < selectedQuantity; i++) {
+      addToCart(product, selectedColor, selectedSize);
+    }
     toast.success("Added to cart");
   };
 
   // Handler for “Buy Now”: add to cart + redirect to /checkout
   const handleBuyNow = () => {
-    addToCart(product);
+    if (!selectedSize) {
+      toast.error("Please select a size before buying.");
+      return;
+    }
+    if (!selectedColor) {
+      toast.error("Please select a color before buying.");
+      return;
+    }
+    if (selectedQuantity < 1) {
+      toast.error("Quantity must be at least 1.");
+      return;
+    }
+    for (let i = 0; i < selectedQuantity; i++) {
+      addToCart(product, selectedColor, selectedSize);
+    }
     router.push("/checkout");
   };
 
@@ -84,7 +114,6 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
         {/* ─── Right Column: More Photos + Meta + Details ───────────────────────── */}
         <div className="flex flex-col space-y-6">
           {/* ───── “More Photos” Responsive Grid ───── */}
-          {/* ───── “More Photos” Responsive Grid ───── */}
           <div className="space-y-2">
             <p className="text-base font-medium text-gray-700 dark:text-gray-300">
               More Photos
@@ -96,9 +125,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                   type="button"
                   onClick={() => setFeaturedImage(thumbUrl)}
                   className={`
-          relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
-          ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
-        `}
+                    relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
+                    ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
+                  `}
                 >
                   <Image
                     src={thumbUrl}
@@ -108,21 +137,21 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                   />
                 </button>
               ))}
-            </div>
 
-            {/* Video If any */}
-            <Button
-              variant="outline"
-              className="w-full mt-3"
-              onClick={() => setIsVideoOpen(true)}
-            >
-              <Play />
-              Play Video
-            </Button>
+              {/* Video If any */}
+              <Button
+                variant="outline"
+                className="w-full mt-3"
+                onClick={() => setIsVideoOpen(true)}
+              >
+                <Play />
+                Play Video
+              </Button>
+            </div>
           </div>
 
           {/* ───── Category / Size Chart / In Stock ───── */}
-          <div className=" grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
             <Link
               href={`/categories/${product.category}`}
               className="flex items-center gap-1 underline"
@@ -167,17 +196,29 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             )}
           </div>
 
-          {/* ───── Size / Color / Quantity ───── */}
+          {/* ───── Size / Color / Quantity Selectors ───── */}
           <OptionSelectors
             sizes={["S", "M", "L", "XL"]}
             colors={["White", "Black", "Silver"]}
             maxQuantity={product.inStock}
+            selectedSize={selectedSize}
+            onSizeChange={setSelectedSize}
+            selectedColor={selectedColor}
+            onColorChange={setSelectedColor}
+            selectedQuantity={selectedQuantity}
+            onQuantityChange={setSelectedQuantity}
           />
 
           {/* ───── Buy Now & Add to Cart Buttons ───── */}
           <section className="w-full">
             <div className="mt-5 w-full grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button className="w-full" onClick={handleBuyNow}>
+              <Button
+                className="w-full"
+                onClick={handleBuyNow}
+                disabled={
+                  !selectedSize || !selectedColor || selectedQuantity < 1
+                }
+              >
                 <Tag />
                 Buy Now
               </Button>
@@ -185,6 +226,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                 className="w-full"
                 variant="outline"
                 onClick={handleAddToCart}
+                disabled={
+                  !selectedSize || !selectedColor || selectedQuantity < 1
+                }
               >
                 <BsBag />
                 Add to Cart
