@@ -1,27 +1,42 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
-// Define the allowable currency strings
+// Allowed currencies
 export type Currency = "NGN" | "USD" | "EUR" | "GBP";
 
-// Define our context shape:
 interface CurrencyContextValue {
   currency: Currency;
   setCurrency: (newCurrency: Currency) => void;
 }
 
-// Create the context (initially undefined):
 const CurrencyContext = createContext<CurrencyContextValue | undefined>(
   undefined
 );
 
-// Provider component that wraps the app (or at least wraps Header)
 export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // Initialize currency state here once
-  const [currency, setCurrency] = useState<Currency>("NGN");
+  const [currency, setCurrencyState] = useState<Currency>("NGN");
+
+  // On mount, read saved currency from localStorage (if any)
+  useEffect(() => {
+    const saved = localStorage.getItem("currency") as Currency | null;
+    if (saved && ["NGN", "USD", "EUR", "GBP"].includes(saved)) {
+      setCurrencyState(saved);
+    }
+  }, []);
+
+  const setCurrency = (newCurrency: Currency) => {
+    setCurrencyState(newCurrency);
+    localStorage.setItem("currency", newCurrency);
+  };
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency }}>
@@ -30,7 +45,6 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// Hook to consume the currency context:
 export function useCurrency(): CurrencyContextValue {
   const ctx = useContext(CurrencyContext);
   if (!ctx) {

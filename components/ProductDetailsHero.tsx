@@ -1,5 +1,3 @@
-// components/ProductDetailsHero.tsx
-
 "use client";
 
 import React, { useState } from "react";
@@ -19,6 +17,11 @@ import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { BsBag } from "react-icons/bs";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { useCurrency } from "@/lib/context/currencyContext";
+import { useExchangeRates } from "@/lib/hooks/useExchangeRates";
+import { formatAmount } from "@/lib/formatCurrency";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -36,7 +39,18 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
 
-  // NEW: Local state for selected options
+  // Currency conversion hooks
+  const { currency } = useCurrency();
+  const { convertFromNgn, isFetching } = useExchangeRates();
+  const convertedPrice = isFetching
+    ? null
+    : formatAmount(convertFromNgn(product.price, currency), currency);
+  const convertedBasePrice =
+    product.basePrice && !isFetching
+      ? formatAmount(convertFromNgn(product.basePrice, currency), currency)
+      : null;
+
+  // Local state for selected options
   const [selectedSize, setSelectedSize] = useState<string | "">("");
   const [selectedColor, setSelectedColor] = useState<string | "">("");
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
@@ -55,14 +69,13 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
       toast.error("Quantity must be at least 1.");
       return;
     }
-    // Add to cart for each unit
     for (let i = 0; i < selectedQuantity; i++) {
       addToCart(product, selectedColor, selectedSize);
     }
     toast.success("Added to cart");
   };
 
-  // Handler for “Buy Now”: add to cart + redirect to /checkout
+  // Handler for “Buy Now”
   const handleBuyNow = () => {
     if (!selectedSize) {
       toast.error("Please select a size before buying.");
@@ -137,17 +150,16 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                   />
                 </button>
               ))}
-
-              {/* Video If any */}
-              <Button
-                variant="outline"
-                className="w-full mt-3"
-                onClick={() => setIsVideoOpen(true)}
-              >
-                <Play />
-                Play Video
-              </Button>
             </div>
+            {/* Video If any */}
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={() => setIsVideoOpen(true)}
+            >
+              <Play />
+              Play Video
+            </Button>
           </div>
 
           {/* ───── Category / Size Chart / In Stock ───── */}
@@ -184,14 +196,26 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </p>
           </div>
 
-          {/* ───── Price & Base Price ───── */}
+          {/* ───── Price & Base Price (converted) ───── */}
           <div className="space-y-1 mt-5">
             <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              NGN {product.price.toLocaleString()}
+              {isFetching ? (
+                <span>
+                  <Skeleton className="h-6 w-24" />
+                </span>
+              ) : (
+                convertedPrice
+              )}
             </p>
             {product.basePrice && (
               <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                NGN {product.basePrice.toLocaleString()}
+                {isFetching ? (
+                  <span>
+                    <Skeleton className="h-4 w-20" />
+                  </span>
+                ) : (
+                  convertedBasePrice
+                )}
               </p>
             )}
           </div>
@@ -252,7 +276,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
       {isVideoOpen && (
         <VideoModal
           onClose={() => setIsVideoOpen(false)}
-          videoId="klKVm1FALhs?si=ad6AgSmIjc2QEqjq" // Dummy YouTube ID
+          videoId="klKVm1FALhs?si=ad6AgSmIjc2QEqjq"
         />
       )}
     </>

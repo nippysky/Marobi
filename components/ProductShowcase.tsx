@@ -22,7 +22,7 @@ interface ShowcaseProps {
 
 export const ProductShowcase: React.FC<ShowcaseProps> = ({ categories }) => {
   return (
-    <div className="space-y-20 mx-auto max-w-[1920px] py-20 px-5 md:px-8 lg:px-12">
+    <div className="space-y-20 mx-auto max-w-[1920px] py-20">
       {categories.map((category) => (
         <section key={category.name}>
           {/* ───────────────────────────────────────────────────────────

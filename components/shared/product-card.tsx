@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton"; // adjust path if needed
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrency } from "@/lib/context/currencyContext";
+import { useExchangeRates } from "@/lib/hooks/useExchangeRates";
+import { formatAmount } from "@/lib/formatCurrency";
 
 export interface Product {
   id: string;
   name: string;
   imageUrl: string;
-  price: number;
+  price: number; // in NGN
   category: string;
 }
 
@@ -18,6 +21,13 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const { currency } = useCurrency();
+  const { convertFromNgn, isFetching } = useExchangeRates();
+
+  // Compute converted price (in target currency) whenever quotes or selected currency change
+  const convertedPrice = isFetching
+    ? null
+    : formatAmount(convertFromNgn(product.price, currency), currency);
 
   return (
     <div className="group">
@@ -46,7 +56,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
       {/* 4. Price */}
       <p className="mt-1 text-[0.9rem] font-semibold text-gray-600 dark:text-gray-400">
-        NGN {product.price}
+        {isFetching ? <Skeleton className="h-4 w-16" /> : convertedPrice}
       </p>
     </div>
   );
