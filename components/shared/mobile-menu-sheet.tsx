@@ -10,13 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  AlignJustify,
-  UserRound,
-  Heart,
-  ShoppingCart,
-  PencilRuler,
-} from "lucide-react";
+import { AlignJustify, UserRound, Heart, PencilRuler } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 

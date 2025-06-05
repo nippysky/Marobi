@@ -19,11 +19,11 @@ export default function AllProducts() {
   const products: Product[] = shuffle(ALL_PRODUCTS);
 
   return (
-    <section className="flex flex-col lg:px-20 md:px-10 px-5">
+    <section className="flex flex-col">
       {/* Site Header */}
       <Header />
 
-      <div className="mt-10 pb-20">
+      <main className="mt-10 pb-20 lg:px-20 md:px-10 px-5 w-full">
         {/* Breadcrumbs */}
         <nav className="text-sm text-gray-600 mb-4">
           <Link href="/" className="hover:underline">
@@ -37,13 +37,11 @@ export default function AllProducts() {
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
             <Link key={product.id} href={`/product/${product.id}`}>
-          
-                <ProductCard product={product} />
-        
+              <ProductCard product={product} />
             </Link>
           ))}
         </div>
-      </div>
+      </main>
     </section>
   );
 }

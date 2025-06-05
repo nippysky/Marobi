@@ -54,7 +54,7 @@ export function CartSheet() {
         </button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-72">
+      <SheetContent side="right">
         <SheetHeader>
           <SheetTitle>Your Cart</SheetTitle>
         </SheetHeader>

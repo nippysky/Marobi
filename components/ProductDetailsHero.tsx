@@ -198,25 +198,18 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
           {/* ───── Price & Base Price (converted) ───── */}
           <div className="space-y-1 mt-5">
-            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {isFetching ? (
-                <span>
-                  <Skeleton className="h-6 w-24" />
-                </span>
-              ) : (
-                convertedPrice
-              )}
-            </p>
+            {/* Changed <p> to <div> to avoid nesting <div> inside <p> */}
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {isFetching ? <Skeleton className="h-6 w-24" /> : convertedPrice}
+            </div>
             {product.basePrice && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
+              <div className="text-sm text-gray-500 dark:text-gray-400 line-through">
                 {isFetching ? (
-                  <span>
-                    <Skeleton className="h-4 w-20" />
-                  </span>
+                  <Skeleton className="h-4 w-20" />
                 ) : (
                   convertedBasePrice
                 )}
-              </p>
+              </div>
             )}
           </div>
 

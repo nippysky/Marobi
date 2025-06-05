@@ -55,9 +55,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </h2>
 
       {/* 4. Price */}
-      <p className="mt-1 text-[0.9rem] font-semibold text-gray-600 dark:text-gray-400">
+      <div className="mt-1 text-[0.9rem] font-semibold text-gray-600 dark:text-gray-400">
         {isFetching ? <Skeleton className="h-4 w-16" /> : convertedPrice}
-      </p>
+      </div>
     </div>
   );
 };

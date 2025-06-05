@@ -33,10 +33,10 @@ export default async function CategoryPage({
   const products: Product[] = getProductsByCategory(slug);
 
   return (
-    <section className="flex flex-col lg:px-20 md:px-10 px-5">
+    <section className="flex flex-col">
       <Header />
 
-      <main className="mt-10">
+      <main className="mt-10 lg:px-20 md:px-10 px-5 w-full">
         {/* ───── Breadcrumb ───── */}
         <nav
           className="text-sm text-gray-600 dark:text-gray-400 mb-6"
@@ -65,24 +65,30 @@ export default async function CategoryPage({
           </ol>
         </nav>
 
-        {/* ───── Page Title & Description ───── */}
-        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          {category.name}
-        </h1>
-        {category.description && (
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            {category.description}
-          </p>
-        )}
+        <section className="w-full">
+          {/* ───── Page Title & Description ───── */}
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            {category.name}
+          </h1>
+          {category.description && (
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              {category.description}
+            </p>
+          )}
 
-        {/* ───── Products Grid ───── */}
-        <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 pb-10 lg:pb-0">
-          {products.map((prod) => (
-            <Link key={prod.id} href={`/product/${prod.id}`} className="block">
-              <ProductCard product={prod} />
-            </Link>
-          ))}
-        </div>
+          {/* ───── Products Grid ───── */}
+          <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 pb-10 lg:pb-0">
+            {products.map((prod) => (
+              <Link
+                key={prod.id}
+                href={`/product/${prod.id}`}
+                className="block"
+              >
+                <ProductCard product={prod} />
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
     </section>
   );

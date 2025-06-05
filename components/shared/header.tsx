@@ -105,28 +105,26 @@ export const Header: React.FC = () => {
       height: "auto",
       opacity: 1,
       y: 0,
-      transition: { duration: 0.3 },
+      transition: { duration: 0.2 },
       display: "block",
     },
     collapsed: {
       height: 0,
       opacity: 0,
       y: -20,
-      transition: { duration: 0.3 },
+      transition: { duration: 0.2 },
       transitionEnd: { display: "none" },
     },
   };
 
   // Placeholder user logic; replace with real auth hook
   const user = null as { name: string } | null;
-  const accountTooltip = user
-    ? `Hello, ${user.name}`
-    : "Login to your account";
+  const accountTooltip = user ? `Hello, ${user.name}` : "Login to your account";
 
   return (
     <>
       <motion.header
-        className="sticky top-0 inset-x-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-black"
+        className="sticky top-0 inset-x-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-black lg:px-20 md:px-10 px-5"
         variants={headerVariants}
         animate={isCollapsed ? "collapsed" : "expanded"}
         initial="expanded"
@@ -170,10 +168,10 @@ export const Header: React.FC = () => {
                         key={item.href}
                         href={item.href}
                         className={`
-                          text-sm tracking-wide
+                          text-[0.85rem] tracking-widest font-semibold uppercase
                           text-gray-700 dark:text-gray-300
-                          hover:underline 
-                          ${isActive ? "underline font-semibold" : ""}
+                          hover:underline transition-all duration-300 ease-in-out
+                          ${isActive ? "underline font-extrabold" : ""}
                         `}
                       >
                         {item.label}
@@ -320,17 +318,33 @@ export const Header: React.FC = () => {
                     initial="expanded"
                     animate={isCollapsed ? "collapsed" : "expanded"}
                   >
+                    {/* 1) Center wrapper for icon + placeholder/text */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <SearchIcon
+                        className="mr-2 text-gray-500 dark:text-gray-400"
+                        size={16}
+                      />
+                      <span className="text-sm text-gray-500 dark:text-gray-400 select-none">
+                        …Search for products
+                      </span>
+                    </div>
+
+                    {/* 2) Actual Input (readOnly) stretched full width, with enough left & right padding so that user text will never overlap the icon+placeholder */}
                     <Input
-                      placeholder="…Search for products"
+                      placeholder="" // we moved the placeholder into our flex block above
                       onFocus={() => setIsSearchOpen(true)}
-                      className="
-                        w-full rounded-full text-center
-                        placeholder-gray-500 dark:placeholder-gray-400
-                        bg-gray-100 dark:bg-gray-800
-                        focus:ring-0 focus:ring-offset-0 border-transparent
-                        text-sm py-2 cursor-pointer
-                      "
                       readOnly
+                      className="
+        w-full 
+        rounded-full 
+        bg-gray-100 dark:bg-gray-800
+        focus:ring-0 focus:ring-offset-0
+        py-2 
+        pl-4 pr-4    /* padding so that cursor/text doesn’t overlap icon/placeholder */
+        border border-gray-300
+        text-sm text-gray-900 dark:text-gray-100
+        cursor-pointer
+      "
                     />
                   </motion.div>
                 </div>
@@ -418,12 +432,12 @@ export const Header: React.FC = () => {
               {/* ROW 2: Centered Nav Links */}
               <motion.nav
                 aria-label="Main navigation"
-                className="mt-1 overflow-hidden"
+                className="mt-5 overflow-hidden"
                 variants={topNavVariants}
                 initial="expanded"
                 animate={isCollapsed ? "collapsed" : "expanded"}
               >
-                <ul className="flex justify-center space-x-10 py-2">
+                <ul className="flex justify-center space-x-28 py-5">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     return (
@@ -431,10 +445,10 @@ export const Header: React.FC = () => {
                         <Link
                           href={item.href}
                           className={`
-                            text-sm tracking-wide
-                            text-black dark:text-white
-                            hover:underline 
-                            ${isActive ? "underline font-semibold" : ""}
+                     text-[0.85rem] tracking-widest font-semibold uppercase
+                          text-gray-700 dark:text-gray-300
+                          hover:underline transition-all duration-300 ease-in-out
+                          ${isActive ? "underline font-extrabold" : ""}
                           `}
                         >
                           {item.label}
