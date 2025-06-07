@@ -41,10 +41,10 @@ export default async function ProductPage({
   const user = await getCurrentUser();
 
   return (
-    <section className="flex flex-col lg:px-20 md:px-10 px-5">
+    <section className="flex flex-col">
       <Header />
 
-      <main className="mt-10 space-y-12">
+      <main className="mt-10 space-y-12 lg:px-20 md:px-10 px-5">
         {/* ───── Breadcrumb ───── */}
         <nav
           className="text-sm text-gray-600 dark:text-gray-400 mb-4"

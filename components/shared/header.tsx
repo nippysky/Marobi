@@ -24,9 +24,13 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { WishlistSheet } from "./wishlist-sheet";
 import { useSearchModal } from "@/lib/context/searchModalContext";
 import { SearchModal } from "../SearchModal";
+import { getCurrentUser, User as AppUser } from "@/lib/session";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BrandIcon: React.FC = () => (
-  <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">M!</div>
+  <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
+    M!
+  </div>
 );
 
 const navItems: { label: string; href: string }[] = [
@@ -36,8 +40,6 @@ const navItems: { label: string; href: string }[] = [
     href: `/categories/${cat.slug}`,
   })),
 ];
-
-type User = { name: string };
 
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
@@ -49,7 +51,13 @@ export const Header: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const wishlistCount = useWishlistStore((s) => s.items.length);
 
-  useEffect(() => setMounted(true), []);
+  const [user, setUser] = useState<AppUser | null | undefined>(undefined);
+
+  useEffect(() => {
+    setMounted(true);
+    getCurrentUser().then((u) => setUser(u));
+  }, []);
+
   useEffect(() => {
     const onScroll = () => setIsCollapsed(window.scrollY > 2);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -99,8 +107,10 @@ export const Header: React.FC = () => {
     },
   };
 
-  const user = null as User | null;
-  const accountTooltip = user?.name ? `Hello, ${user.name}` : "Login to your account";
+  const accountTooltip = (() => {
+    if (user === undefined) return null;
+    return user ? `Hello, ${user.name}` : "Login to your account";
+  })();
 
   return (
     <>
@@ -112,6 +122,7 @@ export const Header: React.FC = () => {
         transition={{ type: "tween", duration: 0.2, ease: "easeInOut" }}
       >
         <div className="w-full max-w-[1920px] mx-auto">
+          {/* Desktop */}
           <div className="hidden lg:block">
             <motion.div
               className={`${isCollapsed ? "flex" : "hidden"} items-center justify-between h-16`}
@@ -129,7 +140,6 @@ export const Header: React.FC = () => {
                     <BrandIcon />
                   </Link>
                 </motion.div>
-
                 <div className="flex items-center space-x-6">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href;
@@ -137,7 +147,9 @@ export const Header: React.FC = () => {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`text-[0.75rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${isActive ? "underline font-extrabold" : ""}`}
+                        className={`text-[0.75rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${
+                          isActive ? "underline font-extrabold" : ""
+                        }`}
                       >
                         {item.label}
                       </Link>
@@ -148,6 +160,7 @@ export const Header: React.FC = () => {
 
               <div className="flex items-center space-x-6">
                 <CurrencySelector />
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <motion.div
@@ -168,6 +181,7 @@ export const Header: React.FC = () => {
                     <p>Search Products</p>
                   </TooltipContent>
                 </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -181,6 +195,7 @@ export const Header: React.FC = () => {
                     <p>View Size Chart</p>
                   </TooltipContent>
                 </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -191,29 +206,35 @@ export const Header: React.FC = () => {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{accountTooltip}</p>
+                    {accountTooltip === null ? (
+                      <Skeleton className="h-4 w-20" />
+                    ) : (
+                      <p>{accountTooltip}</p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-  <button
-  onClick={() => setIsWishlistOpen(true)}
-  className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
->
-  <Heart className="w-5 h-5" />
-  {mounted && wishlistCount > 0 && (
-    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-      {wishlistCount}
-    </span>
-  )}
-</button>
 
+                {user && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setIsWishlistOpen(true)}
+                        className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                      >
+                        <Heart className="w-5 h-5" />
+                        {mounted && wishlistCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                            {wishlistCount}
+                          </span>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View Wishlist</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Wishlist</p>
-                  </TooltipContent>
-                </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div>
@@ -262,6 +283,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-end space-x-6">
                   <CurrencySelector />
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -275,6 +297,7 @@ export const Header: React.FC = () => {
                       <p>View Size Chart</p>
                     </TooltipContent>
                   </Tooltip>
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -285,29 +308,35 @@ export const Header: React.FC = () => {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{accountTooltip}</p>
+                      {accountTooltip === null ? (
+                        <Skeleton className="h-4 w-20" />
+                      ) : (
+                        <p>{accountTooltip}</p>
+                      )}
                     </TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
- <button
-  onClick={() => setIsWishlistOpen(true)}
-  className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
->
-  <Heart className="w-5 h-5" />
-  {mounted && wishlistCount > 0 && (
-    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-      {wishlistCount}
-    </span>
-  )}
-</button>
 
+                  {user && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setIsWishlistOpen(true)}
+                          className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                        >
+                          <Heart className="w-5 h-5" />
+                          {mounted && wishlistCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              {wishlistCount}
+                            </span>
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>View Wishlist</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>View Wishlist</p>
-                    </TooltipContent>
-                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
@@ -334,7 +363,9 @@ export const Header: React.FC = () => {
                       <li key={item.href} className="list-none">
                         <Link
                           href={item.href}
-                          className={`text-[0.85rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${isActive ? "underline font-extrabold" : ""}`}
+                          className={`text-[0.85rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${
+                            isActive ? "underline font-extrabold" : ""
+                          }`}
                         >
                           {item.label}
                         </Link>
@@ -346,6 +377,7 @@ export const Header: React.FC = () => {
             </motion.div>
           </div>
 
+          {/* Mobile */}
           <div className="flex lg:hidden items-center justify-between h-16">
             <Link href="/">
               <BrandIcon />
@@ -365,23 +397,14 @@ export const Header: React.FC = () => {
                   <p>Search Products</p>
                 </TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <CartSheet />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>View Cart</p>
-                </TooltipContent>
-              </Tooltip>
+              <CartSheet />
               <MobileMenuSheet />
             </div>
           </div>
         </div>
       </motion.header>
 
-      {isOpen && <SearchModal/>}
+      {isOpen && <SearchModal />}
       <SizeChartModal />
       <AccountModal />
       <WishlistSheet open={isWishlistOpen} onOpenChange={setIsWishlistOpen} />

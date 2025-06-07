@@ -24,13 +24,13 @@ export async function getCurrentUser(): Promise<User | null> {
   // return null;
 
   // Or return a mock to see the form:
-  return  {
-    name: "Jane Doe",
-    email: "jane@example.com",
-    phone: "+234 801 234 5678",
-    location: "Lagos, Nigeria",
-    shippingAddress: "123 Main St, Lekki Phase 1, Lagos",
-    billingAddress: "123 Main St, Lekki Phase 1, Lagos",
-  };
-// return null
+  // return  {
+  //   name: "Jane Doe",
+  //   email: "jane@example.com",
+  //   phone: "+234 801 234 5678",
+  //   location: "Lagos, Nigeria",
+  //   shippingAddress: "123 Main St, Lekki Phase 1, Lagos",
+  //   billingAddress: "123 Main St, Lekki Phase 1, Lagos",
+  // };
+return null
 }

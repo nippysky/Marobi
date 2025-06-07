@@ -14,32 +14,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCartStore, CartItem } from "@/lib/store/cartStore";
 import { BsBag } from "react-icons/bs";
-
 import { useCurrency } from "@/lib/context/currencyContext";
-import { useExchangeRates } from "@/lib/hooks/useExchangeRates";
 import { formatAmount } from "@/lib/formatCurrency";
 
 export function CartSheet() {
-  // Prevent hydration mismatch
+  // Avoid hydration mismatches for the badge
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Cart store
+  // Cart data
   const items = useCartStore((s) => s.items);
-  const totalItemsCount = useCartStore((s) => s.totalItems());
-  const totalAmountValue = useCartStore((s) => s.totalAmount());
   const removeFromCart = useCartStore((s) => s.removeFromCart);
 
-  // Currency + exchange‐rates
   const { currency } = useCurrency();
-  const { convertFromNgn, isFetching } = useExchangeRates();
 
-  // Converted cart total
-  const convertedTotal = isFetching
-    ? null
-    : formatAmount(convertFromNgn(totalAmountValue, currency), currency);
+  // Pick effective per-unit price (discount if available)
+  const getEffectiveUnitPrice = (product: CartItem["product"]) =>
+    product.isDiscounted && product.discountPrices
+      ? product.discountPrices[currency]
+      : product.prices[currency];
+
+  // Totals
+  const totalItemsCount = items.reduce((acc, { quantity }) => acc + quantity, 0);
+  const totalPriceValue = items.reduce(
+    (sum, { product, quantity }) =>
+      sum + getEffectiveUnitPrice(product) * quantity,
+    0
+  );
+  const formattedTotal = formatAmount(totalPriceValue, currency);
 
   return (
     <Sheet>
@@ -54,7 +58,8 @@ export function CartSheet() {
         </button>
       </SheetTrigger>
 
-      <SheetContent side="right">
+      {/* Full-width on small screens, 1/4 width on md+ */}
+      <SheetContent side="right" className="w-full md:w-1/4">
         <SheetHeader>
           <SheetTitle>Your Cart</SheetTitle>
         </SheetHeader>
@@ -63,7 +68,7 @@ export function CartSheet() {
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
             <ShoppingCart className="w-12 h-12 mb-2 opacity-50" />
             <p>Your cart is empty</p>
-                 <Link href="/all-products" className="mt-4">
+            <Link href="/all-products" className="mt-4">
               <Button>Start Shopping</Button>
             </Link>
           </div>
@@ -73,25 +78,18 @@ export function CartSheet() {
             <div className="flex-1 overflow-y-auto px-2 py-4">
               <div className="flex flex-col space-y-4">
                 {items.map(({ product, quantity, color, size }: CartItem) => {
-                  // Convert each unit price
-                  const convertedItemPrice = isFetching
-                    ? null
-                    : formatAmount(
-                        convertFromNgn(product.price, currency),
-                        currency
-                      );
+                  const unitPrice = getEffectiveUnitPrice(product);
+                  const formattedUnit = formatAmount(unitPrice, currency);
 
                   return (
                     <div
                       key={`${product.id}-${color}-${size}`}
                       className="flex items-start bg-white dark:bg-gray-800 rounded-lg shadow-sm"
                     >
-                      {/* Clickable area → product details */}
                       <Link
                         href={`/product/${product.id}`}
                         className="flex-1 flex items-start space-x-3 p-3"
                       >
-                        {/* Product image */}
                         <div className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100">
                           <Image
                             src={product.imageUrl}
@@ -100,8 +98,6 @@ export function CartSheet() {
                             className="object-cover"
                           />
                         </div>
-
-                        {/* Text details */}
                         <div className="flex-1 flex flex-col">
                           <p
                             className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1"
@@ -110,13 +106,7 @@ export function CartSheet() {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            {isFetching ? (
-                              <span>…</span>
-                            ) : (
-                              <>
-                                {convertedItemPrice} × {quantity}
-                              </>
-                            )}
+                            {formattedUnit} × {quantity}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                             Color: <span className="font-medium">{color}</span>{" "}
@@ -125,9 +115,10 @@ export function CartSheet() {
                         </div>
                       </Link>
 
-                      {/* Remove button */}
                       <button
-                        onClick={() => removeFromCart(product.id, color, size)}
+                        onClick={() =>
+                          removeFromCart(product.id, color, size)
+                        }
                         className="m-3 p-1 text-gray-500 hover:text-red-600"
                         aria-label="Remove item"
                       >
@@ -142,7 +133,7 @@ export function CartSheet() {
             {/* ─── Total & Checkout ─── */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {isFetching ? <span>…</span> : <>Total: {convertedTotal}</>}
+                Total: {formattedTotal}
               </p>
               <Button
                 className="w-full mt-3"

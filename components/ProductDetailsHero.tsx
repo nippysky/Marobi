@@ -7,22 +7,20 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import type { Product } from "@/lib/products";
+import type { User } from "@/lib/session";
 import { getCategoryBySlug } from "@/lib/constants/categories";
 import OptionSelectors from "./OptionSelectors";
 import { BiCategory } from "react-icons/bi";
 import { BadgeCheck, Heart, PencilRuler, Play, Tag } from "lucide-react";
 import { Button } from "./ui/button";
 import { VideoModal } from "./YoutubeVideoModal";
+import { Skeleton } from "./ui/skeleton";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { useAccountModal } from "@/lib/context/accountModalContext";
-
-// If you have a User type in your session utility, import it:
-import type { User } from "@/lib/session";
 import { formatAmount } from "@/lib/formatCurrency";
-import { Skeleton } from "./ui/skeleton";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -34,20 +32,20 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   user,
 }) => {
   const [featuredImage, setFeaturedImage] = useState(product.imageUrl);
+  const [imgLoading, setImgLoading] = useState(true);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-
-       const [imgLoading, setImgLoading] = useState(true);
 
   const router = useRouter();
   const { openSizeChart } = useSizeChart();
   const addToCart = useCartStore((s) => s.addToCart);
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
-  const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
-
+  const isWishlisted = useWishlistStore((s) =>
+    s.isWishlisted(product.id)
+  );
   const { currency } = useCurrency();
   const { openModal: openAccountModal } = useAccountModal();
 
-  // Compute price vs discount/base
+  // Pricing
   const currentPrice = formatAmount(
     product.isDiscounted && product.discountPrices
       ? product.discountPrices[currency]
@@ -59,24 +57,31 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
       ? formatAmount(product.basePrices[currency], currency)
       : null;
 
-  // prepare dynamic variant choices
+  // Variants & stock
   const colors = product.variants.map((v) => v.color);
-  const sizesForColor = (color: string) => {
-    const v = product.variants.find((v) => v.color === color);
-    return v ? v.sizes.map((s) => s.size) : [];
-  };
+  const sizesForColor = (color: string) =>
+    product.variants
+      .find((v) => v.color === color)
+      ?.sizes.map((s) => s.size) || [];
+  const totalStock = product.variants
+    .flatMap((v) => v.sizes)
+    .reduce((sum, s) => sum + s.inStock, 0);
+  const outOfStock = totalStock === 0;
 
-  // local selectors
-  const [selectedColor, setSelectedColor] = useState<string>("");
-  const [selectedSize, setSelectedSize] = useState<string>("");
-  const [customSize, setCustomSize] = useState<string>("");
+  // Local selectors
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [customSize, setCustomSize] = useState("");
   const [selectedQuantity, setSelectedQuantity] = useState(1);
 
-  // choose size: either a selected or a custom
   const sizeToUse =
     product.isSizeModifiable && customSize ? customSize : selectedSize;
 
   const validate = () => {
+    if (outOfStock) {
+      toast.error("Sorry, this item is out of stock.");
+      return false;
+    }
     if (!selectedColor) {
       toast.error("Please select a color.");
       return false;
@@ -109,16 +114,13 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   };
 
   const handleAddToWishlist = () => {
-    // if you want to gate login here:
     if (!user) {
       openAccountModal();
       return;
     }
-    if (!isWishlisted) {
+    if (!isWishlisted && !outOfStock) {
       addToWishlist(product);
       toast.success("Added to wishlist");
-    } else {
-      toast.error("Already in wishlist");
     }
   };
 
@@ -128,30 +130,25 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-        {/* ─── Featured Image */}
+        {/* Featured Image */}
         <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
-
-   
-
-<Skeleton
-  className={`
-    absolute inset-0 h-full w-full
-    ${imgLoading ? "visible" : "hidden"}
-  `}
-/>
-
+          <Skeleton
+            className={`absolute inset-0 h-full w-full ${
+              imgLoading ? "visible" : "hidden"
+            }`}
+          />
           <Image
             src={featuredImage}
-              onLoad={() => setImgLoading(false)}
             alt={product.name}
             fill
             className="object-cover object-center"
             priority
             unoptimized
+            onLoad={() => setImgLoading(false)}
           />
         </div>
 
-        {/* ─── Details Column */}
+        {/* Details */}
         <div className="flex flex-col space-y-6">
           {/* More Photos */}
           <div className="space-y-2">
@@ -159,24 +156,24 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
               More Photos
             </p>
             <div className="grid grid-cols-3 gap-3">
-              {product.moreImages.map((url, idx) => (
+              {product.moreImages.map((thumbUrl, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setFeaturedImage(url)}
+                  type="button"
+                  onClick={() => {
+                    setFeaturedImage(thumbUrl);
+                    setImgLoading(true);
+                  }}
                   className={`
-                    relative w-full aspect-[4/5] rounded-lg bg-gray-100
-                    ${
-                      featuredImage === url
-                        ? "ring-2 ring-green-500"
-                        : ""
-                    }
+                    relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
+                    ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
                   `}
                 >
                   <Image
-                    src={url}
-                    alt={`${product.name} thumb ${idx + 1}`}
+                    src={thumbUrl}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-cover"
                   />
                 </button>
               ))}
@@ -190,14 +187,14 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </Button>
           </div>
 
-          {/* Category / Stock */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
+          {/* Category / Size Chart / Stock */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-5 text-sm text-gray-700 dark:text-gray-300">
             <Link
               href={`/categories/${product.category}`}
               className="flex items-center gap-1 underline"
             >
               <BiCategory className="w-7 h-7" />
-              <p className="text-[1rem] uppercase font-semibold tracking-wider truncate">
+              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
 
               {categoryName}
               </p>
@@ -207,20 +204,22 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
               className="flex items-center gap-1 underline"
             >
               <PencilRuler className="w-7 h-7" />
-                  <p className="text-[1rem] uppercase font-semibold tracking-wider">
 
-              Size Chart
-                  </p>
+                <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
+
+              See Size Chart </p>
             </button>
-            <div className="flex items-center gap-1">
+            <div
+              className={`flex items-center gap-1 ${
+                outOfStock
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-gray-700 dark:text-gray-300"
+              }`}
+            >
               <BadgeCheck className="w-7 h-7" />
-                  <p className="text-[1rem] uppercase font-semibold tracking-wider">
+                <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
 
-              {product.variants
-                .flatMap((v) => v.sizes)
-                .reduce((sum, s) => sum + s.inStock, 0)}{" "}
-              in Stock
-                  </p>
+              {totalStock} in Stock</p>
             </div>
           </div>
 
@@ -246,13 +245,11 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             )}
           </div>
 
-          {/* Option Selectors */}
+          {/* Variant & Quantity Selectors */}
           <OptionSelectors
             sizes={sizesForColor(selectedColor)}
             colors={colors}
-            maxQuantity={product.variants
-              .flatMap((v) => v.sizes)
-              .reduce((sum, s) => sum + s.inStock, 0)}
+            maxQuantity={totalStock}
             selectedSize={selectedSize}
             onSizeChange={setSelectedSize}
             selectedColor={selectedColor}
@@ -264,7 +261,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             onQuantityChange={setSelectedQuantity}
           />
 
-          {/* Custom Size Field */}
+          {/* Custom Size Input */}
           {product.isSizeModifiable && (
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -275,50 +272,57 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                 value={customSize}
                 onChange={(e) => setCustomSize(e.target.value)}
                 placeholder="Enter your size"
-                className="mt-1 block w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring focus:ring-green-200"
+                className="mt-1 w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring focus:ring-green-200"
               />
             </div>
           )}
 
           {/* Actions */}
-          <section className="w-full">
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button
-                className="w-full text-sm"
-                onClick={handleBuyNow}
-                disabled={!selectedColor || !sizeToUse || selectedQuantity < 1}
-              >
-                <Tag /> Buy Now
-              </Button>
-              <Button
-                className="w-full text-sm"
-                variant="outline"
-                onClick={handleAddToCart}
-                disabled={!selectedColor || !sizeToUse || selectedQuantity < 1}
-              >
-                Add to Cart
-              </Button>
-            </div>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button
+              onClick={handleBuyNow}
+              disabled={
+                outOfStock ||
+                !selectedColor ||
+                !sizeToUse ||
+                selectedQuantity < 1
+              }
+            >
+              <Tag /> Buy Now
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleAddToCart}
+              disabled={
+                outOfStock ||
+                !selectedColor ||
+                !sizeToUse ||
+                selectedQuantity < 1
+              }
+            >
+              Add to Cart
+            </Button>
+          </div>
 
-            {/* Wishlist (only if logged in) */}
-            {user && (
-              <Button
-                className="w-full mt-5 text-sm"
-                variant="secondary"
-                onClick={handleAddToWishlist}
-                disabled={isWishlisted}
-              >
-                <Heart /> {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
-              </Button>
-            )}
-          </section>
+          {/* Wishlist */}
+          {user && (
+            <Button
+              variant="secondary"
+              className="mt-4"
+              onClick={handleAddToWishlist}
+              disabled={outOfStock || isWishlisted}
+            >
+              <Heart /> {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Video Modal */}
       {isVideoOpen && (
         <VideoModal
           onClose={() => setIsVideoOpen(false)}
-          videoId="klKVm1FALhs"
+          videoId="klKVm1FALhs?si=ad6AgSmIjc2QEqjq"
         />
       )}
     </>

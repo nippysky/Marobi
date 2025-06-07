@@ -1,4 +1,4 @@
-// store/cartStore.ts
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Product } from "@/lib/products";
@@ -17,30 +17,16 @@ export interface CartItem {
 interface CartStoreState {
   items: CartItem[];
 
-  /**
-   * Add a Product to the cart (or increment quantity if already present).
-   * Now also takes color and size as parameters.
-   */
   addToCart: (product: Product, color: string, size: string) => void;
-
-  // Remove a Product (with a specific color & size) from the cart
   removeFromCart: (productId: string, color: string, size: string) => void;
-
-  // Directly set a new quantity for a given product ID + color + size (removes if ≤ 0)
   updateQuantity: (
     productId: string,
     color: string,
     size: string,
     newQty: number
   ) => void;
-
-  // Empty the entire cart
   clearCart: () => void;
-
-  // Computed total number of items (sum of all quantities)
   totalItems: () => number;
-
-  // Computed total price (sum of product.price × quantity)
   totalAmount: () => number;
 }
 
@@ -49,9 +35,8 @@ export const useCartStore = create<CartStoreState>()(
     (set, get) => ({
       items: [],
 
-      addToCart: (product: Product, color: string, size: string) => {
+      addToCart: (product, color, size) => {
         const items = get().items;
-        // We’ll identify an item uniquely by product.id + color + size
         const idx = items.findIndex(
           (ci) =>
             ci.product.id === product.id &&
@@ -59,25 +44,30 @@ export const useCartStore = create<CartStoreState>()(
             ci.size === size
         );
 
+        // find the correct variant & size entry
+        const variant = product.variants.find((v) => v.color === color);
+        const sizeEntry = variant?.sizes.find((s) => s.size === size);
+        const maxStock = sizeEntry?.inStock ?? Infinity;
+
         if (idx !== -1) {
-          // Already in cart with the same color & size → increment quantity (capped at inStock)
+          // increment but cap at that size's inStock
           const existing = items[idx];
-          const newQty = Math.min(existing.quantity + 1, product.inStock);
-          const updatedItems = [
+          const newQty = Math.min(existing.quantity + 1, maxStock);
+          const updated = [
             ...items.slice(0, idx),
             { product, quantity: newQty, color, size },
             ...items.slice(idx + 1),
           ];
-          set({ items: updatedItems });
+          set({ items: updated });
         } else {
-          // Not yet in cart (for this product/color/size) → add with quantity = 1
+          // new item → quantity = 1
           set({
             items: [...items, { product, quantity: 1, color, size }],
           });
         }
       },
 
-      removeFromCart: (productId: string, color: string, size: string) => {
+      removeFromCart: (productId, color, size) => {
         const items = get().items;
         set({
           items: items.filter(
@@ -91,12 +81,7 @@ export const useCartStore = create<CartStoreState>()(
         });
       },
 
-      updateQuantity: (
-        productId: string,
-        color: string,
-        size: string,
-        newQty: number
-      ) => {
+      updateQuantity: (productId, color, size, newQty) => {
         const items = get().items;
         const idx = items.findIndex(
           (ci) =>
@@ -106,8 +91,15 @@ export const useCartStore = create<CartStoreState>()(
         );
         if (idx === -1) return;
 
-        if (newQty <= 0) {
-          // Remove if newQty ≤ 0
+        const productInCart = items[idx].product;
+        // find that variant's stock
+        const variant = productInCart.variants.find((v) => v.color === color);
+        const sizeEntry = variant?.sizes.find((s) => s.size === size);
+        const maxStock = sizeEntry?.inStock ?? Infinity;
+        const cappedQty = Math.min(Math.max(newQty, 0), maxStock);
+
+        if (cappedQty <= 0) {
+          // remove if zero
           set({
             items: items.filter(
               (ci) =>
@@ -119,15 +111,12 @@ export const useCartStore = create<CartStoreState>()(
             ),
           });
         } else {
-          // Cap at inStock
-          const productInCart = items[idx].product;
-          const cappedQty = Math.min(newQty, productInCart.inStock);
-          const updatedItems = [
+          const updated = [
             ...items.slice(0, idx),
             { product: productInCart, quantity: cappedQty, color, size },
             ...items.slice(idx + 1),
           ];
-          set({ items: updatedItems });
+          set({ items: updated });
         }
       },
 
@@ -136,17 +125,19 @@ export const useCartStore = create<CartStoreState>()(
       },
 
       totalItems: () => {
-        return get().items.reduce(
-          (sum, ci) => sum + ci.quantity,
-          0
-        );
+        return get().items.reduce((sum, ci) => sum + ci.quantity, 0);
       },
 
+      // returns total in NGN (base currency)
       totalAmount: () => {
-        return get().items.reduce(
-          (sum, ci) => sum + ci.product.price * ci.quantity,
-          0
-        );
+        return get().items.reduce((sum, { product, quantity }) => {
+          // pick NGN price, or fallback to USD if missing
+          const unitPrice =
+            product.prices.NGN ??
+            product.prices.USD ??
+            Object.values(product.prices)[0];
+          return sum + unitPrice * quantity;
+        }, 0);
       },
     }),
     {
