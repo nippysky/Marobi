@@ -7,6 +7,7 @@ import React from "react";
 import { CurrencyProvider } from "@/lib/context/currencyContext";
 import { SizeChartProvider } from "@/lib/context/sizeChartcontext";
 import { AccountModalProvider } from "@/lib/context/accountModalContext";
+import { SearchModalProvider } from "@/lib/context/searchModalContext";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -85,8 +86,10 @@ export default function RootLayout({
         className={`${openSans.variable} antialiased w-full max-w-[1920px] mx-auto`}
       >
         <CurrencyProvider>
-          <SizeChartProvider>
+          <SearchModalProvider>
 
+
+          <SizeChartProvider>
             <AccountModalProvider>
 
 
@@ -100,6 +103,7 @@ export default function RootLayout({
             </ThemeProvider>
             </AccountModalProvider>
           </SizeChartProvider>
+          </SearchModalProvider>
         </CurrencyProvider>
         <Toaster />
       </body>
