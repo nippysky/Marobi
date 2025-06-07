@@ -63,6 +63,7 @@ export const AccountModal: React.FC = () => {
         <>
           {/* Backdrop */}
           <motion.div
+              style={{ zIndex: 600000000 }}
             key="backdrop"
             className="fixed inset-0 z-50 bg-black/50"
             variants={backdropVariants}
@@ -73,29 +74,30 @@ export const AccountModal: React.FC = () => {
             onClick={closeModal}
           />
 
-          {/* Modal */}
+          {/* Modal Container */}
           <motion.div
+              style={{ zIndex: 600000000 }}
             key="container"
-            className="fixed inset-0 z-50 flex h-screen w-screen overflow-hidden"
+            className="fixed inset-0 z-50 flex flex-col md:flex-row h-full w-full overflow-x-hidden overflow-y-auto"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             transition={{ type: "tween", duration: 0.3 }}
           >
-            {/* Left image (non-scrollable) */}
+            {/* Left Image (hidden on mobile) */}
             <div
-              className="hidden md:block md:w-1/2 bg-cover bg-center"
+              className="hidden md:flex md:basis-1/2 bg-cover bg-center"
               style={{
                 backgroundImage:
                   'url("https://plus.unsplash.com/premium_photo-1732464750981-2dfaa38f7d3a?w=1200&auto=format&fit=crop&q=80")',
               }}
             />
 
-            {/* Right panel */}
-            <div className="w-full md:w-1/2 flex flex-col bg-white dark:bg-black">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            {/* Right Panel */}
+            <div className="flex-1 md:basis-1/2 flex flex-col bg-white dark:bg-black">
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   My Account
                 </h2>
@@ -109,35 +111,34 @@ export const AccountModal: React.FC = () => {
                 </button>
               </div>
 
-              {/* Scrollable content */}
-              <ScrollArea className="flex-1">
+              {/* Scrollable Content */}
+              <ScrollArea className="flex-1 overflow-y-auto">
                 <div className="w-full mx-auto px-6 py-8">
                   {loading ? (
                     <p className="text-center text-gray-500 dark:text-gray-400">
                       Loading…
                     </p>
                   ) : user ? (
-                    // If already logged in, show account form
-                    <AccountForm
-                      user={user}
-                    />
+                    <AccountForm user={user} />
                   ) : mode === "login" ? (
-
                     <section className="w-full lg:px-32 px-0 mt-10">
-<h1 className="font-bold text-[1.5rem] my-5">Login Your Account</h1>
+                      <h1 className="font-bold text-[1.5rem] my-5">
+                        Login Your Account
+                      </h1>
                       <LoginForm
                         onSuccess={handleSuccess}
                         onSwitch={() => setMode("register")}
                       />
                     </section>
                   ) : (
-
-                        <section className="w-full lg:px-32 px-0 mt-10">
-                      <h1 className="font-bold text-[1.5rem] my-5">Register A New Account</h1>
-                          <RegisterForm
-                            onSuccess={handleSuccess}
-                            onSwitch={() => setMode("login")}
-                          />
+                    <section className="w-full lg:px-32 px-0 mt-10">
+                      <h1 className="font-bold text-[1.5rem] my-5">
+                        Register A New Account
+                      </h1>
+                      <RegisterForm
+                        onSuccess={handleSuccess}
+                        onSwitch={() => setMode("login")}
+                      />
                     </section>
                   )}
                 </div>
