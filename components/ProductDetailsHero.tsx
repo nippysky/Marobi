@@ -16,22 +16,27 @@ import { VideoModal } from "./YoutubeVideoModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
-import { BsBag } from "react-icons/bs";
-import { Skeleton } from "@/components/ui/skeleton";
-
 import { useCurrency } from "@/lib/context/currencyContext";
-import { useExchangeRates } from "@/lib/hooks/useExchangeRates";
+import { useAccountModal } from "@/lib/context/accountModalContext";
+
+// If you have a User type in your session utility, import it:
+import type { User } from "@/lib/session";
 import { formatAmount } from "@/lib/formatCurrency";
+import { Skeleton } from "./ui/skeleton";
 
 interface ProductDetailHeroProps {
   product: Product;
+  user: User | null;
 }
 
 export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   product,
+  user,
 }) => {
-  const [featuredImage, setFeaturedImage] = useState<string>(product.imageUrl);
+  const [featuredImage, setFeaturedImage] = useState(product.imageUrl);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+       const [imgLoading, setImgLoading] = useState(true);
 
   const router = useRouter();
   const { openSizeChart } = useSizeChart();
@@ -39,64 +44,76 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
 
-  // Currency conversion hooks
   const { currency } = useCurrency();
-  const { convertFromNgn, isFetching } = useExchangeRates();
-  const convertedPrice = isFetching
-    ? null
-    : formatAmount(convertFromNgn(product.price, currency), currency);
-  const convertedBasePrice =
-    product.basePrice && !isFetching
-      ? formatAmount(convertFromNgn(product.basePrice, currency), currency)
+  const { openModal: openAccountModal } = useAccountModal();
+
+  // Compute price vs discount/base
+  const currentPrice = formatAmount(
+    product.isDiscounted && product.discountPrices
+      ? product.discountPrices[currency]
+      : product.prices[currency],
+    currency
+  );
+  const basePrice =
+    product.isDiscounted && product.basePrices
+      ? formatAmount(product.basePrices[currency], currency)
       : null;
 
-  // Local state for selected options
-  const [selectedSize, setSelectedSize] = useState<string | "">("");
-  const [selectedColor, setSelectedColor] = useState<string | "">("");
-  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  // prepare dynamic variant choices
+  const colors = product.variants.map((v) => v.color);
+  const sizesForColor = (color: string) => {
+    const v = product.variants.find((v) => v.color === color);
+    return v ? v.sizes.map((s) => s.size) : [];
+  };
 
-  // Handler for “Add to Cart” with validation
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast.error("Please select a size.");
-      return;
-    }
+  // local selectors
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [customSize, setCustomSize] = useState<string>("");
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+
+  // choose size: either a selected or a custom
+  const sizeToUse =
+    product.isSizeModifiable && customSize ? customSize : selectedSize;
+
+  const validate = () => {
     if (!selectedColor) {
       toast.error("Please select a color.");
-      return;
+      return false;
+    }
+    if (!sizeToUse) {
+      toast.error("Please select or enter a size.");
+      return false;
     }
     if (selectedQuantity < 1) {
       toast.error("Quantity must be at least 1.");
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!validate()) return;
     for (let i = 0; i < selectedQuantity; i++) {
-      addToCart(product, selectedColor, selectedSize);
+      addToCart(product, selectedColor, sizeToUse);
     }
     toast.success("Added to cart");
   };
 
-  // Handler for “Buy Now”
   const handleBuyNow = () => {
-    if (!selectedSize) {
-      toast.error("Please select a size before buying.");
-      return;
-    }
-    if (!selectedColor) {
-      toast.error("Please select a color before buying.");
-      return;
-    }
-    if (selectedQuantity < 1) {
-      toast.error("Quantity must be at least 1.");
-      return;
-    }
+    if (!validate()) return;
     for (let i = 0; i < selectedQuantity; i++) {
-      addToCart(product, selectedColor, selectedSize);
+      addToCart(product, selectedColor, sizeToUse);
     }
     router.push("/checkout");
   };
 
-  // Handler for “Add to Wishlist”
   const handleAddToWishlist = () => {
+    // if you want to gate login here:
+    if (!user) {
+      openAccountModal();
+      return;
+    }
     if (!isWishlisted) {
       addToWishlist(product);
       toast.success("Added to wishlist");
@@ -105,17 +122,27 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
     }
   };
 
-  // Lookup category name
   const categoryMeta = getCategoryBySlug(product.category);
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
 
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-        {/* ─── Left Column: Featured Image ───────────────────────────────────────── */}
-        <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100">
+        {/* ─── Featured Image */}
+        <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
+
+   
+
+<Skeleton
+  className={`
+    absolute inset-0 h-full w-full
+    ${imgLoading ? "visible" : "hidden"}
+  `}
+/>
+
           <Image
             src={featuredImage}
+              onLoad={() => setImgLoading(false)}
             alt={product.name}
             fill
             className="object-cover object-center"
@@ -124,69 +151,80 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
           />
         </div>
 
-        {/* ─── Right Column: More Photos + Meta + Details ───────────────────────── */}
+        {/* ─── Details Column */}
         <div className="flex flex-col space-y-6">
-          {/* ───── “More Photos” Responsive Grid ───── */}
+          {/* More Photos */}
           <div className="space-y-2">
             <p className="text-base font-medium text-gray-700 dark:text-gray-300">
               More Photos
             </p>
             <div className="grid grid-cols-3 gap-3">
-              {product.moreImages.map((thumbUrl, idx) => (
+              {product.moreImages.map((url, idx) => (
                 <button
                   key={idx}
-                  type="button"
-                  onClick={() => setFeaturedImage(thumbUrl)}
+                  onClick={() => setFeaturedImage(url)}
                   className={`
-                    relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
-                    ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
+                    relative w-full aspect-[4/5] rounded-lg bg-gray-100
+                    ${
+                      featuredImage === url
+                        ? "ring-2 ring-green-500"
+                        : ""
+                    }
                   `}
                 >
                   <Image
-                    src={thumbUrl}
-                    alt={`${product.name} thumbnail ${idx + 1}`}
+                    src={url}
+                    alt={`${product.name} thumb ${idx + 1}`}
                     fill
-                    className="object-cover"
+                    className="object-cover rounded-lg"
                   />
                 </button>
               ))}
             </div>
-            {/* Video If any */}
             <Button
               variant="outline"
               className="w-full mt-3"
               onClick={() => setIsVideoOpen(true)}
             >
-              <Play />
-              Play Video
+              <Play /> Play Video
             </Button>
           </div>
 
-          {/* ───── Category / Size Chart / In Stock ───── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
+          {/* Category / Stock */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-5 text-sm text-gray-700 dark:text-gray-300 mt-5">
             <Link
               href={`/categories/${product.category}`}
               className="flex items-center gap-1 underline"
             >
-              <BiCategory className="w-5 h-5" />
-              {categoryName}
-            </Link>
+              <BiCategory className="w-7 h-7" />
+              <p className="text-[1rem] uppercase font-semibold tracking-wider truncate">
 
+              {categoryName}
+              </p>
+            </Link>
             <button
               onClick={openSizeChart}
               className="flex items-center gap-1 underline"
             >
-              <PencilRuler className="w-5 h-5" />
-              See Size Chart
-            </button>
+              <PencilRuler className="w-7 h-7" />
+                  <p className="text-[1rem] uppercase font-semibold tracking-wider">
 
+              Size Chart
+                  </p>
+            </button>
             <div className="flex items-center gap-1">
-              <BadgeCheck className="w-5 h-5" />
-              {product.inStock} in Stock
+              <BadgeCheck className="w-7 h-7" />
+                  <p className="text-[1rem] uppercase font-semibold tracking-wider">
+
+              {product.variants
+                .flatMap((v) => v.sizes)
+                .reduce((sum, s) => sum + s.inStock, 0)}{" "}
+              in Stock
+                  </p>
             </div>
           </div>
 
-          {/* ───── Title & Description ───── */}
+          {/* Title & Description */}
           <div className="space-y-3 mt-5">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
               {product.name}
@@ -196,80 +234,91 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </p>
           </div>
 
-          {/* ───── Price & Base Price (converted) ───── */}
+          {/* Price & Base Price */}
           <div className="space-y-1 mt-5">
-            {/* Changed <p> to <div> to avoid nesting <div> inside <p> */}
             <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {isFetching ? <Skeleton className="h-6 w-24" /> : convertedPrice}
+              {currentPrice}
             </div>
-            {product.basePrice && (
+            {basePrice && (
               <div className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                {isFetching ? (
-                  <Skeleton className="h-4 w-20" />
-                ) : (
-                  convertedBasePrice
-                )}
+                {basePrice}
               </div>
             )}
           </div>
 
-          {/* ───── Size / Color / Quantity Selectors ───── */}
+          {/* Option Selectors */}
           <OptionSelectors
-            sizes={["S", "M", "L", "XL"]}
-            colors={["White", "Black", "Silver"]}
-            maxQuantity={product.inStock}
+            sizes={sizesForColor(selectedColor)}
+            colors={colors}
+            maxQuantity={product.variants
+              .flatMap((v) => v.sizes)
+              .reduce((sum, s) => sum + s.inStock, 0)}
             selectedSize={selectedSize}
             onSizeChange={setSelectedSize}
             selectedColor={selectedColor}
-            onColorChange={setSelectedColor}
+            onColorChange={(c) => {
+              setSelectedColor(c);
+              setSelectedSize("");
+            }}
             selectedQuantity={selectedQuantity}
             onQuantityChange={setSelectedQuantity}
           />
 
-          {/* ───── Buy Now & Add to Cart Buttons ───── */}
+          {/* Custom Size Field */}
+          {product.isSizeModifiable && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Custom Size
+              </label>
+              <input
+                type="text"
+                value={customSize}
+                onChange={(e) => setCustomSize(e.target.value)}
+                placeholder="Enter your size"
+                className="mt-1 block w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring focus:ring-green-200"
+              />
+            </div>
+          )}
+
+          {/* Actions */}
           <section className="w-full">
-            <div className="mt-5 w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
               <Button
-                className="w-full"
+                className="w-full text-sm"
                 onClick={handleBuyNow}
-                disabled={
-                  !selectedSize || !selectedColor || selectedQuantity < 1
-                }
+                disabled={!selectedColor || !sizeToUse || selectedQuantity < 1}
               >
-                <Tag />
-                Buy Now
+                <Tag /> Buy Now
               </Button>
               <Button
-                className="w-full"
+                className="w-full text-sm"
                 variant="outline"
                 onClick={handleAddToCart}
-                disabled={
-                  !selectedSize || !selectedColor || selectedQuantity < 1
-                }
+                disabled={!selectedColor || !sizeToUse || selectedQuantity < 1}
               >
-                <BsBag />
                 Add to Cart
               </Button>
             </div>
 
-            {/* Add to Wishlist */}
-            <Button
-              className="w-full mt-5"
-              variant="secondary"
-              onClick={handleAddToWishlist}
-            >
-              <Heart />
-              {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
-            </Button>
+            {/* Wishlist (only if logged in) */}
+            {user && (
+              <Button
+                className="w-full mt-5 text-sm"
+                variant="secondary"
+                onClick={handleAddToWishlist}
+                disabled={isWishlisted}
+              >
+                <Heart /> {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
+              </Button>
+            )}
           </section>
         </div>
       </div>
 
-      {/* Render VideoModal if needed */}
       {isVideoOpen && (
         <VideoModal
           onClose={() => setIsVideoOpen(false)}
-          videoId="klKVm1FALhs?si=ad6AgSmIjc2QEqjq"
+          videoId="klKVm1FALhs"
         />
       )}
     </>

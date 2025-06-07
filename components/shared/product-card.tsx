@@ -4,16 +4,9 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrency } from "@/lib/context/currencyContext";
-import { useExchangeRates } from "@/lib/hooks/useExchangeRates";
 import { formatAmount } from "@/lib/formatCurrency";
+import { Product } from "@/lib/products";
 
-export interface Product {
-  id: string;
-  name: string;
-  imageUrl: string;
-  price: number; // in NGN
-  category: string;
-}
 
 interface ProductCardProps {
   product: Product;
@@ -22,20 +15,25 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { currency } = useCurrency();
-  const { convertFromNgn, isFetching } = useExchangeRates();
 
-  // Compute converted price (in target currency) whenever quotes or selected currency change
-  const convertedPrice = isFetching
-    ? null
-    : formatAmount(convertFromNgn(product.price, currency), currency);
+  // pick the current price and (optional) was‐price
+  const currentRaw = product.isDiscounted
+    ? product.discountPrices![currency]
+    : product.prices[currency];
+
+  const wasRaw =
+    product.isDiscounted && product.basePrices
+      ? product.basePrices[currency]
+      : null;
+
+  const formattedPrice = formatAmount(currentRaw, currency);
+  const formattedWas = wasRaw ? formatAmount(wasRaw, currency) : null;
 
   return (
     <div className="group">
-      {/* 1. Skeleton placeholder (shown while image loading) */}
+      {/* Image + skeleton */}
       <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100">
         {isLoading && <Skeleton className="absolute inset-0 h-full w-full" />}
-
-        {/* 2. Actual Image */}
         <Image
           src={product.imageUrl}
           alt={product.name}
@@ -49,14 +47,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         />
       </div>
 
-      {/* 3. Name (single‐line, truncated) */}
+      {/* Title */}
       <h2 className="mt-2 text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
         {product.name}
       </h2>
 
-      {/* 4. Price */}
-      <div className="mt-1 text-[0.9rem] font-semibold text-gray-600 dark:text-gray-400">
-        {isFetching ? <Skeleton className="h-4 w-16" /> : convertedPrice}
+      {/* Price */}
+      <div className="mt-1 flex items-baseline space-x-2 text-[0.9rem] font-semibold text-gray-600 dark:text-gray-400">
+        {formattedWas && (
+          <span className="line-through text-gray-500 dark:text-gray-500">
+            {formattedWas}
+          </span>
+        )}
+        <span className="text-sm text-gray-800 dark:text-gray-200">
+          {formattedPrice}
+        </span>
       </div>
     </div>
   );

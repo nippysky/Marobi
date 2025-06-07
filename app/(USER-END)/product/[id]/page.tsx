@@ -98,7 +98,7 @@ export default async function ProductPage({
         </nav>
 
         {/* ───── Hero Section (Left: Featured Image; Right: Thumbnails + Details) ───── */}
-        <ProductDetailHero product={product} />
+        <ProductDetailHero product={product} user={user} />
 
         {/* ───── Reviews Section ───── */}
         <ReviewSection id={product.id} user={user} />

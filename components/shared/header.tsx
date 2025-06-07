@@ -137,7 +137,7 @@ export const Header: React.FC = () => {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`text-[0.85rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${isActive ? "underline font-extrabold" : ""}`}
+                        className={`text-[0.75rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${isActive ? "underline font-extrabold" : ""}`}
                       >
                         {item.label}
                       </Link>
@@ -196,9 +196,19 @@ export const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div onClick={() => setIsWishlistOpen(true)}>
-                      <Heart className="w-5 h-5 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100" />
-                    </div>
+  <button
+  onClick={() => setIsWishlistOpen(true)}
+  className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+>
+  <Heart className="w-5 h-5" />
+  {mounted && wishlistCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+      {wishlistCount}
+    </span>
+  )}
+</button>
+
+
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>View Wishlist</p>
@@ -280,9 +290,19 @@ export const Header: React.FC = () => {
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => setIsWishlistOpen(true)}>
-                        <Heart className="w-5 h-5 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100" />
-                      </div>
+ <button
+  onClick={() => setIsWishlistOpen(true)}
+  className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+>
+  <Heart className="w-5 h-5" />
+  {mounted && wishlistCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+      {wishlistCount}
+    </span>
+  )}
+</button>
+
+
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>View Wishlist</p>

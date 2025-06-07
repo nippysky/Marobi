@@ -11,7 +11,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ export const WishlistSheet = ({ open, onOpenChange }: { open: boolean; onOpenCha
                   className="flex items-start bg-white dark:bg-gray-800 rounded-lg shadow-sm"
                 >
                   <Link
-                    href={`/products/${product.id}`}
+                    href={`/product/${product.id}`}
                     className="flex-1 flex items-start space-x-3 p-3"
                   >
                     <div className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100">
