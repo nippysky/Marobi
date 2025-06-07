@@ -63,6 +63,9 @@ export function CartSheet() {
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
             <ShoppingCart className="w-12 h-12 mb-2 opacity-50" />
             <p>Your cart is empty</p>
+                 <Link href="/all-products" className="mt-4">
+              <Button>Start Shopping</Button>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col h-full">

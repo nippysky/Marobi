@@ -54,9 +54,10 @@ export const SizeChartModal: React.FC = () => {
               </h2>
               <button
                 onClick={closeSizeChart}
-                className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+                className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 flex items-center space-x-2"
                 aria-label="Close size chart"
               >
+                <p>Close</p>
                 <X className="w-5 h-5" />
               </button>
             </div>

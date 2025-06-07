@@ -19,6 +19,9 @@ import { MobileMenuSheet } from "./mobile-menu-sheet";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { CartSheet } from "./cart-sheet";
+import { useAccountModal } from "@/lib/context/accountModalContext";
+import { AccountModal } from "../AccountModal"; // add this once globally if not already
+
 
 // shadcn UI tooltip components
 import {
@@ -26,6 +29,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { WishlistSheet } from "./wishlist-sheet";
 
 // A simple black circle “M!” icon.
 const BrandIcon: React.FC = () => (
@@ -49,6 +53,7 @@ export const Header: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { openSizeChart } = useSizeChart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { openModal } = useAccountModal();
 
   // mounted flag for client-only rendering of badges
   const [mounted, setMounted] = useState(false);
@@ -241,38 +246,16 @@ export const Header: React.FC = () => {
                     <p>{accountTooltip}</p>
                   </TooltipContent>
                 </Tooltip>
-
-                {/* Wishlist Icon with count & tooltip */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    {/* Wrap the icon in a fixed-size relative container */}
-                    <div className="relative inline-block p-2">
-                      <Link
-                        href="/wishlist"
-                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                      >
-                        <Heart className="w-5 h-5" />
-                      </Link>
-                      {mounted && wishlistCount > 0 && (
-                        <span
-                          className="
-                            absolute 
-                            top-0 right-0
-                            bg-green-500 text-white text-xs font-bold 
-                            rounded-full w-4 h-4 flex items-center justify-center 
-                            -translate-y-1/2 translate-x-1/2
-                          "
-                        >
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Wishlist</p>
-                  </TooltipContent>
-                </Tooltip>
-
+                
+                {/* Wishlist Icon */}
+                       <Tooltip>
+  <TooltipTrigger asChild>
+    <WishlistSheet />
+  </TooltipTrigger>
+  <TooltipContent>
+    <p>View Wishlist</p>
+  </TooltipContent>
+</Tooltip>
                 {/* CartSheet trigger with tooltip */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -340,7 +323,7 @@ export const Header: React.FC = () => {
         bg-gray-100 dark:bg-gray-800
         focus:ring-0 focus:ring-offset-0
         py-2 
-        pl-4 pr-4    /* padding so that cursor/text doesn’t overlap icon/placeholder */
+        pl-4 pr-4
         border border-gray-300
         text-sm text-gray-900 dark:text-gray-100
         cursor-pointer
@@ -372,12 +355,16 @@ export const Header: React.FC = () => {
                   {/* Account Icon */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href="/account"
-                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
-                      >
-                        <UserRound className="w-5 h-5" />
-                      </Link>
+              
+
+<button
+  onClick={openModal}
+  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+  aria-label="Open account"
+>
+  <UserRound className="w-5 h-5" />
+</button>
+
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>{accountTooltip}</p>
@@ -385,35 +372,14 @@ export const Header: React.FC = () => {
                   </Tooltip>
 
                   {/* Wishlist Icon */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      {/* Same fixed-size relative container here */}
-                      <div className="relative inline-block p-2">
-                        <Link
-                          href="/wishlist"
-                          className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                        >
-                          <Heart className="w-5 h-5" />
-                        </Link>
-                        {mounted && wishlistCount > 0 && (
-                          <span
-                            className="
-                              absolute 
-                              top-1 right-1
-                              bg-green-500 text-white text-xs font-bold 
-                              rounded-full w-4 h-4 flex items-center justify-center 
-                              -translate-y-1/2 translate-x-1/2
-                            "
-                          >
-                            {wishlistCount}
-                          </span>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>View Wishlist</p>
-                    </TooltipContent>
-                  </Tooltip>
+                       <Tooltip>
+  <TooltipTrigger asChild>
+    <WishlistSheet />
+  </TooltipTrigger>
+  <TooltipContent>
+    <p>View Wishlist</p>
+  </TooltipContent>
+</Tooltip>
 
                   {/* CartSheet trigger */}
                   <Tooltip>
@@ -516,6 +482,7 @@ export const Header: React.FC = () => {
 
       {/* SizeChartModal (anywhere in the app) */}
       <SizeChartModal />
+      <AccountModal/>
     </>
   );
 };

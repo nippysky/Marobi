@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search as SearchIcon } from "lucide-react";
+import { X, Search as SearchIcon, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface SearchModalProps {
@@ -56,23 +56,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
       >
         {/* Header: Close Button */}
         <div className="flex items-center justify-between px-4 pt-6 pb-2 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <SearchIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              Search
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
-            aria-label="Close search"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+          <button className="flex items-center space-x-2" onClick={onClose}>
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <p className="text-[0.85rem] font-medium text-gray-900 dark:text-gray-100">
+              Go back
+            </p>
+          </ button>
 
-        {/* Search Input */}
-        <div className="px-4 py-3 flex justify-center">
+
+  {/* Search Input */}
           <div className="w-full max-w-md mx-auto">
             <Input
               placeholder="Type to search..."
@@ -83,11 +75,23 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                 placeholder-gray-500 dark:placeholder-gray-400
                 bg-gray-100 dark:bg-gray-800
                 focus:ring-0 focus:ring-offset-0 border-transparent
-                text-sm py-2
+                text-sm py-2 border border-gray-300 dark:border-gray-700
               "
             />
           </div>
+      
+
+
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+            aria-label="Close search"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
+
+      
 
         {/* (Optional) Results / Scrollable Content */}
         <div className="flex-1 px-4 overflow-y-auto">
