@@ -61,7 +61,7 @@ export const HeroSlider: React.FC = () => {
   return (
     <div className="w-full max-w-[1920px] mx-auto">
       {/* The outer wrapper: constrained to max‐width, centered. */}
-      <div className="relative w-full lg:h-[45rem] h-[25rem] overflow-hidden">
+      <div className="relative w-full lg:h-[47rem] h-[25rem] overflow-hidden">
         {slides.map((slide, idx) => (
           <div
             key={idx}
