@@ -1,9 +1,9 @@
+// pages/index.tsx (or app/page.tsx)
 import HeroSlider from "@/components/HeroSlider";
+import FeatureHighlights from "@/components/FeatureHighlights";
 import ProductShowcase from "@/components/ProductShowcase";
 import { Header } from "@/components/shared/header";
 import { Metadata } from "next";
-
-// Import your data‐fetching helper
 import { getProductsByCategory, Product } from "@/lib/products";
 
 export const metadata: Metadata = {
@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  // 1) Define category “slugs” + display names
   const categoryMeta: { name: string; slug: string; viewMoreHref: string }[] = [
     {
       name: "Corporate Wears",
@@ -38,7 +37,6 @@ export default function Home() {
     },
   ];
 
-  // 2) For each category, fetch up to 4 products
   const categoriesWithProducts: {
     name: string;
     viewMoreHref: string;
@@ -54,6 +52,7 @@ export default function Home() {
       <Header />
       <main className="w-full flex-1">
         <HeroSlider />
+        <FeatureHighlights />
         <ProductShowcase categories={categoriesWithProducts} />
       </main>
       {/* Footer */}

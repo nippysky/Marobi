@@ -1,6 +1,7 @@
+// components/ProductDetailHero.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,12 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   product,
   user,
 }) => {
+  // prevent hydration mismatch for wishlist button
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const [featuredImage, setFeaturedImage] = useState(product.imageUrl);
   const [imgLoading, setImgLoading] = useState(true);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
@@ -133,9 +140,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
         {/* Featured Image */}
         <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
           <Skeleton
-            className={`absolute inset-0 h-full w-full ${
-              imgLoading ? "visible" : "hidden"
-            }`}
+            className={`absolute inset-0 h-full w-full ${imgLoading ? "visible" : "hidden"}`}
           />
           <Image
             src={featuredImage}
@@ -189,37 +194,27 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
           {/* Category / Size Chart / Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-5 text-sm text-gray-700 dark:text-gray-300">
-            <Link
-              href={`/categories/${product.category}`}
-              className="flex items-center gap-1 underline"
-            >
+            <Link href={`/categories/${product.category}`} className="flex items-center gap-1 underline">
               <BiCategory className="w-7 h-7" />
               <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-
-              {categoryName}
+                {categoryName}
               </p>
             </Link>
-            <button
-              onClick={openSizeChart}
-              className="flex items-center gap-1 underline"
-            >
+            <button onClick={openSizeChart} className="flex items-center gap-1 underline">
               <PencilRuler className="w-7 h-7" />
-
-                <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-
-              See Size Chart </p>
+              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
+                See Size Chart
+              </p>
             </button>
             <div
               className={`flex items-center gap-1 ${
-                outOfStock
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-gray-700 dark:text-gray-300"
+                outOfStock ? "text-red-600 dark:text-red-400" : "text-gray-700 dark:text-gray-300"
               }`}
             >
               <BadgeCheck className="w-7 h-7" />
-                <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-
-              {totalStock} in Stock</p>
+              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
+                {totalStock} in Stock
+              </p>
             </div>
           </div>
 
@@ -305,7 +300,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
           </div>
 
           {/* Wishlist */}
-          {user && (
+          {user && hasMounted && (
             <Button
               variant="secondary"
               className="mt-4"

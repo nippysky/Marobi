@@ -1,4 +1,4 @@
-// components/AccountModal.tsx
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -78,7 +78,7 @@ export const AccountModal: React.FC = () => {
           <motion.div
               style={{ zIndex: 600000000 }}
             key="container"
-            className="fixed inset-0 z-50 flex flex-col md:flex-row h-full w-full overflow-x-hidden overflow-y-auto"
+            className="fixed inset-0 z-50 flex flex-col md:flex-row h-full w-full overflow-hidden"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -95,7 +95,7 @@ export const AccountModal: React.FC = () => {
             />
 
             {/* Right Panel */}
-            <div className="flex-1 md:basis-1/2 flex flex-col bg-white dark:bg-black">
+            <div className="flex-1 md:basis-1/2 flex flex-col bg-white dark:bg-black min-h-0">
               {/* Sticky Header */}
               <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -112,14 +112,17 @@ export const AccountModal: React.FC = () => {
               </div>
 
               {/* Scrollable Content */}
-              <ScrollArea className="flex-1 overflow-y-auto">
+              <ScrollArea className="flex-1 h-full">
                 <div className="w-full mx-auto px-6 py-8">
                   {loading ? (
                     <p className="text-center text-gray-500 dark:text-gray-400">
                       Loading…
                     </p>
                   ) : user ? (
-                    <AccountForm user={user} />
+                    <section className="flex-1 pb-20 ">
+                      
+                      <AccountForm user={user} />
+                    </section>
                   ) : mode === "login" ? (
                     <section className="w-full lg:px-32 px-0 mt-10">
                       <h1 className="font-bold text-[1.5rem] my-5">
