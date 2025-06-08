@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { CurrencyProvider } from "@/lib/context/currencyContext";
 import { SizeChartProvider } from "@/lib/context/sizeChartcontext";
-import { AccountModalProvider } from "@/lib/context/accountModalContext";
 import { SearchModalProvider } from "@/lib/context/searchModalContext";
 
 const openSans = Open_Sans({
@@ -87,22 +86,16 @@ export default function RootLayout({
       >
         <CurrencyProvider>
           <SearchModalProvider>
-
-
-          <SizeChartProvider>
-            <AccountModalProvider>
-
-
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
-              <React.Fragment>{children}</React.Fragment>
-            </ThemeProvider>
-            </AccountModalProvider>
-          </SizeChartProvider>
+            <SizeChartProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+              >
+                <React.Fragment>{children}</React.Fragment>
+              </ThemeProvider>
+            </SizeChartProvider>
           </SearchModalProvider>
         </CurrencyProvider>
         <Toaster />

@@ -1,4 +1,3 @@
-// pages/index.tsx (or app/page.tsx)
 import HeroSlider from "@/components/HeroSlider";
 import FeatureHighlights from "@/components/FeatureHighlights";
 import ProductShowcase from "@/components/ProductShowcase";
