@@ -37,7 +37,10 @@ export function CartSheet() {
       : product.prices[currency];
 
   // Totals
-  const totalItemsCount = items.reduce((acc, { quantity }) => acc + quantity, 0);
+  const totalItemsCount = items.reduce(
+    (acc, { quantity }) => acc + quantity,
+    0
+  );
   const totalPriceValue = items.reduce(
     (sum, { product, quantity }) =>
       sum + getEffectiveUnitPrice(product) * quantity,
@@ -51,7 +54,7 @@ export function CartSheet() {
         <button className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">
           <BsBag className="w-5 h-5" />
           {mounted && totalItemsCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-brand text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
               {totalItemsCount}
             </span>
           )}
@@ -116,9 +119,7 @@ export function CartSheet() {
                       </Link>
 
                       <button
-                        onClick={() =>
-                          removeFromCart(product.id, color, size)
-                        }
+                        onClick={() => removeFromCart(product.id, color, size)}
                         className="m-3 p-1 text-gray-500 hover:text-red-600"
                         aria-label="Remove item"
                       >

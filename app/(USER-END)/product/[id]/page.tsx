@@ -10,6 +10,7 @@ import { getCategoryBySlug } from "@/lib/constants/categories";
 import ProductDetailHero from "@/components/ProductDetailsHero";
 import { getCurrentUser } from "@/lib/session";
 import ReviewSection from "@/components/ReviewSection";
+import Footer from "@/components/shared/footer";
 
 export async function generateStaticParams() {
   const allProducts = getProductsByCategory("all-products");
@@ -104,7 +105,7 @@ export default async function ProductPage({
         <ReviewSection id={product.id} user={user} />
 
         {/* ───── More from This Category ───── */}
-        <section className="space-y-4 pb-20">
+        <section className="space-y-4 pb-20 lg:px-40">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             More {categoryName} Looks
           </h2>
@@ -121,6 +122,8 @@ export default async function ProductPage({
           </div>
         </section>
       </main>
+
+      <Footer />
     </section>
   );
 }

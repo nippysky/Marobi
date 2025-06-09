@@ -1,4 +1,3 @@
-// components/checkout/CheckoutSection.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -46,7 +45,7 @@ export default function CheckoutSection({ user }: Props) {
   const total = subtotal + DELIVERY_FEE;
 
   return (
-    <div className="px-5 md:px-10 lg:px-20 py-10">
+    <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-10">
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         <Link href="/" className="hover:underline">
@@ -58,9 +57,9 @@ export default function CheckoutSection({ user }: Props) {
         </span>
       </nav>
 
-   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Delivery form */}
-        <div className="lg:col-span-2 space-y-6 bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="lg:col-span-2 space-y-6 bg-white p-6 rounded-lg border border-gray-200 ">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Delivery Information
           </h2>
@@ -75,7 +74,7 @@ export default function CheckoutSection({ user }: Props) {
                 placeholder="Your full name"
               />
             </div>
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
@@ -85,7 +84,7 @@ export default function CheckoutSection({ user }: Props) {
                 placeholder="you@example.com"
               />
             </div>
-               <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
@@ -95,7 +94,7 @@ export default function CheckoutSection({ user }: Props) {
                 placeholder="+234 800 000 0000"
               />
             </div>
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
@@ -188,6 +187,6 @@ export default function CheckoutSection({ user }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

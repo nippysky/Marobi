@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ALL_PRODUCTS, Product } from "@/lib/products";
 import Header from "@/components/shared/header";
 import FilterableProductList from "@/components/categories/FilterableProductList";
+import Footer from "@/components/shared/footer";
 
 // Fisher–Yates shuffle
 function shuffle<T>(array: T[]): T[] {
@@ -38,6 +39,8 @@ export default function AllProductsPage() {
         {/* Filter + Grid */}
         <FilterableProductList initialProducts={products} />
       </main>
+
+      <Footer />
     </section>
   );
 }

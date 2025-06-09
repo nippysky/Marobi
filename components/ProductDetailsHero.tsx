@@ -20,6 +20,7 @@ import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
+import { BsBag } from "react-icons/bs";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -119,7 +120,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
         {/* Featured Image */}
         <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
           <Skeleton
@@ -288,6 +289,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                 selectedQuantity < 1
               }
             >
+              <BsBag className="w-5 h-5" />
               Add to Cart
             </Button>
           </div>
@@ -304,7 +306,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </Button>
           )}
         </div>
-      </div>
+      </section>
 
       {/* Video Modal */}
       {isVideoOpen && (

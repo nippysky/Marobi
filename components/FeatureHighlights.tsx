@@ -20,7 +20,7 @@ const features = [
 ];
 
 const FeatureHighlights: React.FC = () => (
-  <section className="mt-10 lg:py-20 py-10 bg-background lg:px-20 md:px-10 px-5">
+  <section className=" lg:py-20 py-10 bg-background lg:px-20 md:px-10 px-5">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
       {features.map(({ icon: Icon, title, description }) => (
         <div
@@ -36,7 +36,7 @@ const FeatureHighlights: React.FC = () => (
         >
           {/* fixed 10×10 container to center the actual SVG */}
           <div className="w-10 h-10 flex items-center justify-center text-muted-foreground">
-            <Icon className="w-6 h-6" />
+            <Icon className="w-10 h-10" />
           </div>
 
           <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -11,6 +11,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import { Product } from "@/lib/products";
+import { Currency, useCurrency } from "@/lib/context/currencyContext";
 import useMediaQuery from "@/lib/useMediaQuery";
 
 export interface Filters {
@@ -26,38 +27,61 @@ interface SidebarProps {
   onChange: (f: Filters) => void;
 }
 
+const SYMBOLS: Record<Currency, string> = {
+  NGN: "₦",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+};
+
 export default function FilterSidebar({ products, onChange }: SidebarProps) {
-  // derive raw values
-  const prices = products.map((p) => p.prices.NGN);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
+  const { currency } = useCurrency();
+  const symbol = SYMBOLS[currency];
 
-  const colors = Array.from(
-    new Set(products.flatMap((p) => p.variants.map((v) => v.color)))
+  // recompute price list on currency change
+  const priceValues = useMemo(
+    () => products.map((p) => p.prices[currency]),
+    [products, currency]
   );
-  const sizes = Array.from(
-    new Set(
-      products.flatMap((p) =>
-        p.variants.flatMap((v) => v.sizes.map((s) => s.size))
-      )
-    )
+  const min = Math.min(...priceValues);
+  const max = Math.max(...priceValues);
+
+  const colors = useMemo(
+    () =>
+      Array.from(
+        new Set(products.flatMap((p) => p.variants.map((v) => v.color)))
+      ),
+    [products]
+  );
+  const sizes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          products.flatMap((p) =>
+            p.variants.flatMap((v) => v.sizes.map((s) => s.size))
+          )
+        )
+      ),
+    [products]
   );
 
-  // state
   const [priceRange, setPriceRange] = useState<[number, number]>([min, max]);
   const [selColors, setSelColors] = useState<string[]>([]);
   const [selSizes, setSelSizes] = useState<string[]>([]);
   const [onSale, setOnSale] = useState(false);
   const [inStock, setInStock] = useState(false);
 
-  // desktop opens all panels by default
+  // reset slider when currency or product set changes
+  useEffect(() => {
+    setPriceRange([min, max]);
+  }, [min, max]);
+
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const defaultPanels = isDesktop
     ? ["price", "color", "size", "onSale", "inStock"]
     : [];
 
-  // 🚀 fire onChange only when filter values change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // notify parent when filters change
   useEffect(() => {
     onChange({
       priceRange,
@@ -66,7 +90,7 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
       onSale,
       inStock,
     });
-  }, [priceRange, selColors, selSizes, onSale, inStock]);
+  }, [priceRange, selColors, selSizes, onSale, inStock, onChange]);
 
   return (
     <aside>
@@ -77,7 +101,7 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
       >
         {/* PRICE */}
         <AccordionItem value="price">
-          <AccordionTrigger>Price (₦)</AccordionTrigger>
+          <AccordionTrigger>Price ({symbol})</AccordionTrigger>
           <AccordionContent>
             <SliderPrimitive.Root
               className="relative flex w-full items-center"
@@ -94,7 +118,8 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
               <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full bg-white shadow" />
             </SliderPrimitive.Root>
             <p className="mt-2 text-sm text-muted-foreground">
-              ₦{priceRange[0].toLocaleString()} – ₦
+              {symbol}
+              {priceRange[0].toLocaleString()} – {symbol}
               {priceRange[1].toLocaleString()}
             </p>
           </AccordionContent>

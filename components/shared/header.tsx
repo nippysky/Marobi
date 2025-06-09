@@ -145,10 +145,8 @@ export const Header: React.FC = () => {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`${linkBaseClasses} text-[0.75rem] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                          isActive
-                            ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                            : ""
+                        className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
+                          isActive ? "bg-brand text-white" : ""
                         }`}
                       >
                         {item.label}
@@ -320,10 +318,8 @@ export const Header: React.FC = () => {
                       <li key={item.href} className="list-none">
                         <Link
                           href={item.href}
-                          className={`${linkBaseClasses} text-[0.85rem] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                            isActive
-                              ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                              : ""
+                          className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
+                            isActive ? "bg-brand text-white" : ""
                           }`}
                         >
                           {item.label}

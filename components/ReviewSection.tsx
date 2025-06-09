@@ -1,71 +1,82 @@
 "use client";
 
 import React from "react";
-import ReviewCard from "./ReviewCard";
-import ReviewForm from "./ReviewForm";
 import Link from "next/link";
-import { Button } from "./ui/button";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import ReviewForm from "./ReviewForm";
+import { Button } from "@/components/ui/button";
+import PaginatedReviews, { Review } from "./PaginatedReview";
 
-interface Review {
-  author: string;
-  content: string;
-  // you can extend with rating, date, etc.
+interface ReviewSectionProps {
+  id: string;
+  user: any;
 }
-// ───────────────────────────────────────────────────────────────────
-// NEW: Dummy data for “existing” reviews (in a real app, you'd fetch from a DB or API)
-// You can replace this with a fetch to your backend when ready.
+
+// replace this dummy array or fetch from API
 const reviews: Review[] = [
   {
     author: "Collins Jr",
-    content: "I so much love the fact that the gown is well fitted.",
+    content: "I love the fact that the gown is well fitted.",
   },
+  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
+  { author: "Sandra O", content: "Quality and fit are top-notch." },
+  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
   {
-    author: "Adaobi K",
-    content: "This dress made me feel elegant all night!",
+    author: "Collins Jr",
+    content: "I love the fact that the gown is well fitted.",
   },
+  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
+  { author: "Sandra O", content: "Quality and fit are top-notch." },
+  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
   {
-    author: "Sandra O",
-    content: "Quality and fit are top-notch.",
+    author: "Collins Jr",
+    content: "I love the fact that the gown is well fitted.",
   },
-  {
-    author: "Kim A",
-    content: "Absolutely beautiful craftsmanship!",
-  },
+  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
+  { author: "Sandra O", content: "Quality and fit are top-notch." },
+  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
+  // ... potentially many more
 ];
-// ───────────────────────────────────────────────────────────────────
 
-export default function ReviewSection({ id, user }: { id: string; user: any }) {
+export default function ReviewSection({ id, user }: ReviewSectionProps) {
   return (
-    <section className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-        Reviews
-      </h2>
+    <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+      {/* Reviews Accordion */}
+      <div>
+        <Accordion type="single" collapsible defaultValue="reviews">
+          <AccordionItem value="reviews">
+            <AccordionTrigger className="text-xl font-semibold">
+              Reviews ({reviews.length})
+            </AccordionTrigger>
+            <AccordionContent className="mt-4">
+              {reviews.length === 0 ? (
+                <p className="text-muted-foreground">
+                  No reviews yet. Be the first to leave one!
+                </p>
+              ) : (
+                <PaginatedReviews reviews={reviews} pageSize={4} />
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
 
-      {/* ─── If there are no reviews, show a fallback message ─── */}
-      {reviews.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-400">
-          No reviews yet. Be the first to leave one!
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {reviews.map((rev, idx) => (
-            <ReviewCard key={idx} author={rev.author} content={rev.content} />
-          ))}
-        </div>
-      )}
-
-      {/* ─── Review Form or “Login to Review” Prompt ─── */}
-      <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+      {/* Review Form / Login Prompt */}
+      <div className="sticky top-24 space-y-4">
         {user ? (
-          // If user is logged in, show the client-side ReviewForm:
-          <ReviewForm productId={id} />
+          <>
+            <h3 className="text-lg font-semibold">Leave a Review</h3>
+            <ReviewForm productId={id} />
+          </>
         ) : (
-          // Otherwise, prompt to log in:
-          <p className="text-gray-700 dark:text-gray-300">
-            <Link href="/auth/login" className="text-blue-600 hover:underline">
-              <Button>Login to drop your review</Button>
-            </Link>
-          </p>
+          <Link href="/auth/login">
+            <Button>Login to drop your review</Button>
+          </Link>
         )}
       </div>
     </section>

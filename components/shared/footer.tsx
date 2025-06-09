@@ -8,7 +8,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full py-20 lg:px-20 md:px-10 px-5 bg-green-950 text-white">
+    <footer className="w-full py-20 lg:px-20 md:px-10 px-5 bg-brand text-white">
       <section className="w-full flex flex-col lg:flex-row gap-20 justify-between items-start lg:items-center">
         {/* About Marob! + Social Icons */}
         <div className="w-full lg:w-[28%] flex flex-col gap-6">
