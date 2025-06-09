@@ -3,9 +3,9 @@ import Link from "next/link";
 
 import { ALL_PRODUCTS, Product } from "@/lib/products";
 import Header from "@/components/shared/header";
-import ProductCard from "@/components/shared/product-card";
+import FilterableProductList from "@/components/categories/FilterableProductList";
 
-// Simple shuffle function (Fisher–Yates)
+// Fisher–Yates shuffle
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -15,7 +15,7 @@ function shuffle<T>(array: T[]): T[] {
   return arr;
 }
 
-export default function AllProducts() {
+export default function AllProductsPage() {
   const products: Product[] = shuffle(ALL_PRODUCTS);
 
   return (
@@ -23,24 +23,20 @@ export default function AllProducts() {
       {/* Site Header */}
       <Header />
 
-      <main className="mt-10 pb-20 lg:px-20 md:px-10 px-5 w-full">
+      <main className="container mx-auto px-5 mt-10 pb-20">
         {/* Breadcrumbs */}
-        <nav className="text-sm text-gray-600 mb-4">
+        <nav className="text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
           <Link href="/" className="hover:underline">
             Home
           </Link>{" "}
           / <span className="font-medium">All Products</span>
         </nav>
 
+        {/* Page Title */}
         <h1 className="text-3xl font-bold mb-6">All Products</h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Link key={product.id} href={`/product/${product.id}`}>
-              <ProductCard product={product} />
-            </Link>
-          ))}
-        </div>
+        {/* Filter + Grid */}
+        <FilterableProductList initialProducts={products} />
       </main>
     </section>
   );
