@@ -1,4 +1,3 @@
-// components/SearchModal.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -155,7 +154,7 @@ export const SearchModal: React.FC = () => {
                   No products found.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 py-4 lg:px-40 md:px-10">
                   {results.map((product) => (
                     <Link
                       key={product.id}

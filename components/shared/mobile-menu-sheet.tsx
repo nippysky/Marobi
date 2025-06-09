@@ -38,7 +38,7 @@ export const MobileMenuSheet: React.FC = () => {
         </SheetHeader>
 
         {/* primary nav */}
-        <nav className="mt-6 px-4 space-y-4">
+        <nav className="mt-8 px-4 space-y-6">
           {navItems.map(({ label, href }) => {
             const isActive = pathname === href;
             return (
@@ -55,10 +55,10 @@ export const MobileMenuSheet: React.FC = () => {
           })}
         </nav>
 
-        <div className="my-6 border-t border-gray-200 dark:border-gray-700" />
+        <div className="my-8 border-t border-gray-200 dark:border-gray-700" />
 
         {/* utilities */}
-        <div className="px-4 space-y-4">
+        <div className="px-4 space-y-6">
           <Link
             href="/account"
             className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"

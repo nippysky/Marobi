@@ -21,6 +21,7 @@ import { SearchModal } from "../SearchModal";
 import { getCurrentUser, User as AppUser } from "@/lib/session";
 import { Skeleton } from "@/components/ui/skeleton";
 import MobileMenuSheet from "./mobile-menu-sheet";
+import SearchBar from "../SearchBar";
 
 const BrandIcon: React.FC = () => (
   <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
@@ -158,7 +159,6 @@ export const Header: React.FC = () => {
 
               <div className="flex items-center space-x-6">
                 <CurrencySelector />
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <motion.div
@@ -239,26 +239,12 @@ export const Header: React.FC = () => {
                 </motion.div>
                 <div className="flex justify-center">
                   <motion.div
-                    className="relative w-full max-w-lg"
+                    className="w-full max-w-lg"
                     variants={searchInputVariants}
                     initial="expanded"
                     animate={isCollapsed ? "collapsed" : "expanded"}
                   >
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <SearchIcon
-                        className="mr-2 text-gray-500 dark:text-gray-400"
-                        size={16}
-                      />
-                      <span className="text-sm text-gray-500 dark:text-gray-400 select-none">
-                        …Search for products
-                      </span>
-                    </div>
-                    <Input
-                      placeholder=""
-                      onFocus={openModal}
-                      readOnly
-                      className="w-full rounded-full bg-gray-100 dark:bg-gray-800 focus:ring-0 focus:ring-offset-0 py-2 pl-4 pr-4 border border-gray-300 text-sm text-gray-900 dark:text-gray-100 cursor-pointer"
-                    />
+                    <SearchBar />
                   </motion.div>
                 </div>
                 <div className="flex items-center justify-end space-x-6">
