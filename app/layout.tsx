@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/shared/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { CurrencyProvider } from "@/lib/context/currencyContext";
@@ -87,14 +86,7 @@ export default function RootLayout({
         <CurrencyProvider>
           <SearchModalProvider>
             <SizeChartProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="light"
-                enableSystem={false}
-                disableTransitionOnChange
-              >
-                <React.Fragment>{children}</React.Fragment>
-              </ThemeProvider>
+              <React.Fragment>{children}</React.Fragment>
             </SizeChartProvider>
           </SearchModalProvider>
         </CurrencyProvider>

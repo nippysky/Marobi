@@ -4,6 +4,7 @@ import ProductShowcase from "@/components/ProductShowcase";
 import { Header } from "@/components/shared/header";
 import { Metadata } from "next";
 import { getProductsByCategory, Product } from "@/lib/products";
+import Footer from "@/components/shared/footer";
 
 export const metadata: Metadata = {
   robots: {
@@ -54,7 +55,7 @@ export default function Home() {
         <FeatureHighlights />
         <ProductShowcase categories={categoriesWithProducts} />
       </main>
-      {/* Footer */}
+      <Footer />
     </section>
   );
 }

@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
 import { SizeChartModal } from "../SizeChartModal";
-import { MobileMenuSheet } from "./mobile-menu-sheet";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { CartSheet } from "./cart-sheet";
 import {
@@ -21,6 +20,7 @@ import { useSearchModal } from "@/lib/context/searchModalContext";
 import { SearchModal } from "../SearchModal";
 import { getCurrentUser, User as AppUser } from "@/lib/session";
 import { Skeleton } from "@/components/ui/skeleton";
+import MobileMenuSheet from "./mobile-menu-sheet";
 
 const BrandIcon: React.FC = () => (
   <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
@@ -104,6 +104,9 @@ export const Header: React.FC = () => {
     return user ? `Hello, ${user.name}` : "Login to your account";
   })();
 
+  const linkBaseClasses =
+    "tracking-widest font-semibold uppercase py-1 px-3 rounded-full transition duration-300 ease-in-out";
+
   return (
     <>
       <motion.header
@@ -116,6 +119,7 @@ export const Header: React.FC = () => {
         <div className="w-full max-w-[1920px] mx-auto">
           {/* Desktop */}
           <div className="hidden lg:block">
+            {/* Collapsed Header */}
             <motion.div
               className={`${
                 isCollapsed ? "flex" : "hidden"
@@ -134,15 +138,17 @@ export const Header: React.FC = () => {
                     <BrandIcon />
                   </Link>
                 </motion.div>
-                <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-3">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`text-[0.75rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${
-                          isActive ? "underline font-extrabold" : ""
+                        className={`${linkBaseClasses} text-[0.75rem] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                          isActive
+                            ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            : ""
                         }`}
                       >
                         {item.label}
@@ -217,6 +223,7 @@ export const Header: React.FC = () => {
               </div>
             </motion.div>
 
+            {/* Expanded Header */}
             <motion.div className={`${isCollapsed ? "hidden" : "block"}`}>
               <div className="grid grid-cols-3 items-center h-16">
                 <motion.div
@@ -313,8 +320,10 @@ export const Header: React.FC = () => {
                       <li key={item.href} className="list-none">
                         <Link
                           href={item.href}
-                          className={`text-[0.85rem] tracking-widest font-semibold uppercase text-gray-700 dark:text-gray-300 hover:underline transition-all duration-300 ease-in-out ${
-                            isActive ? "underline font-extrabold" : ""
+                          className={`${linkBaseClasses} text-[0.85rem] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                            isActive
+                              ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              : ""
                           }`}
                         >
                           {item.label}

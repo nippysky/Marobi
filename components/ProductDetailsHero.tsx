@@ -1,4 +1,3 @@
-// components/ProductDetailHero.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -20,7 +19,6 @@ import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCurrency } from "@/lib/context/currencyContext";
-import { useAccountModal } from "@/lib/context/accountModalContext";
 import { formatAmount } from "@/lib/formatCurrency";
 
 interface ProductDetailHeroProps {
@@ -46,11 +44,8 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const { openSizeChart } = useSizeChart();
   const addToCart = useCartStore((s) => s.addToCart);
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
-  const isWishlisted = useWishlistStore((s) =>
-    s.isWishlisted(product.id)
-  );
+  const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
   const { currency } = useCurrency();
-  const { openModal: openAccountModal } = useAccountModal();
 
   // Pricing
   const currentPrice = formatAmount(
@@ -67,9 +62,8 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   // Variants & stock
   const colors = product.variants.map((v) => v.color);
   const sizesForColor = (color: string) =>
-    product.variants
-      .find((v) => v.color === color)
-      ?.sizes.map((s) => s.size) || [];
+    product.variants.find((v) => v.color === color)?.sizes.map((s) => s.size) ||
+    [];
   const totalStock = product.variants
     .flatMap((v) => v.sizes)
     .reduce((sum, s) => sum + s.inStock, 0);
@@ -120,17 +114,6 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
     router.push("/checkout");
   };
 
-  const handleAddToWishlist = () => {
-    if (!user) {
-      openAccountModal();
-      return;
-    }
-    if (!isWishlisted && !outOfStock) {
-      addToWishlist(product);
-      toast.success("Added to wishlist");
-    }
-  };
-
   const categoryMeta = getCategoryBySlug(product.category);
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
 
@@ -140,7 +123,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
         {/* Featured Image */}
         <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
           <Skeleton
-            className={`absolute inset-0 h-full w-full ${imgLoading ? "visible" : "hidden"}`}
+            className={`absolute inset-0 h-full w-full ${
+              imgLoading ? "visible" : "hidden"
+            }`}
           />
           <Image
             src={featuredImage}
@@ -194,13 +179,19 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
           {/* Category / Size Chart / Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-5 text-sm text-gray-700 dark:text-gray-300">
-            <Link href={`/categories/${product.category}`} className="flex items-center gap-1 underline">
+            <Link
+              href={`/categories/${product.category}`}
+              className="flex items-center gap-1 underline"
+            >
               <BiCategory className="w-7 h-7" />
               <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
                 {categoryName}
               </p>
             </Link>
-            <button onClick={openSizeChart} className="flex items-center gap-1 underline">
+            <button
+              onClick={openSizeChart}
+              className="flex items-center gap-1 underline"
+            >
               <PencilRuler className="w-7 h-7" />
               <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
                 See Size Chart
@@ -208,7 +199,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </button>
             <div
               className={`flex items-center gap-1 ${
-                outOfStock ? "text-red-600 dark:text-red-400" : "text-gray-700 dark:text-gray-300"
+                outOfStock
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-gray-700 dark:text-gray-300"
               }`}
             >
               <BadgeCheck className="w-7 h-7" />
@@ -304,7 +297,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             <Button
               variant="secondary"
               className="mt-4"
-              onClick={handleAddToWishlist}
+              onClick={() => {}}
               disabled={outOfStock || isWishlisted}
             >
               <Heart /> {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
