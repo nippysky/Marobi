@@ -10,13 +10,13 @@ export default async function AccountLayout({
   children: ReactNode;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/auth/login");
 
   return (
     <section className="min-h-screen bg-background">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="xl:px-40 lg:px-20 md:px-10 px-5 py-10 flex flex-col lg:flex-row gap-10">
         {/* Sidebar */}
         <aside className="w-full lg:w-1/4 pb-6 lg:pb-0">
           <AccountSidebar />

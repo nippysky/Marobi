@@ -44,8 +44,12 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
   const router = useRouter();
   const { openSizeChart } = useSizeChart();
   const addToCart = useCartStore((s) => s.addToCart);
+
+  // wishlist actions
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
+  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
+
   const { currency } = useCurrency();
 
   // Pricing
@@ -115,6 +119,16 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
     router.push("/checkout");
   };
 
+  const toggleWishlist = () => {
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+      toast("Removed from wishlist");
+    } else {
+      addToWishlist(product);
+      toast.success("Added to wishlist");
+    }
+  };
+
   const categoryMeta = getCategoryBySlug(product.category);
   const categoryName = categoryMeta ? categoryMeta.name : product.category;
 
@@ -155,10 +169,9 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
                     setFeaturedImage(thumbUrl);
                     setImgLoading(true);
                   }}
-                  className={`
-                    relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100
-                    ${featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""}
-                  `}
+                  className={`relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100 ${
+                    featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""
+                  }`}
                 >
                   <Image
                     src={thumbUrl}
@@ -294,15 +307,18 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
             </Button>
           </div>
 
-          {/* Wishlist */}
+          {/* Wishlist Toggle */}
           {user && hasMounted && (
             <Button
               variant="secondary"
               className="mt-4"
-              onClick={() => {}}
-              disabled={outOfStock || isWishlisted}
+              onClick={toggleWishlist}
+              disabled={outOfStock}
             >
-              <Heart /> {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
+              <Heart className={isWishlisted ? "text-red-500" : ""} />
+              <span className="ml-2">
+                {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              </span>
             </Button>
           )}
         </div>
