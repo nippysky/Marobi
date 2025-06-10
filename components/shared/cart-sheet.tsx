@@ -16,8 +16,10 @@ import { useCartStore, CartItem } from "@/lib/store/cartStore";
 import { BsBag } from "react-icons/bs";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
+import { useRouter } from "next/navigation";
 
 export function CartSheet() {
+  const router = useRouter()
   // Avoid hydration mismatches for the badge
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -139,7 +141,7 @@ export function CartSheet() {
               <Button
                 className="w-full mt-3"
                 onClick={() => {
-                  /* e.g. router.push("/checkout") */
+                  router.push("/checkout")
                 }}
               >
                 Proceed to Checkout

@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCartStore } from "@/lib/store/cartStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +11,7 @@ import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
 import type { User } from "@/lib/session";
 import type { Product } from "@/lib/products";
+ import { PaystackButton } from 'react-paystack';
 
 interface Props {
   user: User | null;
@@ -44,8 +44,17 @@ export default function CheckoutSection({ user }: Props) {
   }, 0);
   const total = subtotal + DELIVERY_FEE;
 
+
+  // Paystack Config
+    const PAYSTACK_CONFIG = {
+     reference: (new Date()).getTime().toString(),
+     email: "user@example.com",
+     amount: 20000 *100,
+     publicKey: 'pk_test_your_public_key',
+   };
+
   return (
-    <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-10">
+    <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-20">
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         <Link href="/" className="hover:underline">
@@ -176,14 +185,8 @@ export default function CheckoutSection({ user }: Props) {
                 <span>{formatAmount(total, currency)}</span>
               </div>
             </div>
-            <Button
-              className="w-full mt-6"
-              onClick={() => {
-                /* TODO: Paystack integration */
-              }}
-            >
-              Pay with Paystack
-            </Button>
+
+            <PaystackButton {...PAYSTACK_CONFIG} text="Pay Now With Paystack" className="bg-brand rounded-full py-3 w-full mt-5 flex justify-center items-center text-center text-white text-[0.85rem]"   onBankTransferConfirmationPending={()=>{}} onClose={()=>{}} onSuccess={()=>{}}/>
           </div>
         </div>
       </div>

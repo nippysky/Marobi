@@ -3,6 +3,7 @@ import React from "react";
 import { Header } from "@/components/shared/header";
 import { getCurrentUser, type User } from "@/lib/session";
 import CheckoutContent from "@/components/CheckOutContent";
+import Footer from "@/components/shared/footer";
 
 
 export default async function CheckoutPage() {
@@ -12,6 +13,7 @@ export default async function CheckoutPage() {
     <section className="min-h-screen flex flex-col bg-background">
       <Header />
       <CheckoutContent user={user} />
+      <Footer/>
     </section>
   );
 }
