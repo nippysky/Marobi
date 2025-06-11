@@ -1,11 +1,12 @@
 import ResetPasswordClient from "@/components/auth/ResetPasswordClient";
 
-
 export default function Page({
-  searchParams,
+  params,       
+  searchParams,  
 }: {
-  searchParams: { email?: string };
+  params: Record<string, any>;           
+  searchParams: { email?: string };     
 }) {
-  const email = searchParams.email || "";
+  const email = searchParams.email ?? "";
   return <ResetPasswordClient email={email} />;
 }
