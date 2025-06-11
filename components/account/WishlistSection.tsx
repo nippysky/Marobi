@@ -43,7 +43,7 @@ export default function WishlistSection() {
         ) : (
           <div className="flex flex-col items-center space-y-4 py-12">
             <p className="text-muted-foreground">Your wishlist is empty.</p>
-            <Link href="/categories">
+            <Link href="/all-products">
               <Button>Start Shopping</Button>
             </Link>
           </div>

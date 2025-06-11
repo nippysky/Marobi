@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeftLong } from "react-icons/fa6";
-import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { FaArrowLeftLong, FaEye, FaEyeSlash } from "react-icons/fa6";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,8 +21,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <Link href="/" className="mb-4 flex items-center gap-1 hover:underline">
+    <div className="w-full max-w-md mx-auto">
+      <Link href="/" className="mb-4 inline-flex items-center gap-1 hover:underline">
         <FaArrowLeftLong /> Back
       </Link>
       <h1 className="mb-6 text-2xl font-semibold">Login</h1>
@@ -64,6 +63,16 @@ export default function LoginPage() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
+        </div>
+
+        {/* Forgot Password Link */}
+        <div className="flex justify-end">
+          <Link
+            href="/auth/forgot-password"
+            className="text-sm font-medium text-brand hover:underline"
+          >
+            Forgot password?
+          </Link>
         </div>
 
         <Button type="submit" className="w-full">

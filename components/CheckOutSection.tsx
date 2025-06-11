@@ -20,15 +20,15 @@ import { formatAmount } from "@/lib/formatCurrency";
 import type { User } from "@/lib/session";
 import type { Product } from "@/lib/products";
 
-// Dynamically import PaystackButton to prevent SSR errors
+// Dynamically load PaystackButton to avoid SSR window errors
 const PaystackButton = dynamic(
-  () => import("react-paystack").then((mod) => mod.PaystackButton),
+  () => import("react-paystack").then((m) => m.PaystackButton),
   { ssr: false }
 );
 
-interface Country {
+interface CountryData {
   name: string;
-  alpha2Code: string;
+  iso2: string;
   callingCodes: string[];
 }
 
@@ -36,7 +36,7 @@ interface Props {
   user: User | null;
 }
 
-// Simple label+control wrapper
+// Helper to wrap label + field
 const FormField = ({
   label,
   htmlFor,
@@ -54,24 +54,34 @@ const FormField = ({
   </div>
 );
 
+// Convert ISO2 to flag emoji
+const flagEmoji = (iso2: string) =>
+  iso2
+    .toUpperCase()
+    .replace(/./g, (char) =>
+      String.fromCodePoint(127397 + char.charCodeAt(0))
+    );
+
 export default function CheckoutSection({ user }: Props) {
-  // Name & contact
+  // Personal info
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState(user?.email ?? "");
+
+  // Phone
   const [phoneCode, setPhoneCode] = useState("+234");
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // Location
-  const [countryList, setCountryList] = useState<Country[]>([]);
-  const [country, setCountry] = useState<Country | null>(null);
+  // Country & State
+  const [countryList, setCountryList] = useState<CountryData[]>([]);
+  const [country, setCountry] = useState<CountryData | null>(null);
   const [stateList, setStateList] = useState<string[]>([]);
   const [state, setState] = useState("");
 
   // Address
   const [address, setAddress] = useState("");
 
-  // Cart & pricing
+  // Cart & totals
   const { currency } = useCurrency();
   const items = useCartStore((s) => s.items) as {
     product: Product;
@@ -89,24 +99,40 @@ export default function CheckoutSection({ user }: Props) {
   }, 0);
   const total = subtotal + DELIVERY_FEE;
 
-  // Fetch list of countries on mount
+  // 1️⃣ On mount: fetch countries from countriesnow.space + merge ISO2 & callingCodes
   useEffect(() => {
-    fetch(
-      "https://restcountries.com/v2/all?fields=name,alpha2Code,callingCodes"
-    )
-      .then((r) => r.json())
-      .then((data: Country[]) => {
-        setCountryList(data);
-        const ng = data.find((c) => c.alpha2Code === "NG");
-        if (ng) setCountry(ng);
+    Promise.all([
+      fetch("https://countriesnow.space/api/v0.1/countries").then((r) =>
+        r.json()
+      ),
+      fetch(
+        "https://restcountries.com/v2/all?fields=name,alpha2Code,callingCodes"
+      ).then((r) => r.json()),
+    ]).then(([cnJson, rcJson]: any[]) => {
+      const merged: CountryData[] = cnJson.data.map((c: any) => {
+        const rc = (rcJson as any[]).find((r) => r.name === c.country);
+        return {
+          name: c.country,
+          iso2: rc?.alpha2Code ?? "",
+          callingCodes: rc?.callingCodes ?? [],
+        };
       });
+      setCountryList(merged);
+      const ng = merged.find((c) => c.name === "Nigeria") ?? null;
+      setCountry(ng);
+      if (ng?.callingCodes.length) setPhoneCode(`+${ng.callingCodes[0]}`);
+    });
   }, []);
 
-  // When country changes: fetch its states + update phone code
+  // 2️⃣ On country change: clear old states, fetch new state names, update phoneCode
   useEffect(() => {
-    if (!country) return;
+    if (!country) {
+      setStateList([]);
+      return;
+    }
+    setStateList([]); // clear stale
+    setState("");
 
-    // Fetch states for selected country
     fetch("https://countriesnow.space/api/v0.1/countries/states", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -114,26 +140,37 @@ export default function CheckoutSection({ user }: Props) {
     })
       .then((r) => r.json())
       .then((json: any) => {
-        setStateList(json.data.states.map((s: any) => s.name));
-        setState("");
+        // extract only the names
+        const names: string[] =
+          json.data?.states?.map((s: any) => s.name) ?? [];
+        setStateList(names);
+      })
+      .catch(() => {
+        setStateList([]);
       });
 
-    // Update phone code
     if (country.callingCodes.length) {
       setPhoneCode(`+${country.callingCodes[0]}`);
     }
   }, [country]);
 
-  // Build a deduplicated list of all calling codes
-  const phoneCodes = useMemo(() => {
-    const codes = new Set<string>();
-    countryList.forEach((c) =>
-      c.callingCodes.forEach((code) => codes.add(`+${code}`))
-    );
-    return Array.from(codes);
+  // Build unique phone-code options with flags
+  const phoneOptions = useMemo(() => {
+    const map = new Map<string, string>(); // code -> iso2
+    countryList.forEach((c) => {
+      c.callingCodes.forEach((code) => {
+        if (!map.has(code)) {
+          map.set(code, c.iso2);
+        }
+      });
+    });
+    return Array.from(map.entries()).map(([code, iso2]) => ({
+      code: `+${code}`,
+      iso2,
+    }));
   }, [countryList]);
 
-  // Paystack config
+  // Paystack setup
   const PAYSTACK_CONFIG = {
     reference: Date.now().toString(),
     email: email || "user@example.com",
@@ -143,7 +180,7 @@ export default function CheckoutSection({ user }: Props) {
 
   return (
     <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-20">
-      {/* Breadcrumb omitted */}
+      {/* Breadcrumb omitted for brevity */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Delivery Information */}
@@ -153,7 +190,7 @@ export default function CheckoutSection({ user }: Props) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* First / Last Name */}
+            {/* First / Last */}
             <FormField label="First Name" htmlFor="firstName">
               <Input
                 id="firstName"
@@ -171,12 +208,12 @@ export default function CheckoutSection({ user }: Props) {
               />
             </FormField>
 
-            {/* Country / State (full width selects) */}
+            {/* Country / State (full-width selects) */}
             <FormField label="Country" htmlFor="country">
               <Select
-                value={country?.alpha2Code}
-                onValueChange={(code) => {
-                  const sel = countryList.find((c) => c.alpha2Code === code);
+                value={country?.name}
+                onValueChange={(val) => {
+                  const sel = countryList.find((c) => c.name === val);
                   if (sel) setCountry(sel);
                 }}
               >
@@ -185,7 +222,7 @@ export default function CheckoutSection({ user }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   {countryList.map((c) => (
-                    <SelectItem key={c.alpha2Code} value={c.alpha2Code}>
+                    <SelectItem key={c.name} value={c.name}>
                       {c.name}
                     </SelectItem>
                   ))}
@@ -193,10 +230,7 @@ export default function CheckoutSection({ user }: Props) {
               </Select>
             </FormField>
             <FormField label="State" htmlFor="state">
-              <Select
-                value={state}
-                onValueChange={setState}
-              >
+              <Select value={state} onValueChange={setState}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
@@ -226,12 +260,13 @@ export default function CheckoutSection({ user }: Props) {
                   value={phoneCode}
                   onValueChange={setPhoneCode}
                 >
-                  <SelectTrigger className="w-24 mr-2">
+                  <SelectTrigger className="w-40 mr-2">
                     <SelectValue placeholder={phoneCode} />
                   </SelectTrigger>
                   <SelectContent>
-                    {phoneCodes.map((code) => (
+                    {phoneOptions.map(({ code, iso2 }) => (
                       <SelectItem key={code} value={code}>
+                        <span className="mr-1">{flagEmoji(iso2)}</span>
                         {code}
                       </SelectItem>
                     ))}
@@ -247,8 +282,12 @@ export default function CheckoutSection({ user }: Props) {
               </div>
             </FormField>
 
-            {/* Delivery Address (span full width) */}
-            <FormField label="Delivery Address" htmlFor="address" span2>
+            {/* Delivery Address */}
+            <FormField
+              label="Delivery Address"
+              htmlFor="address"
+              span2
+            >
               <Textarea
                 id="address"
                 value={address}
