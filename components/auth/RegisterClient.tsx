@@ -19,6 +19,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FaArrowLeftLong, FaEye, FaEyeSlash } from "react-icons/fa6";
 
 interface CountryData {
@@ -81,7 +82,7 @@ export default function RegisterClient() {
   // loading
   const [loading, setLoading] = useState(false);
 
-  // 1️⃣ load countries + merge ISO2 & callingCodes
+  // load countries + merge ISO2 & callingCodes
   useEffect(() => {
     Promise.all([
       fetch("https://countriesnow.space/api/v0.1/countries").then((r) =>
@@ -92,9 +93,7 @@ export default function RegisterClient() {
       ).then((r) => r.json()),
     ]).then(([cnJson, rcJson]: any[]) => {
       const merged: CountryData[] = cnJson.data.map((c: any) => {
-        const rc = (rcJson as any[]).find(
-          (r) => r.name === c.country
-        );
+        const rc = (rcJson as any[]).find((r) => r.name === c.country);
         return {
           name: c.country,
           iso2: rc?.alpha2Code ?? "",
@@ -104,8 +103,7 @@ export default function RegisterClient() {
       setCountryList(merged);
 
       // default to Nigeria
-      const ng =
-        merged.find((c) => c.name === "Nigeria") ?? null;
+      const ng = merged.find((c) => c.name === "Nigeria") ?? null;
       setCountry(ng);
       if (ng?.callingCodes.length) {
         setPhoneCode(`+${ng.callingCodes[0]}`);
@@ -113,17 +111,15 @@ export default function RegisterClient() {
     });
   }, []);
 
-  // 2️⃣ on country change: fetch states + update phone code
+  // on country change: fetch states + update phone code
   useEffect(() => {
     if (!country) {
       setStateList([]);
       setStateVal("");
       return;
     }
-
     setStateList([]);
     setStateVal("");
-
     fetch("https://countriesnow.space/api/v0.1/countries/states", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -131,14 +127,12 @@ export default function RegisterClient() {
     })
       .then((r) => r.json())
       .then((json: any) => {
-        const names =
-          json.data?.states?.map((s: any) => s.name) ?? [];
+        const names = json.data?.states?.map((s: any) => s.name) ?? [];
         setStateList(names);
       })
       .catch(() => {
         setStateList([]);
       });
-
     if (country.callingCodes.length) {
       setPhoneCode(`+${country.callingCodes[0]}`);
     }
@@ -157,6 +151,8 @@ export default function RegisterClient() {
       iso2,
     }));
   }, [countryList]);
+
+  const countryLoading = countryList.length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,9 +173,7 @@ export default function RegisterClient() {
     try {
       const res = await fetch("/api/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Registration failed");
@@ -230,45 +224,53 @@ export default function RegisterClient() {
         </FormField>
 
         <FormField label="Country" htmlFor="country">
-          <Select
-            value={country?.name}
-            onValueChange={(val) => {
-              const sel =
-                countryList.find((c) => c.name === val) ?? null;
-              setCountry(sel);
-            }}
-            disabled={loading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {countryList.map((c) => (
-                <SelectItem key={c.name} value={c.name}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {countryLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Select
+              value={country?.name}
+              onValueChange={(val) => {
+                const sel =
+                  countryList.find((c) => c.name === val) ?? null;
+                setCountry(sel);
+              }}
+              disabled={loading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent>
+                {countryList.map((c) => (
+                  <SelectItem key={c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </FormField>
 
         <FormField label="State / Region" htmlFor="state">
-          <Select
-            value={stateVal}
-            onValueChange={setStateVal}
-            disabled={loading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select state" />
-            </SelectTrigger>
-            <SelectContent>
-              {stateList.map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {countryLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Select
+              value={stateVal}
+              onValueChange={setStateVal}
+              disabled={loading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <SelectContent>
+                {stateList.map((st) => (
+                  <SelectItem key={st} value={st}>
+                    {st}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </FormField>
 
         <FormField label="Email Address" htmlFor="email">
@@ -378,11 +380,7 @@ export default function RegisterClient() {
         </FormField>
 
         <div className="md:col-span-2">
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Registering…" : "Register"}
           </Button>
         </div>
@@ -398,5 +396,5 @@ export default function RegisterClient() {
         </p>
       </form>
     </div>
-);
+  );
 }

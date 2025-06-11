@@ -6,6 +6,7 @@ import React from "react";
 import { CurrencyProvider } from "@/lib/context/currencyContext";
 import { SizeChartProvider } from "@/lib/context/sizeChartcontext";
 import { SearchModalProvider } from "@/lib/context/searchModalContext";
+import ScrollToTop from "@/components/ScroolToTop";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -91,6 +92,7 @@ export default function RootLayout({
           </SearchModalProvider>
         </CurrencyProvider>
         <Toaster />
+        <ScrollToTop/>
       </body>
     </html>
   );

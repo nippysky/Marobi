@@ -2,28 +2,28 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FaArrowLeftLong, FaEye, FaEyeSlash } from "react-icons/fa6";
+import {
+  FaArrowLeftLong,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa6";
 
-interface Props {
-  email: string;
-}
-
-export default function ResetPasswordClient({ email }: Props) {
+export default function ResetPasswordClient() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const numDigits = 6;
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
 
-  // code‐entry state
+  const [step, setStep] = useState<1 | 2>(1);
+  const numDigits = 6;
   const [codeArr, setCodeArr] = useState<string[]>(
     Array(numDigits).fill("")
   );
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
-  // password state
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -32,7 +32,7 @@ export default function ResetPasswordClient({ email }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Handle one‐digit input and auto‐focus
+  // Handle OTP input + auto-focus
   const handleCodeChange = (val: string, idx: number) => {
     const char = val.replace(/\D/g, "").slice(-1);
     const next = [...codeArr];
@@ -42,7 +42,6 @@ export default function ResetPasswordClient({ email }: Props) {
       inputsRef.current[idx + 1]?.focus();
     }
   };
-  // Handle backspace moving focus backward
   const handleCodeKey = (
     e: React.KeyboardEvent<HTMLInputElement>,
     idx: number
@@ -51,7 +50,6 @@ export default function ResetPasswordClient({ email }: Props) {
       inputsRef.current[idx - 1]?.focus();
     }
   };
-
   const code = codeArr.join("");
 
   const verifyCode = async (e: React.FormEvent) => {
@@ -62,8 +60,7 @@ export default function ResetPasswordClient({ email }: Props) {
       return;
     }
     setLoading(true);
-    // TODO: call /api/auth/verify-reset-code { email, code }
-    // on success:
+    // TODO: POST /api/auth/verify-reset-code { email, code }
     setStep(2);
     setLoading(false);
   };
@@ -76,47 +73,45 @@ export default function ResetPasswordClient({ email }: Props) {
       return;
     }
     setLoading(true);
-    // TODO: call /api/auth/reset-password { email, code, password }
+    // TODO: POST /api/auth/reset-password { email, code, password }
     router.push("/auth/login");
     setLoading(false);
   };
 
-  // autofocus the first code box
   useEffect(() => {
-    if (step === 1) {
-      inputsRef.current[0]?.focus();
-    }
+    if (step === 1) inputsRef.current[0]?.focus();
   }, [step]);
 
   return (
     <div className="w-full max-w-xl mx-auto py-16 px-6">
-      {/* Back Link */}
       <Link
-        href={step === 1 ? "/auth/forgot-password" : "/auth/reset-password?email=" + encodeURIComponent(email)}
+        href="/auth/forgot-password"
         className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
       >
         <FaArrowLeftLong className="mr-2" /> Back
       </Link>
-
       <h1 className="text-2xl font-semibold mb-8">
-        {step === 1 ? "Enter Verification Code" : "Set New Password"}
+        {step === 1
+          ? "Enter Verification Code"
+          : "Set New Password"}
       </h1>
 
       {step === 1 ? (
         <form onSubmit={verifyCode} className="space-y-6">
           <p className="text-gray-600">
-            We’ve sent a 6-digit code to <strong>{email}</strong>. Enter it below.
+            We’ve sent a 6-digit code to <strong>{email}</strong>.
           </p>
-
           <div className="flex justify-between">
             {codeArr.map((digit, idx) => (
               <Input
                 key={idx}
+                type="text"
                 inputMode="numeric"
                 maxLength={1}
-                type="text"
                 value={digit}
-                onChange={(e) => handleCodeChange(e.target.value, idx)}
+                onChange={(e) =>
+                  handleCodeChange(e.target.value, idx)
+                }
                 onKeyDown={(e) => handleCodeKey(e, idx)}
                 ref={(el) => {
                   inputsRef.current[idx] = el;
@@ -126,9 +121,9 @@ export default function ResetPasswordClient({ email }: Props) {
               />
             ))}
           </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
           <Button
             type="submit"
             className="w-full"
@@ -139,8 +134,9 @@ export default function ResetPasswordClient({ email }: Props) {
         </form>
       ) : (
         <form onSubmit={resetPassword} className="space-y-6">
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
           <div>
             <Label htmlFor="password">New Password</Label>
             <div className="relative mt-2">
@@ -151,20 +147,21 @@ export default function ResetPasswordClient({ email }: Props) {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                placeholder="Enter new password"
                 className="w-full"
+                placeholder="Enter new password"
               />
               <button
                 type="button"
                 onClick={() => setShowPwd((v) => !v)}
                 className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                aria-label={showPwd ? "Hide password" : "Show password"}
+                aria-label={
+                  showPwd ? "Hide password" : "Show password"
+                }
               >
                 {showPwd ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
-
           <div>
             <Label htmlFor="confirm">Confirm Password</Label>
             <div className="relative mt-2">
@@ -175,8 +172,8 @@ export default function ResetPasswordClient({ email }: Props) {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 disabled={loading}
-                placeholder="Re-enter your password"
                 className="w-full"
+                placeholder="Re-enter your password"
               />
               <button
                 type="button"
@@ -192,7 +189,6 @@ export default function ResetPasswordClient({ email }: Props) {
               </button>
             </div>
           </div>
-
           <Button
             type="submit"
             className="w-full"

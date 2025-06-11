@@ -3,6 +3,7 @@
 import React, { useState, useEffect, ReactNode, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,10 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { FaArrowLeftLong } from "react-icons/fa6";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
@@ -36,7 +40,6 @@ interface Props {
   user: User | null;
 }
 
-// Helper to wrap label + field
 const FormField = ({
   label,
   htmlFor,
@@ -54,7 +57,6 @@ const FormField = ({
   </div>
 );
 
-// Convert ISO2 to flag emoji
 const flagEmoji = (iso2: string) =>
   iso2
     .toUpperCase()
@@ -63,6 +65,8 @@ const flagEmoji = (iso2: string) =>
     );
 
 export default function CheckoutSection({ user }: Props) {
+  const router = useRouter();
+
   // Personal info
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -99,7 +103,11 @@ export default function CheckoutSection({ user }: Props) {
   }, 0);
   const total = subtotal + DELIVERY_FEE;
 
-  // 1️⃣ On mount: fetch countries from countriesnow.space + merge ISO2 & callingCodes
+  // loading flags
+  const countryLoading = countryList.length === 0;
+  const stateLoading = country !== null && stateList.length === 0;
+
+  // 1️⃣ On mount: fetch countries and merge ISO2 & callingCodes
   useEffect(() => {
     Promise.all([
       fetch("https://countriesnow.space/api/v0.1/countries").then((r) =>
@@ -120,7 +128,9 @@ export default function CheckoutSection({ user }: Props) {
       setCountryList(merged);
       const ng = merged.find((c) => c.name === "Nigeria") ?? null;
       setCountry(ng);
-      if (ng?.callingCodes.length) setPhoneCode(`+${ng.callingCodes[0]}`);
+      if (ng?.callingCodes.length) {
+        setPhoneCode(`+${ng.callingCodes[0]}`);
+      }
     });
   }, []);
 
@@ -130,7 +140,7 @@ export default function CheckoutSection({ user }: Props) {
       setStateList([]);
       return;
     }
-    setStateList([]); // clear stale
+    setStateList([]);
     setState("");
 
     fetch("https://countriesnow.space/api/v0.1/countries/states", {
@@ -140,9 +150,7 @@ export default function CheckoutSection({ user }: Props) {
     })
       .then((r) => r.json())
       .then((json: any) => {
-        // extract only the names
-        const names: string[] =
-          json.data?.states?.map((s: any) => s.name) ?? [];
+        const names: string[] = json.data?.states?.map((s: any) => s.name) ?? [];
         setStateList(names);
       })
       .catch(() => {
@@ -180,7 +188,25 @@ export default function CheckoutSection({ user }: Props) {
 
   return (
     <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-20">
-      {/* Breadcrumb omitted for brevity */}
+       {/* Breadcrumbs */}
+      <nav className="text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
+        <Link href="/" className="hover:underline">
+          Home
+        </Link>{" "}
+        /{" "}
+        <span className="font-medium text-gray-900 dark:text-gray-100">
+          Checkout
+        </span>
+      </nav>
+
+      {/* Back Button */}
+      <Button
+        variant="link"
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-6"
+      >
+        <FaArrowLeftLong /> Back
+      </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Delivery Information */}
@@ -208,40 +234,49 @@ export default function CheckoutSection({ user }: Props) {
               />
             </FormField>
 
-            {/* Country / State (full-width selects) */}
+            {/* Country */}
             <FormField label="Country" htmlFor="country">
-              <Select
-                value={country?.name}
-                onValueChange={(val) => {
-                  const sel = countryList.find((c) => c.name === val);
-                  if (sel) setCountry(sel);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countryList.map((c) => (
-                    <SelectItem key={c.name} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {countryLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select
+                  value={country?.name}
+                  onValueChange={(val) => {
+                    const sel = countryList.find((c) => c.name === val);
+                    if (sel) setCountry(sel);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countryList.map((c) => (
+                      <SelectItem key={c.name} value={c.name}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </FormField>
+            {/* State */}
             <FormField label="State" htmlFor="state">
-              <Select value={state} onValueChange={setState}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stateList.map((st) => (
-                    <SelectItem key={st} value={st}>
-                      {st}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {stateLoading ? (
+                <Skeleton className="h-10 w-full" />
+              ) : (
+                <Select value={state} onValueChange={setState}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stateList.map((st) => (
+                      <SelectItem key={st} value={st}>
+                        {st}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </FormField>
 
             {/* Email / Phone */}
@@ -283,11 +318,7 @@ export default function CheckoutSection({ user }: Props) {
             </FormField>
 
             {/* Delivery Address */}
-            <FormField
-              label="Delivery Address"
-              htmlFor="address"
-              span2
-            >
+            <FormField label="Delivery Address" htmlFor="address" span2>
               <Textarea
                 id="address"
                 value={address}
