@@ -44,6 +44,13 @@ import { AdminOrder } from "@/lib/orders";
 
 type Props = { initialData: AdminOrder[] };
 
+// central source of truth for status strings
+const STATUS_OPTIONS: AdminOrder["status"][] = [
+  "Processing",
+  "Delivering",
+  "Delivered",
+];
+
 export default function OrderTable({ initialData }: Props) {
   // — state
   const [data, setData] = useState<AdminOrder[]>(initialData);
@@ -58,7 +65,7 @@ export default function OrderTable({ initialData }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 50,
   });
 
   // — dialogs
@@ -84,7 +91,7 @@ export default function OrderTable({ initialData }: Props) {
     setCustomerDialogOpen(true);
   }
 
-  // — filter + search
+  // — filtered + searched data
   const filteredData = useMemo(
     () =>
       data.filter((o) => {
@@ -94,9 +101,8 @@ export default function OrderTable({ initialData }: Props) {
           !o.customer.name
             .toLowerCase()
             .includes(search.toLowerCase())
-        ) {
+        )
           return false;
-        }
         if (statusFilter !== "All" && o.status !== statusFilter)
           return false;
         if (
@@ -109,8 +115,9 @@ export default function OrderTable({ initialData }: Props) {
     [data, search, statusFilter, currencyFilter]
   );
 
-  // — columns
+  // — column definitions
   const columns = useMemo<ColumnDef<AdminOrder>[]>(() => [
+    // 0) multi-select
     {
       id: "select",
       header: ({ table }) => (
@@ -119,17 +126,26 @@ export default function OrderTable({ initialData }: Props) {
           onCheckedChange={(v) =>
             table.toggleAllPageRowsSelected(!!v)
           }
-          aria-label="Select all"
+          aria-label="Select all orders"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(v) => row.toggleSelected(!!v)}
-          aria-label={`Select row ${row.id}`}
+          aria-label={`Select order ${row.original.id}`}
         />
       ),
     },
+    // 1) Order ID
+    {
+      accessorKey: "id",
+      header: "Order ID",
+      cell: ({ getValue }) => (
+        <code className="font-mono">{getValue<string>()}</code>
+      ),
+    },
+    // 2) stacked images + “View all”
     {
       id: "order",
       header: "Order",
@@ -138,24 +154,23 @@ export default function OrderTable({ initialData }: Props) {
         const display = prods.slice(0, 3);
         return (
           <div className="flex items-center">
-            <div className="flex -space-x-3">
+            <div className="flex -space-x-2">
               {display.map((p, i) => (
                 <img
-                  key={i}
+                  key={p.id}
                   src={p.image}
                   alt={p.name}
-                  className="h-8 w-8 rounded-full border-2 border-white object-cover"
+                  className="h-8 w-8 rounded-md border-2 border-white object-cover"
                   style={{ zIndex: display.length - i }}
                 />
               ))}
               {prods.length > 3 && (
-                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium border-2 border-white">
+                <div className="h-8 w-8 rounded-md bg-gray-200 flex items-center justify-center text-xs font-medium border-2 border-white">
                   +{prods.length - 3}
                 </div>
               )}
             </div>
             <Button
-              variant="link"
               size="sm"
               className="ml-2"
               onClick={() => openProductsDialog(prods)}
@@ -166,6 +181,7 @@ export default function OrderTable({ initialData }: Props) {
         );
       },
     },
+    // 3) Status pill
     {
       accessorKey: "status",
       header: "Status",
@@ -178,29 +194,27 @@ export default function OrderTable({ initialData }: Props) {
             ? "bg-yellow-100 text-yellow-800"
             : "bg-green-100 text-green-800";
         return (
-          <span
-            className={`inline-block px-2 py-0.5 rounded-full ${color}`}
-          >
+          <span className={`px-2 py-0.5 rounded-full ${color}`}>
             {s}
           </span>
         );
       },
     },
+    // 4) ₦ Total
     {
       id: "totalNGN",
-      header: "₦ Total",
+      header: "₦ Amount",
       accessorFn: (row) => row.totalNGN,
       cell: ({ getValue }) =>
         `₦${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
-    {
-      accessorKey: "currency",
-      header: "Currency",
-    },
+    // 5) Currency code
+    { accessorKey: "currency", header: "Order Currency" },
+    // 6) Amount in order currency
     {
       id: "amount",
-      header: "Amount",
+      header: "Order Amount",
       accessorFn: (row) => row.totalAmount,
       cell: ({ getValue, row }) => {
         const sym =
@@ -215,6 +229,7 @@ export default function OrderTable({ initialData }: Props) {
       },
       enableSorting: true,
     },
+    // 7) Customer link
     {
       id: "customer",
       header: "Customer",
@@ -230,6 +245,7 @@ export default function OrderTable({ initialData }: Props) {
         </Button>
       ),
     },
+    // 8) Change status dropdown
     {
       id: "actions",
       header: "Change Status",
@@ -250,13 +266,11 @@ export default function OrderTable({ initialData }: Props) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {["Processing", "Delivering", "Delivered"].map(
-              (st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
-                </SelectItem>
-              )
-            )}
+            {STATUS_OPTIONS.map((st) => (
+              <SelectItem key={st} value={st}>
+                {st}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       ),
@@ -275,7 +289,7 @@ export default function OrderTable({ initialData }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // — bulk‐select logic
+  // — bulk-select logic
   const selectedIds = table
     .getSelectedRowModel()
     .flatRows.map((r) => r.original.id);
@@ -295,12 +309,10 @@ export default function OrderTable({ initialData }: Props) {
       {/* Bulk toolbar */}
       {selectedIds.length > 0 && (
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded mb-4">
-          <div>
-            <strong>{selectedIds.length}</strong> selected
-          </div>
+          <strong>{selectedIds.length}</strong> selected
           <Button
-            onClick={() => setSelectedStatusDialog(true)}
             variant="outline"
+            onClick={() => setSelectedStatusDialog(true)}
           >
             Change Status
           </Button>
@@ -316,39 +328,36 @@ export default function OrderTable({ initialData }: Props) {
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          {/* status filter */}
           <Select
             value={statusFilter}
-            onValueChange={(val) =>
-              setStatusFilter(val as any)
-            }
+            onValueChange={(v) => setStatusFilter(v as any)}
           >
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
-              <SelectItem value="Processing">Processing</SelectItem>
-              <SelectItem value="Delivering">Delivering</SelectItem>
-              <SelectItem value="Delivered">Delivered</SelectItem>
+              {STATUS_OPTIONS.map((st) => (
+                <SelectItem key={st} value={st}>
+                  {st}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {/* currency filter */}
           <Select
             value={currencyFilter}
-            onValueChange={(val) =>
-              setCurrencyFilter(val as any)
-            }
+            onValueChange={(v) => setCurrencyFilter(v as any)}
           >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="All Currencies" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Currencies</SelectItem>
-              <SelectItem value="NGN">NGN</SelectItem>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-              <SelectItem value="GBP">GBP</SelectItem>
+              {["NGN", "USD", "EUR", "GBP"].map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -369,7 +378,7 @@ export default function OrderTable({ initialData }: Props) {
                           header.getContext()
                         )}
                         {header.column.getCanSort() && (
-                          <span className="inline-block ml-1 align-middle">
+                          <span className="ml-1 inline-block align-middle">
                             {{
                               asc: <ChevronUp className="h-4 w-4" />,
                               desc: <ChevronDown className="h-4 w-4" />,
@@ -402,26 +411,24 @@ export default function OrderTable({ initialData }: Props) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between py-4">
-        <div className="space-x-2">
-          <Button
-            variant="link"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            ← Prev
-          </Button>
-          <Button
-            variant="link"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next →
-          </Button>
-        </div>
+        <Button
+          variant="link"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          ← Prev
+        </Button>
         <span>
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </span>
+        <Button
+          variant="link"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next →
+        </Button>
         <Select
           value={String(table.getState().pagination.pageSize)}
           onValueChange={(v) => table.setPageSize(Number(v))}
@@ -463,7 +470,7 @@ export default function OrderTable({ initialData }: Props) {
                 <img
                   src={p.image}
                   alt={p.name}
-                  className="h-12 w-12 rounded object-cover"
+                  className="h-12 w-12 rounded-md object-cover"
                 />
                 <div>
                   <div className="font-medium">{p.name}</div>
@@ -482,10 +489,7 @@ export default function OrderTable({ initialData }: Props) {
             ))}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setProductsDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setProductsDialogOpen(false)}>
               Close
             </Button>
           </DialogFooter>
@@ -518,10 +522,7 @@ export default function OrderTable({ initialData }: Props) {
             </div>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCustomerDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setCustomerDialogOpen(false)}>
               Close
             </Button>
           </DialogFooter>
@@ -542,19 +543,15 @@ export default function OrderTable({ initialData }: Props) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 p-4">
-            {["Processing", "Delivering", "Delivered"].map(
-              (st) => (
-                <Button
-                  key={st}
-                  className="w-full"
-                  onClick={() =>
-                    applyStatus(st as AdminOrder["status"])
-                  }
-                >
-                  {st}
-                </Button>
-              )
-            )}
+            {STATUS_OPTIONS.map((st) => (
+              <Button
+                key={st}
+                className="w-full"
+                onClick={() => applyStatus(st)}
+              >
+                {st}
+              </Button>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

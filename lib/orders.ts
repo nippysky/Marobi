@@ -1,6 +1,7 @@
+
 import { generateDummyProducts } from "./products"
 
-// ——— 1) Define Customer ———
+// 1) Define Customer
 export interface Customer {
   name: string
   phone: string
@@ -8,7 +9,7 @@ export interface Customer {
   address: string
 }
 
-// ——— 2) OrderItem & AdminOrder as before ———
+// 2) OrderItem & AdminOrder as before
 export interface OrderItem {
   id: string
   name: string
@@ -28,7 +29,16 @@ export interface AdminOrder {
   products: OrderItem[]
 }
 
-// ——— Dummy data sources ———
+// helper to make an 8-char random ID
+function makeRandomId(length = 8) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let s = ""
+  for (let i = 0; i < length; i++) {
+    s += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return s
+}
+
 const STATUSES: AdminOrder["status"][] = [
   "Processing",
   "Delivering",
@@ -61,15 +71,13 @@ const SAMPLE_CUSTOMERS: Customer[] = [
   },
 ]
 
-// ——— 3) generateDummyOrders — now emits full OrderItem objects ———
+// 3) Now use makeRandomId() for each order
 export function generateDummyOrders(count: number): AdminOrder[] {
-  // First get a bunch of fake products
   const prods = generateDummyProducts(count * 3)
 
   return Array.from({ length: count }).map((_, i) => {
     const currency = CURRENCIES[i % CURRENCIES.length]
     const totalAmount = parseFloat((10 + Math.random() * 490).toFixed(2))
-    // pretend a conversion rate
     const rate =
       currency === "NGN"
         ? 750 + Math.random() * 250
@@ -79,15 +87,12 @@ export function generateDummyOrders(count: number): AdminOrder[] {
         ? 0.9
         : 0.8
 
-    // pick between 1–3 items for this order
     const sliceStart = i * 3
     const sliceEnd = sliceStart + Math.ceil(Math.random() * 3)
     const picked = prods.slice(sliceStart, sliceEnd)
 
-    // Build OrderItem[] from those AdminProducts
     const items: OrderItem[] = picked.map((p) => {
       const qty = Math.floor(Math.random() * 5) + 1
-      // dynamic access of p.price based on currency
       const unitPrice = (p.price as any)[currency] as number
       const lineTotal = parseFloat((unitPrice * qty).toFixed(2))
 
@@ -102,7 +107,7 @@ export function generateDummyOrders(count: number): AdminOrder[] {
     })
 
     return {
-      id: String(i + 1),
+      id: makeRandomId(8),
       status: STATUSES[i % STATUSES.length],
       totalNGN: Math.round(totalAmount * rate),
       currency,

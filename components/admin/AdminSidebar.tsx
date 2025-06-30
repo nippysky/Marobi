@@ -87,7 +87,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
       </aside>
 
       {/** Main content **/}
-      <main className="flex-1 overflow-auto bg-white">
+      <main className="flex-1 overflow-auto bg-white px-5">
         {children}
       </main>
 
