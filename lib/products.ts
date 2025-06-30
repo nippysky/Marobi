@@ -1,5 +1,30 @@
 import { AdminProduct } from "@/components/admin/ProductTable";
 
+
+// lib/products.ts
+export type ProductPayload = {
+  id?: string;
+  name: string;
+  category: string;
+  price: Record<"NGN"|"USD"|"EUR"|"GBP", string>;
+  weight: string;
+  description: string;
+  stock: string;
+  colors?: string[];
+  hasSizes: boolean;
+  sizeMods: boolean;
+  images: string[];
+  status: "Draft"|"Published";
+};
+
+// stub: replace with your real DB/API call
+export async function getProductByItsId(id: string): Promise<ProductPayload> {
+  // e.g. fetch from your database
+  const res = await fetch(`https://your.api/products/${id}`);
+  return res.json();
+}
+
+
 // 1. Review stays as-is
 export interface Review {
   userId: string;

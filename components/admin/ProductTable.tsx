@@ -326,20 +326,24 @@ export default function ProductTable({ initialData }: Props) {
         </div>
       )}
 
-      {/* 2) Search & Filters */}
-      <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+        {/* 2) Search & Filters (responsive) */}
+     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+        {/* Search always full-width up to max-sm, then auto */}
         <Input
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full max-w-sm"
         />
-        <div className="flex space-x-2">
+
+        {/* Filters grid: 1 column on xs, 2 on sm, 3 on md+ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full md:w-auto">
+          {/* Category filter */}
           <Select
             value={categoryFilter}
             onValueChange={(val) => setCategoryFilter(val as any)}
           >
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -350,11 +354,13 @@ export default function ProductTable({ initialData }: Props) {
               <SelectItem value="I Have an Event">I Have an Event</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Status filter */}
           <Select
             value={statusFilter}
             onValueChange={(val) => setStatusFilter(val as any)}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -363,11 +369,13 @@ export default function ProductTable({ initialData }: Props) {
               <SelectItem value="Draft">Draft</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Stock filter */}
           <Select
             value={stockFilter}
             onValueChange={(val) => setStockFilter(val as any)}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="All Stock" />
             </SelectTrigger>
             <SelectContent>
