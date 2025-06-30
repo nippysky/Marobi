@@ -1,3 +1,5 @@
+import { AdminProduct } from "@/components/admin/ProductTable";
+
 // 1. Review stays as-is
 export interface Review {
   userId: string;
@@ -727,4 +729,54 @@ export function getProductsByCategory(slug: string): Product[] {
 /** Fetch a single product by ID (for product details page) */
 export function getProductById(id: string): Product | undefined {
   return ALL_PRODUCTS.find((p) => p.id === id);
+}
+
+
+
+
+
+// ----------------------
+// Dummy data generator
+// ----------------------
+export function generateDummyProducts(count: number): AdminProduct[] {
+  const categories: AdminProduct["category"][] = [
+    "Corporate Wears",
+    "African Print",
+    "Casual Looks",
+    "I Have an Event",
+  ] as const;
+  const names = [
+    "T-Shirt",
+    "Sunglasses",
+    "Jacket",
+    "Skirt",
+    "Hat",
+    "Blazer",
+    "Jeans",
+    "Shirt",
+    "Dress",
+    "Sneakers",
+  ];
+  const images = [
+ "https://images.unsplash.com/photo-1709809081557-78f803ce93a0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8QWZyaWNhbiUyMGZlbWFsZSUyMGZhc2hpb24lMjBwb3RyYWl0fGVufDB8fDB8fHww",
+      "https://images.unsplash.com/photo-1629160477511-e5e730a661ee?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1732464750981-2dfaa38f7d3a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fEFmcmljYW4lMjBmZW1hbGUlMjBmYXNoaW9uJTIwcG90cmFpdHxlbnwwfHwwfHx8MA%3D%3D",
+    "https://plus.unsplash.com/premium_photo-1732464750981-2dfaa38f7d3a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fEFmcmljYW4lMjBmZW1hbGUlMjBmYXNoaW9uJTIwcG90cmFpdHxlbnwwfHwwfHx8MA%3D%3D",
+  ];
+
+    return Array.from({ length: count }).map((_, i) => ({
+    id: String(i + 1),
+    name: `${names[i % names.length]} ${i + 1}`,
+    image: images[i % images.length],
+    category: categories[i % categories.length],
+    price: {
+      NGN: 1000 + Math.floor(Math.random() * 49000),
+      USD: parseFloat((10 + Math.random() * 190).toFixed(2)),
+      EUR: parseFloat((9 + Math.random() * 181).toFixed(2)),
+      GBP: parseFloat((8 + Math.random() * 172).toFixed(2)),  // ← NEW
+    },
+    stockCount: Math.floor(Math.random() * 101),
+    stockTotal: 100,
+    status: Math.random() > 0.5 ? "Published" : "Draft",
+  }));
 }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, PencilRuler, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { CATEGORIES } from "@/lib/constants/categories";
