@@ -1,6 +1,5 @@
 import { AdminProduct } from "@/components/admin/ProductTable";
 
-
 // lib/products.ts
 export type ProductPayload = {
   id?: string;
@@ -9,13 +8,17 @@ export type ProductPayload = {
   price: Record<"NGN"|"USD"|"EUR"|"GBP", string>;
   weight: string;
   description: string;
-  stock: string;
+  // remove the old fixed stock:
+  // stock: string;
+
   colors?: string[];
-  hasSizes: boolean;
-  sizeMods: boolean;
+  // every product must have sizes, so no hasSizes flag
+  sizeMods: boolean;            // leave custom-size‐mods toggle
+  sizeStocks: Record<string, string>; 
   images: string[];
   status: "Draft"|"Published";
 };
+
 
 // stub: replace with your real DB/API call
 export async function getProductByItsId(id: string): Promise<ProductPayload> {
