@@ -1,3 +1,4 @@
+// components/admin/OrderTable.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -44,79 +45,56 @@ import { AdminOrder } from "@/lib/orders";
 
 type Props = { initialData: AdminOrder[] };
 
-const STATUS_OPTIONS: AdminOrder["status"][] = [
-  "Processing",
-  "Shipped",
-  "Delivered",
-];
-const CURRENCY_OPTIONS: AdminOrder["currency"][] = [
-  "NGN",
-  "USD",
-  "EUR",
-  "GBP",
-];
+// central source of truth for statuses & currencies
+const STATUS_OPTIONS: AdminOrder["status"][] = ["Processing", "Shipped", "Delivered"];
+const CURRENCY_OPTIONS: AdminOrder["currency"][] = ["NGN", "USD", "EUR", "GBP"];
 
 export default function OrderTable({ initialData }: Props) {
   // — state
   const [data, setData] = useState<AdminOrder[]>(initialData);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "All" | AdminOrder["status"]
-  >("All");
-  const [currencyFilter, setCurrencyFilter] = useState<
-    "All" | AdminOrder["currency"]
-  >("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | AdminOrder["status"]>("All");
+  const [currencyFilter, setCurrencyFilter] = useState<"All" | AdminOrder["currency"]>("All");
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 50,
-  });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
 
   // — dialogs
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [receiptOrder, setReceiptOrder] = useState<AdminOrder | null>(
-    null
-  );
+  const [receiptOrder, setReceiptOrder] = useState<AdminOrder | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
   function openReceipt(order: AdminOrder, autoPrint = false) {
     setReceiptOrder(order);
     setReceiptOpen(true);
+    // auto-print after 300ms
     if (autoPrint) setTimeout(() => window.print(), 300);
   }
 
-  // — filtered & searched
+  // — filtering + searching
   const filteredData = useMemo(() => {
     return data.filter((o) => {
       if (
         search &&
         !o.id.includes(search) &&
-        !o.customer.name
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      )
+        !o.customer.name.toLowerCase().includes(search.toLowerCase())
+      ) {
         return false;
-      if (statusFilter !== "All" && o.status !== statusFilter)
-        return false;
-      if (
-        currencyFilter !== "All" &&
-        o.currency !== currencyFilter
-      )
-        return false;
+      }
+      if (statusFilter !== "All" && o.status !== statusFilter) return false;
+      if (currencyFilter !== "All" && o.currency !== currencyFilter) return false;
       return true;
     });
   }, [data, search, statusFilter, currencyFilter]);
 
-  // — table columns
+  // — column definitions
   const columns = useMemo<ColumnDef<AdminOrder>[]>(() => [
+    // 0) checkbox for multi‐select
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) =>
-            table.toggleAllPageRowsSelected(!!v)
-          }
+          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
           aria-label="Select all orders"
         />
       ),
@@ -128,13 +106,13 @@ export default function OrderTable({ initialData }: Props) {
         />
       ),
     },
+    // 1) Order ID
     {
       accessorKey: "id",
       header: "Order ID",
-      cell: ({ getValue }) => (
-        <code className="font-mono">{getValue<string>()}</code>
-      ),
+      cell: ({ getValue }) => <code className="font-mono">{getValue<string>()}</code>,
     },
+    // 2) “Order” column: up to 3 stacked images + “View all”
     {
       id: "order",
       header: "Order",
@@ -171,6 +149,7 @@ export default function OrderTable({ initialData }: Props) {
         );
       },
     },
+    // 3) Status pill
     {
       accessorKey: "status",
       header: "Status",
@@ -182,22 +161,20 @@ export default function OrderTable({ initialData }: Props) {
             : s === "Shipped"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-green-100 text-green-800";
-        return (
-          <span className={`px-2 py-0.5 rounded-full ${color}`}>
-            {s}
-          </span>
-        );
+        return <span className={`px-2 py-0.5 rounded-full ${color}`}>{s}</span>;
       },
     },
+    // 4) ₦ Amount
     {
       id: "totalNGN",
       header: "₦ Amount",
       accessorFn: (row) => row.totalNGN,
-      cell: ({ getValue }) =>
-        `₦${getValue<number>().toLocaleString()}`,
+      cell: ({ getValue }) => `₦${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
+    // 5) Currency code
     { accessorKey: "currency", header: "Order Currency" },
+    // 6) Amount in order currency
     {
       id: "amount",
       header: "Order Amount",
@@ -215,6 +192,7 @@ export default function OrderTable({ initialData }: Props) {
       },
       enableSorting: true,
     },
+    // 7) Customer ID or “—” if guest
     {
       id: "customer",
       header: "Customer ID",
@@ -224,17 +202,16 @@ export default function OrderTable({ initialData }: Props) {
           <Button
             variant="link"
             size="sm"
-            onClick={() =>
-              (window.location.href = `/admin/customers/${cid}`)
-            }
+            onClick={() => (window.location.href = `/admin/customers/${cid}`)}
           >
             {cid}
           </Button>
         ) : (
-          <span className="text-gray-400">—</span>
+          <p className="text-gray-400">Guest User</p>
         );
       },
     },
+    // 8) Actions: change status + print icon
     {
       id: "actions",
       header: "Actions",
@@ -243,20 +220,17 @@ export default function OrderTable({ initialData }: Props) {
           <Select
             defaultValue={row.original.status}
             onValueChange={async (val) => {
+              // update UI immediately
               setData((d) =>
                 d.map((o) =>
-                  o.id === row.original.id
-                    ? { ...o, status: val as any }
-                    : o
+                  o.id === row.original.id ? { ...o, status: val as any } : o
                 )
               );
-              await fetch(
-                `/api/orders/${row.original.id}/status`,
-                {
-                  method: "PUT",
-                  body: JSON.stringify({ status: val }),
-                }
-              );
+              // send email via your API
+              await fetch(`/api/orders/${row.original.id}/status`, {
+                method: "PUT",
+                body: JSON.stringify({ status: val }),
+              });
             }}
           >
             <SelectTrigger className="w-[160px]">
@@ -270,6 +244,7 @@ export default function OrderTable({ initialData }: Props) {
               ))}
             </SelectContent>
           </Select>
+
           <Button
             variant="outline"
             size="icon"
@@ -294,16 +269,10 @@ export default function OrderTable({ initialData }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // — bulk-select
-  const selectedIds = table
-    .getSelectedRowModel()
-    .flatRows.map((r) => r.original.id);
+  // — bulk‐select logic
+  const selectedIds = table.getSelectedRowModel().flatRows.map((r) => r.original.id);
   function applyBulkStatus(status: AdminOrder["status"]) {
-    setData((d) =>
-      d.map((o) =>
-        selectedIds.includes(o.id) ? { ...o, status } : o
-      )
-    );
+    setData((d) => d.map((o) => (selectedIds.includes(o.id) ? { ...o, status } : o)));
     setBulkDialogOpen(false);
   }
 
@@ -313,10 +282,7 @@ export default function OrderTable({ initialData }: Props) {
       {selectedIds.length > 0 && (
         <div className="flex items-center justify-between bg-gray-100 p-2 mb-4 rounded">
           <strong>{selectedIds.length}</strong> selected
-          <Button
-            variant="outline"
-            onClick={() => setBulkDialogOpen(true)}
-          >
+          <Button variant="outline" onClick={() => setBulkDialogOpen(true)}>
             Change Status
           </Button>
         </div>
@@ -331,10 +297,7 @@ export default function OrderTable({ initialData }: Props) {
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as any)}
-          >
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
@@ -347,10 +310,7 @@ export default function OrderTable({ initialData }: Props) {
               ))}
             </SelectContent>
           </Select>
-          <Select
-            value={currencyFilter}
-            onValueChange={(v) => setCurrencyFilter(v as any)}
-          >
+          <Select value={currencyFilter} onValueChange={(v) => setCurrencyFilter(v as any)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Currencies" />
             </SelectTrigger>
@@ -376,17 +336,13 @@ export default function OrderTable({ initialData }: Props) {
                   <TableHead key={header.id} className="p-2">
                     {!header.isPlaceholder && (
                       <>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
                           <span className="ml-1 inline-block align-middle">
                             {{
                               asc: <ChevronUp className="h-4 w-4" />,
                               desc: <ChevronDown className="h-4 w-4" />,
-                            }[header.column.getIsSorted() as string] ??
-                              null}
+                            }[header.column.getIsSorted() as string] ?? null}
                           </span>
                         )}
                       </>
@@ -398,16 +354,10 @@ export default function OrderTable({ initialData }: Props) {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className="even:bg-gray-50"
-              >
+              <TableRow key={row.id} className="even:bg-gray-50">
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="p-2">
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
@@ -418,22 +368,13 @@ export default function OrderTable({ initialData }: Props) {
 
       {/* Pagination */}
       <div className="flex items-center justify-between py-4">
-        <Button
-          variant="link"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
+        <Button variant="link" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
           ← Prev
         </Button>
         <span>
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
-        <Button
-          variant="link"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
+        <Button variant="link" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Next →
         </Button>
         <Select
@@ -453,11 +394,8 @@ export default function OrderTable({ initialData }: Props) {
         </Select>
       </div>
 
-      {/* Bulk-status dialog */}
-      <Dialog
-        open={bulkDialogOpen}
-        onOpenChange={setBulkDialogOpen}
-      >
+      {/* Bulk‐status dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
             <DialogTitle>Change Status</DialogTitle>
@@ -467,11 +405,7 @@ export default function OrderTable({ initialData }: Props) {
           </DialogHeader>
           <div className="p-4 space-y-2">
             {STATUS_OPTIONS.map((st) => (
-              <Button
-                key={st}
-                className="w-full"
-                onClick={() => applyBulkStatus(st)}
-              >
+              <Button key={st} className="w-full" onClick={() => applyBulkStatus(st)}>
                 {st}
               </Button>
             ))}
@@ -481,10 +415,7 @@ export default function OrderTable({ initialData }: Props) {
 
       {/* Receipt dialog */}
       {receiptOrder && (
-        <Dialog
-          open={receiptOpen}
-          onOpenChange={() => setReceiptOpen(false)}
-        >
+        <Dialog open={receiptOpen} onOpenChange={() => setReceiptOpen(false)}>
           <DialogContent
             className="
               max-w-lg
@@ -496,34 +427,22 @@ export default function OrderTable({ initialData }: Props) {
           >
             <DialogHeader>
               <div className="flex justify-between items-center">
-                <img
-                  src="/marobi-logo.png"
-                  alt="Marobi"
-                  className="h-8"
-                />
-                <div className="text-xs text-gray-500">
-                  {new Date().toLocaleString()}
-                </div>
+                <img src="/marobi-logo.png" alt="Marobi" className="h-8" />
+                <div className="text-xs text-gray-500">{new Date().toLocaleString()}</div>
               </div>
               <DialogTitle className="mt-2">
-                Receipt —{" "}
-                <span className="font-mono">
-                  {receiptOrder.id}
-                </span>
+                Receipt — <span className="font-mono">{receiptOrder.id}</span>
               </DialogTitle>
               <DialogDescription className="mt-1">
                 Payment Method: <strong>Credit Card</strong>
               </DialogDescription>
             </DialogHeader>
 
-            {/* Screen: scrollable list */}
+            {/* Web view: scrollable */}
             <ScrollArea className="mt-6 max-h-[30vh] px-1 print:hidden">
-              <section className="flex flex-col space-y-4">
+              <div className="flex flex-col space-y-4">
                 {receiptOrder.products.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-start justify-between"
-                  >
+                  <div key={p.id} className="flex items-start justify-between">
                     <div className="flex items-start space-x-4">
                       <img
                         src={p.image}
@@ -531,12 +450,9 @@ export default function OrderTable({ initialData }: Props) {
                         className="h-12 w-12 object-cover rounded-md"
                       />
                       <div>
-                        <div className="font-medium">
-                          {p.name}
-                        </div>
+                        <div className="font-medium">{p.name}</div>
                         <div className="text-sm text-gray-600">
-                          Color: {p.color} &bull; Size: {p.size}{" "}
-                          &bull; Qty: {p.quantity}
+                          Color: {p.color} &bull; Size: {p.size} &bull; Qty: {p.quantity}
                         </div>
                       </div>
                     </div>
@@ -551,17 +467,14 @@ export default function OrderTable({ initialData }: Props) {
                     </div>
                   </div>
                 ))}
-              </section>
+              </div>
             </ScrollArea>
 
-            {/* Print: full list, no scroll */}
+            {/* Print view: full list (no scroll) */}
             <div className="mt-6 px-1 hidden print:block">
-              <section className="flex flex-col space-y-4">
+              <div className="flex flex-col space-y-4">
                 {receiptOrder.products.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-start justify-between"
-                  >
+                  <div key={p.id} className="flex items-start justify-between">
                     <div className="flex items-start space-x-4">
                       <img
                         src={p.image}
@@ -569,12 +482,9 @@ export default function OrderTable({ initialData }: Props) {
                         className="h-12 w-12 object-cover rounded-md"
                       />
                       <div>
-                        <div className="font-medium">
-                          {p.name}
-                        </div>
+                        <div className="font-medium">{p.name}</div>
                         <div className="text-sm text-gray-600">
-                          Color: {p.color} &bull; Size: {p.size}{" "}
-                          &bull; Qty: {p.quantity}
+                          Color: {p.color} &bull; Size: {p.size} &bull; Qty: {p.quantity}
                         </div>
                       </div>
                     </div>
@@ -589,69 +499,41 @@ export default function OrderTable({ initialData }: Props) {
                     </div>
                   </div>
                 ))}
-              </section>
+              </div>
             </div>
 
             {/* Total */}
             <div className="mt-6 flex justify-between text-lg font-semibold px-1">
               <span>Total</span>
-              <span>
-                ₦{receiptOrder.totalNGN.toLocaleString()}
-              </span>
+              <span>₦{receiptOrder.totalNGN.toLocaleString()}</span>
             </div>
 
-            {/* Customer & addresses */}
+            {/* Customer & Addresses */}
             <div className="mt-6 px-1 text-sm grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Customer */}
               <div className="space-y-1">
-                <h3 className="font-medium">
-                  Customer Details
-                </h3>
-                <div>
-                  Name: {receiptOrder.customer.name}
-                </div>
-                <div>
-                  Email: {receiptOrder.customer.email}
-                </div>
-                <div>
-                  Phone: {receiptOrder.customer.phone}
-                </div>
+                <h3 className="font-medium">Customer Details</h3>
+                <div>Name: {receiptOrder.customer.name}</div>
+                <div>Email: {receiptOrder.customer.email}</div>
+                <div>Phone: {receiptOrder.customer.phone}</div>
               </div>
-              {/* Addresses */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium">
-                    Shipping Address
-                  </h3>
-                  <p className="mt-1">
-                    {receiptOrder.customer.address}
-                  </p>
+                  <h3 className="font-medium">Shipping Address</h3>
+                  <p className="mt-1">{receiptOrder.customer.address}</p>
                 </div>
                 <div>
-                  <h3 className="font-medium">
-                    Billing Address
-                  </h3>
-                  <p className="mt-1">
-                    {receiptOrder.customer.address}
-                  </p>
+                  <h3 className="font-medium">Billing Address</h3>
+                  <p className="mt-1">{receiptOrder.customer.address}</p>
                 </div>
               </div>
             </div>
 
             {/* Footer (hidden when printing) */}
             <DialogFooter className="mt-6 flex justify-end space-x-2 print:hidden px-1">
-              <Button
-                variant="outline"
-                onClick={() => setReceiptOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setReceiptOpen(false)}>
                 Close
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  openReceipt(receiptOrder, true)
-                }
-              >
+              <Button variant="secondary" onClick={() => openReceipt(receiptOrder, true)}>
                 <Printer className="mr-1 h-4 w-4" />
                 Print
               </Button>

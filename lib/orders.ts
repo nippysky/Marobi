@@ -1,3 +1,5 @@
+// lib/orders.ts
+
 import { generateDummyProducts } from "./products";
 
 // 1) Define Customer
@@ -17,16 +19,16 @@ export interface OrderItem {
   quantity: number;
   currency: "NGN" | "USD" | "EUR" | "GBP";
   lineTotal: number;
-  color: string;        // NEW
-  size: string;         // NEW
+  color: string;        // product color
+  size: string;         // product size
 }
 
 export interface AdminOrder {
-  id: string;
+  id: string;                    // 10-char uppercase ID
   status: "Processing" | "Shipped" | "Delivered";
   totalNGN: number;
   currency: "NGN" | "USD" | "EUR" | "GBP";
-  totalAmount: number;
+  totalAmount: number;           // in order currency
   customer: Customer;
   products: OrderItem[];
 }
@@ -59,21 +61,24 @@ const SAMPLE_CUSTOMERS: Customer[] = [
     name: "Alice Johnson",
     phone: "+2348130000000",
     email: "alice@example.com",
-    address: "12 Marina Road, 56 Nonsense testing , BCG Quaters,  Lagos State Nigeria",
+    address:
+      "12 Marina Road, 56 Nonsense testing, BCG Quarters, Lagos State, Nigeria",
   },
   {
     id: "M!002",
     name: "Bob Smith",
     phone: "+2348020000000",
     email: "bob@example.com",
-      address: "12 Marina Road, 56 Nonsense testing , BCG Quaters,  Lagos State Nigeria",
+    address:
+      "12 Marina Road, 56 Nonsense testing, BCG Quarters, Lagos State, Nigeria",
   },
   {
-    id: "M!003",
-    name: "Carol Lee",
+    // guest checkout (no `id`)
+    name: "Guest User",
     phone: "+2347010000000",
-    email: "carol@example.com",
-    address: "12 Marina Road, 56 Nonsense testing , BCG Quaters,  Lagos State Nigeria",
+    email: "guest@example.com",
+    address:
+      "12 Marina Road, 56 Nonsense testing, BCG Quarters, Lagos State, Nigeria",
   },
 ];
 
@@ -81,14 +86,12 @@ const COLORS = ["Red", "Blue", "Green", "Black", "White"];
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 
 export function generateDummyOrders(count: number): AdminOrder[] {
-  // make plenty of dummy products to slice from
+  // make plenty of dummy products
   const products = generateDummyProducts(count * 8);
 
   return Array.from({ length: count }).map((_, i) => {
     const currency = CURRENCIES[i % CURRENCIES.length];
-    const totalAmount = parseFloat(
-      (10 + Math.random() * 490).toFixed(2)
-    );
+    const totalAmount = parseFloat((10 + Math.random() * 490).toFixed(2));
     const rate =
       currency === "NGN"
         ? 750 + Math.random() * 250
@@ -98,12 +101,13 @@ export function generateDummyOrders(count: number): AdminOrder[] {
         ? 0.9
         : 0.8;
 
-    // choose between 1 and 8 items so some >3
+    // choose between 1 and 8 items so some orders >3 items
     const numItems = Math.ceil(Math.random() * 8);
     const sliceStart = i * 8;
     const sliceEnd = sliceStart + numItems;
     const picked = products.slice(sliceStart, sliceEnd);
 
+    // build each OrderItem
     const items: OrderItem[] = picked.map((p) => {
       const qty = Math.floor(Math.random() * 5) + 1;
       const unitPrice = (p.price as any)[currency] as number;

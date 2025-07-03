@@ -61,7 +61,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
             Marobi Admin
           </div>
           {/* Nav items, scrollable */}
-          <nav className="flex-1 overflow-y-auto px-6 space-y-4">
+          <nav className="flex-1 overflow-y-auto px-6 space-y-7 mt-10">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -74,7 +74,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
             ))}
           </nav>
           {/* Logout pinned */}
-          <div className="px-6 py-4 border-t border-white/20">
+          <div className="px-6 py-4 border-t border-white/20 mt-10">
             <button
               onClick={() => { router.push("/"); }}
               className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
