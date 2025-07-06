@@ -1,5 +1,4 @@
 // lib/orders.ts
-
 import { generateDummyProducts } from "./products";
 
 // 1) Define Customer
@@ -16,19 +15,20 @@ export interface OrderItem {
   id: string;
   name: string;
   image: string;
+  category: string;            // ← NEW
   quantity: number;
   currency: "NGN" | "USD" | "EUR" | "GBP";
   lineTotal: number;
-  color: string;        // product color
-  size: string;         // product size
+  color: string;               // product color
+  size: string;                // product size
 }
 
 export interface AdminOrder {
-  id: string;                    // 10-char uppercase ID
+  id: string;                  // 10-char uppercase ID
   status: "Processing" | "Shipped" | "Delivered";
   totalNGN: number;
   currency: "NGN" | "USD" | "EUR" | "GBP";
-  totalAmount: number;           // in order currency
+  totalAmount: number;         // in order currency
   customer: Customer;
   products: OrderItem[];
 }
@@ -44,17 +44,8 @@ function makeRandomId(length = 10) {
   return s.toUpperCase();
 }
 
-const STATUSES: AdminOrder["status"][] = [
-  "Processing",
-  "Shipped",
-  "Delivered",
-];
-const CURRENCIES: AdminOrder["currency"][] = [
-  "NGN",
-  "USD",
-  "EUR",
-  "GBP",
-];
+const STATUSES: AdminOrder["status"][] = ["Processing", "Shipped", "Delivered"];
+const CURRENCIES: AdminOrder["currency"][] = ["NGN", "USD", "EUR", "GBP"];
 const SAMPLE_CUSTOMERS: Customer[] = [
   {
     id: "M!001",
@@ -81,33 +72,29 @@ const SAMPLE_CUSTOMERS: Customer[] = [
       "12 Marina Road, 56 Nonsense testing, BCG Quarters, Lagos State, Nigeria",
   },
 ];
-
 const COLORS = ["Red", "Blue", "Green", "Black", "White"];
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 
 export function generateDummyOrders(count: number): AdminOrder[] {
-  // make plenty of dummy products
   const products = generateDummyProducts(count * 8);
 
   return Array.from({ length: count }).map((_, i) => {
     const currency = CURRENCIES[i % CURRENCIES.length];
     const totalAmount = parseFloat((10 + Math.random() * 490).toFixed(2));
-    const rate =
-      currency === "NGN"
-        ? 750 + Math.random() * 250
-        : currency === "USD"
-        ? 1
-        : currency === "EUR"
-        ? 0.9
-        : 0.8;
+    const rate = currency === "NGN"
+      ? 750 + Math.random() * 250
+      : currency === "USD"
+      ? 1
+      : currency === "EUR"
+      ? 0.9
+      : 0.8;
 
-    // choose between 1 and 8 items so some orders >3 items
     const numItems = Math.ceil(Math.random() * 8);
     const sliceStart = i * 8;
     const sliceEnd = sliceStart + numItems;
     const picked = products.slice(sliceStart, sliceEnd);
 
-    // build each OrderItem
+    // build each OrderItem — now with p.category
     const items: OrderItem[] = picked.map((p) => {
       const qty = Math.floor(Math.random() * 5) + 1;
       const unitPrice = (p.price as any)[currency] as number;
@@ -115,6 +102,7 @@ export function generateDummyOrders(count: number): AdminOrder[] {
         id: p.id,
         name: p.name,
         image: p.image,
+        category: p.category,                // ← PASS IT THROUGH
         quantity: qty,
         currency,
         lineTotal: parseFloat((unitPrice * qty).toFixed(2)),

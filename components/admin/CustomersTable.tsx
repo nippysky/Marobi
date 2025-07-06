@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 
 import { Customer } from "@/lib/customers";
+import Link from "next/link";
 
 type Props = { initialData: Customer[] };
 
@@ -134,13 +135,11 @@ export default function CustomersTable({ initialData }: Props) {
 
 
           {/* View */}
-          <Button
-            variant="outline"
-              size="sm"
-            onClick={() => window.location.assign(`/admin/customers/${row.original.id}`)}
-          >
-            View <Eye className="ml-1 h-5 w-5" />
-          </Button>
+            <Button asChild variant="outline" size="sm">
+        <Link href={`/admin/customers/${row.original.id}`}>
+          View <Eye className="ml-1 h-5 w-5" />
+        </Link>
+      </Button>
  
         </div>
       ),

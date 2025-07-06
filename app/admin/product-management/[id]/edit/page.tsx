@@ -1,4 +1,5 @@
 import EditProductSection from "@/components/admin/EditProductSection";
+import BackButton from "@/components/BackButton";
 import { getProductByItsId, ProductPayload } from "@/lib/products";
 
 interface Params {
@@ -10,7 +11,8 @@ export default async function EditProductPage({ params: { id } }: Params) {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
+      <BackButton/>
+      <h1 className="text-2xl font-bold my-10">Edit Product</h1>
       <EditProductSection initialProduct={product} />
     </div>
   );

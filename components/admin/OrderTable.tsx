@@ -1,4 +1,3 @@
-// components/admin/OrderTable.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -519,10 +518,6 @@ export default function OrderTable({ initialData }: Props) {
               <div className="space-y-4">
                 <div>
                   <h3 className="font-medium">Shipping Address</h3>
-                  <p className="mt-1">{receiptOrder.customer.address}</p>
-                </div>
-                <div>
-                  <h3 className="font-medium">Billing Address</h3>
                   <p className="mt-1">{receiptOrder.customer.address}</p>
                 </div>
               </div>
