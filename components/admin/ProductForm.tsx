@@ -23,7 +23,10 @@ type CustomSize = { label: string; stock: string };
 
 export interface ProductFormProps {
   initialProduct?: ProductPayload;
-  onSave: (payload: ProductPayload, status: "Draft" | "Published") => Promise<void>;
+  onSave: (
+    payload: ProductPayload,
+    status: "Draft" | "Published"
+  ) => Promise<void>;
 }
 
 export default function ProductForm({
@@ -34,7 +37,9 @@ export default function ProductForm({
 
   // — Basic fields
   const [name, setName] = useState(initialProduct?.name ?? "");
-  const [category, setCategory] = useState(initialProduct?.category ?? "Corporate Wears");
+  const [category, setCategory] = useState(
+    initialProduct?.category ?? "Corporate Wears"
+  );
   const [price, setPrice] = useState({
     NGN: initialProduct?.price.NGN ?? "",
     USD: initialProduct?.price.USD ?? "",
@@ -42,28 +47,43 @@ export default function ProductForm({
     GBP: initialProduct?.price.GBP ?? "",
   });
   const [weight, setWeight] = useState(initialProduct?.weight ?? "");
-  const [description, setDescription] = useState(initialProduct?.description ?? "");
+  const [description, setDescription] = useState(
+    initialProduct?.description ?? ""
+  );
+
   // — Colors
   const [hasColors, setHasColors] = useState(!!initialProduct?.colors);
   const [colors, setColors] = useState<string[]>(
-    initialProduct?.colors?.length
-      ? initialProduct.colors
-      : [""]
+    initialProduct?.colors?.length ? initialProduct.colors : [""]
   );
+
+  // whenever you toggle “hasColors” on, ensure at least one input
+  useEffect(() => {
+    if (hasColors && colors.length === 0) {
+      setColors([""]);
+    }
+  }, [hasColors, colors.length]);
+
   // — Custom-size toggle
   const [sizeMods, setSizeMods] = useState(initialProduct?.sizeMods ?? false);
+
   // — Images
-  const [images, setImages] = useState<string[]>(initialProduct?.images ?? []);
+  const [images, setImages] = useState<string[]>(
+    initialProduct?.images ?? []
+  );
 
   // — Which conventional sizes are enabled?
   const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(() => {
     if (!initialProduct) {
-      return Object.fromEntries(CONVENTIONAL_SIZES.map((s) => [s, false]));
+      return Object.fromEntries(
+        CONVENTIONAL_SIZES.map((s) => [s, false])
+      );
     }
     return Object.fromEntries(
       CONVENTIONAL_SIZES.map((s) => [s, !!initialProduct.sizeStocks[s]])
     );
   });
+
   // — The per-size stock map
   const [sizeStocks, setSizeStocks] = useState<Record<string, string>>(
     () => ({ ...initialProduct?.sizeStocks })
@@ -115,10 +135,16 @@ export default function ProductForm({
     form.append("file", file);
     const res = await fetch("/api/upload", { method: "POST", body: form });
     if (!res.ok) throw new Error("Upload failed");
-    const json = (await res.json()) as { success: boolean; data: { secure_url: string } };
+    const json = (await res.json()) as {
+      success: boolean;
+      data: { secure_url: string };
+    };
     return json.data.secure_url;
   }
-  async function handleImageChange(e: ChangeEvent<HTMLInputElement>, idx: number) {
+  async function handleImageChange(
+    e: ChangeEvent<HTMLInputElement>,
+    idx: number
+  ) {
     if (!e.target.files?.[0]) return;
     const url = await uploadFile(e.target.files[0]);
     setImages((imgs) => {
@@ -135,8 +161,12 @@ export default function ProductForm({
   const addColor = () => setColors((c) => [...c, ""]);
   const updateColor = (i: number, v: string) =>
     setColors((c) => c.map((x, j) => (j === i ? v : x)));
-  const removeColor = (i: number) =>
-    setColors((c) => c.filter((_, j) => j !== i));
+  const removeColor = (i: number) => {
+    // only if more than one
+    if (colors.length > 1) {
+      setColors((c) => c.filter((_, j) => j !== i));
+    }
+  };
 
   // — Conventional size toggle
   function toggleSize(size: string, on: boolean) {
@@ -260,14 +290,15 @@ export default function ProductForm({
           />
         </div>
 
-        {/* Colors */}
-        <div className="flex items-center space-x-2" >
+        {/* Colors toggle */}
+        <div className="flex items-center space-x-2">
           <Switch checked={hasColors} onCheckedChange={setHasColors} />
           <Label>Has Colors?</Label>
         </div>
         {hasColors && (
           <div className="md:col-span-2">
             <Label>Colors</Label>
+
             {colors.map((c, i) => (
               <div key={i} className="flex items-center space-x-2 mt-2">
                 <Input
@@ -275,9 +306,18 @@ export default function ProductForm({
                   value={c}
                   onChange={(e) => updateColor(i, e.target.value)}
                 />
-                <button onClick={() => removeColor(i)} className="text-red-500">
-                  <X />
-                </button>
+
+                {/* only show delete if >1 */}
+                {colors.length > 1 && (
+                  <button
+                    onClick={() => removeColor(i)}
+                    className="text-red-500"
+                  >
+                    <X />
+                  </button>
+                )}
+
+                {/* add button only on last row */}
                 {i === colors.length - 1 && (
                   <button onClick={addColor} className="text-green-500">
                     <Plus />
@@ -288,7 +328,7 @@ export default function ProductForm({
           </div>
         )}
 
-        {/* Custom-size Mods */}
+        {/* Custom-size Mods toggle */}
         <div className="flex items-center space-x-2">
           <Switch checked={sizeMods} onCheckedChange={setSizeMods} />
           <Label>Enable Custom Size Mods?</Label>
@@ -333,17 +373,24 @@ export default function ProductForm({
                 <Input
                   placeholder="Label"
                   value={csz.label}
-                  onChange={(e) => updateCustomSizeLabel(i, e.target.value)}
+                  onChange={(e) =>
+                    updateCustomSizeLabel(i, e.target.value)
+                  }
                   className="w-24"
                 />
                 <Input
                   type="number"
-                  placeholder="Qty"
-                  value={csz.stock}
-                  onChange={(e) => updateCustomSizeStock(i, e.target.value)}
+                    placeholder="Qty"
+                    value={csz.stock}
+                    onChange={(e) =>
+                      updateCustomSizeStock(i, e.target.value)
+                    }
                   className="w-20"
                 />
-                <button onClick={() => removeCustomSize(i)} className="text-red-500">
+                <button
+                  onClick={() => removeCustomSize(i)}
+                  className="text-red-500"
+                >
                   <X />
                 </button>
               </div>
@@ -386,7 +433,11 @@ export default function ProductForm({
                   ) : (
                     <>
                       <div
-                        onClick={() => document.getElementById(`file-${idx}`)?.click()}
+                        onClick={() =>
+                          document
+                            .getElementById(`file-${idx}`)
+                            ?.click()
+                        }
                         className="h-full w-full border-2 border-dashed rounded flex flex-col items-center justify-center text-gray-500 cursor-pointer"
                       >
                         <Plus />

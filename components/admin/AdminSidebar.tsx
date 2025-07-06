@@ -19,14 +19,14 @@ import { RiAdminLine } from "react-icons/ri";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navItems = [
-  { name: "Dashboard",           href: "/admin",                  icon: <LayoutDashboard size={20} /> },
-  { name: "Log Offline Sale",    href: "/admin/log-sale",         icon: <NotebookPen size={20} /> },
+  { name: "Dashboard",           href: "/admin",                   icon: <LayoutDashboard size={20} /> },
+  { name: "Log Offline Sale",    href: "/admin/log-sale",          icon: <NotebookPen size={20} /> },
   { name: "Products Management", href: "/admin/product-management", icon: <Boxes size={20} /> },
-  { name: "Order Inventory",     href: "/admin/order-inventory",  icon: <BsBag size={20} /> },
-  { name: "Customers",           href: "/admin/customers",        icon: <Users size={20} /> },
-  { name: "Staff & Admin",       href: "/admin/staff-admins",     icon: <RiAdminLine size={20} /> },
-  { name: "Reports & Analytics", href: "/admin/reports",          icon: <BarChart2 size={20} /> },
-  { name: "Store Settings",      href: "/admin/settings",         icon: <Settings size={20} /> },
+  { name: "Order Inventory",     href: "/admin/order-inventory",   icon: <BsBag size={20} /> },
+  { name: "Customers",           href: "/admin/customers",         icon: <Users size={20} /> },
+  { name: "Staff & Admin",       href: "/admin/staff-admins",      icon: <RiAdminLine size={20} /> },
+  { name: "Reports & Analytics", href: "/admin/reports",           icon: <BarChart2 size={20} /> },
+  { name: "Store Settings",      href: "/admin/settings",          icon: <Settings size={20} /> },
 ];
 
 export default function AdminSidebar({ children }: { children: ReactNode }) {
@@ -34,16 +34,24 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const linkClasses = (href: string) => {
-    const active = pathname === href;
+  // treat child paths as active too
+  function isActive(href: string) {
+    if (href === "/admin") {
+      return pathname === href;            // only exact match for Dashboard
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  function linkClasses(href: string) {
+    const active = isActive(href);
     return [
       "flex items-center space-x-3 px-4 py-2 rounded-md transition",
       active ? "bg-white text-brand" : "hover:bg-white hover:text-brand",
     ].join(" ");
-  };
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       {/** Mobile header **/}
       <header className="md:hidden bg-brand text-white flex items-center justify-between px-4 py-3">
         <button onClick={() => setOpen(true)} aria-label="Open menu">
@@ -56,27 +64,20 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
       {/** Desktop sidebar **/}
       <aside className="hidden md:flex flex-col w-80 bg-brand text-white">
         <ScrollArea className="h-full flex flex-col">
-          {/* Logo / title */}
           <div className="px-6 py-4 font-bold text-xl tracking-wide">
             Marobi Admin
           </div>
-          {/* Nav items, scrollable */}
           <nav className="flex-1 overflow-y-auto px-6 space-y-7 mt-10">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={linkClasses(item.href)}
-              >
+            {navItems.map(item => (
+              <Link key={item.href} href={item.href} className={linkClasses(item.href)}>
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
             ))}
           </nav>
-          {/* Logout pinned */}
           <div className="px-6 py-4 border-t border-white/20 mt-10">
             <button
-              onClick={() => { router.push("/"); }}
+              onClick={() => router.push("/")}
               className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
             >
               <LogOut size={20} />
@@ -87,7 +88,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
       </aside>
 
       {/** Main content **/}
-      <main className="flex-1 overflow-auto bg-white px-5">
+      <main className="flex-1 overflow-auto bg-white p-4 md:p-5">
         {children}
       </main>
 
@@ -107,7 +108,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
             </div>
             <ScrollArea className="px-6 flex-1">
               <nav className="space-y-4 py-4">
-                {navItems.map((item) => (
+                {navItems.map(item => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -122,7 +123,7 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
             </ScrollArea>
             <div className="px-6 py-4 border-t border-white/20">
               <button
-                onClick={() => { router.push("/"); }}
+                onClick={() => { router.push("/"); setOpen(false); }}
                 className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
               >
                 <LogOut size={20} />

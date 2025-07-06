@@ -1,0 +1,111 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma-client"
+}
+
+enum OrderStatus {
+  Processing
+  Shipped
+  Delivered
+}
+
+enum Currency {
+  NGN
+  USD
+  EUR
+  GBP
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String    @unique
+  phone        String
+  address      String
+  registeredAt DateTime  @default(now())
+  lastLogin    DateTime?
+  orders       Order[]
+}
+
+model Staff {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  phone        String
+  passwordHash String
+  role         String
+  orders       Order[] // orders created by this staff
+  offlineSales OfflineSale[] // offline‐sale logs
+  createdAt    DateTime      @default(now())
+}
+
+model Product {
+  id        String    @id @default(cuid())
+  name      String
+  image     String
+  category  String
+  priceNGN  Float?
+  priceUSD  Float?
+  priceEUR  Float?
+  priceGBP  Float?
+  variants  Variant[]
+  createdAt DateTime  @default(now())
+}
+
+model Variant {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  color     String
+  size      String
+  stock     Int
+  weight    Float?
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id          String       @id @default(uuid())
+  status      OrderStatus  @default(Processing)
+  currency    Currency
+  totalAmount Float
+  totalNGN    Int
+  createdAt   DateTime     @default(now())
+  customer    Customer     @relation(fields: [customerId], references: [id])
+  customerId  String
+  staff       Staff?       @relation(fields: [staffId], references: [id])
+  staffId     String?
+  items       OrderItem[]
+  offlineSale OfflineSale?
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  name      String
+  image     String?
+  category  String
+  quantity  Int
+  currency  Currency
+  lineTotal Float
+  color     String
+  size      String
+}
+
+model OfflineSale {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String   @unique
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  staffId   String
+  timestamp DateTime @default(now())
+}

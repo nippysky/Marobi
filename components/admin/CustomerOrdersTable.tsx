@@ -9,7 +9,6 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import printJS from 'print-js'
 
 import { AdminOrder, OrderItem } from '@/lib/orders'
 import {
@@ -126,8 +125,10 @@ export default function CustomerOrdersTable({ initialData }: Props) {
   }
 
   // — direct print via Print.js
-  function handlePrint(order: AdminOrder) {
+  async function handlePrint(order: AdminOrder) {
     const html = generateReceiptHtml(order)
+        if (typeof window === 'undefined') return
+    const { default: printJS } = await import('print-js')
     printJS({
       printable: html,
       type: 'raw-html',

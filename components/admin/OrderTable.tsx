@@ -1,4 +1,3 @@
-// components/admin/OrderTable.tsx
 'use client'
 
 import React, { useState, useMemo } from 'react'
@@ -11,7 +10,7 @@ import {
   useReactTable,
   type SortingState,
 } from '@tanstack/react-table'
-import printJS from 'print-js'
+import Link from 'next/link'
 
 import {
   Table,
@@ -89,10 +88,10 @@ export default function OrderTable({ initialData }: Props) {
     const totalWeight = order.products.reduce((w,p) => w + p.quantity * 0.2, 0).toFixed(2)
     const courier = 'DHL Express'
     const sym =
-      order.currency === 'NGN' ? '₦' :
-      order.currency === 'USD' ? '$' :
-      order.currency === 'EUR' ? '€' :
-      '£'
+      order.currency === 'NGN' ? '₦'
+      : order.currency === 'USD' ? '$'
+      : order.currency === 'EUR' ? '€'
+      : '£'
     const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2)
 
     const itemsHtml = order.products.map((p: OrderItem) => `
@@ -131,8 +130,10 @@ export default function OrderTable({ initialData }: Props) {
   }
 
   // send to printer
-  function handlePrint(order: AdminOrder) {
+  async function handlePrint(order: AdminOrder) {
     const html = generateReceiptHtml(order)
+        if (typeof window === 'undefined') return
+    const { default: printJS } = await import('print-js')
     printJS({
       printable: html,
       type: 'raw-html',
@@ -196,7 +197,12 @@ export default function OrderTable({ initialData }: Props) {
                 </div>
               )}
             </div>
-            <Button size="sm" className="ml-2" onClick={() => openReceiptModal(row.original)}>
+            <Button
+              variant="default"
+              size="sm"
+              className="ml-2"
+              onClick={() => openReceiptModal(row.original)}
+            >
               View all
             </Button>
           </div>
@@ -209,10 +215,8 @@ export default function OrderTable({ initialData }: Props) {
       cell: ({ row }) => {
         const s = row.original.status
         const color =
-          s === 'Processing'
-            ? 'bg-blue-100 text-blue-800'
-            : s === 'Shipped'
-            ? 'bg-yellow-100 text-yellow-800'
+          s === 'Processing' ? 'bg-blue-100 text-blue-800'
+            : s === 'Shipped' ? 'bg-yellow-100 text-yellow-800'
             : 'bg-green-100 text-green-800'
         return <span className={`px-2 py-0.5 rounded-full ${color}`}>{s}</span>
       },
@@ -231,30 +235,42 @@ export default function OrderTable({ initialData }: Props) {
       accessorFn: row => row.totalAmount,
       cell: ({ getValue, row }) => {
         const sym =
-          row.original.currency === 'NGN'
-            ? '₦'
-            : row.original.currency === 'USD'
-            ? '$'
-            : row.original.currency === 'EUR'
-            ? '€'
+          row.original.currency === 'NGN' ? '₦'
+            : row.original.currency === 'USD' ? '$'
+            : row.original.currency === 'EUR' ? '€'
             : '£'
         return `${sym}${getValue<number>().toLocaleString()}`
       },
       enableSorting: true,
     },
+   {
+  id: 'customer',
+  header: 'Customer ID',
+  cell: ({ row }) => {
+    const cid = row.original.customer.id
+    return cid ? (
+      <Link href={`/admin/customers/${cid}`}>
+  
+          {cid}
+    
+      </Link>
+    ) : (
+      <span className="text-gray-500">Guest User</span>
+    )
+  },
+},
+
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => handlePrint(row.original)}
-          >
-            <Printer className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handlePrint(row.original)}
+        >
+          <Printer className="h-4 w-4" />
+        </Button>
       ),
     },
   ], [])
@@ -273,7 +289,7 @@ export default function OrderTable({ initialData }: Props) {
 
   return (
     <>
-      {/* Search & Filters */}
+      {/* Search & filters */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <Input
           placeholder="Search orders…"
@@ -324,8 +340,10 @@ export default function OrderTable({ initialData }: Props) {
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
                           <span className="ml-1">
-                            {header.column.getIsSorted() === 'asc' ? <ChevronUp className="h-4 w-4" /> :
-                             header.column.getIsSorted() === 'desc' ? <ChevronDown className="h-4 w-4" /> : null}
+                            {header.column.getIsSorted() === 'asc'
+                              ? <ChevronUp className="h-4 w-4"/>
+                              : header.column.getIsSorted() === 'desc'
+                              ? <ChevronDown className="h-4 w-4"/> : null}
                           </span>
                         )}
                       </div>
@@ -381,22 +399,20 @@ export default function OrderTable({ initialData }: Props) {
                 Payment: Credit Card — {new Date().toLocaleString()}
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-[60vh] space-y-4">
+            <ScrollArea className="mt-6 max-h-[60vh] space-y-4">
               {(() => {
-                const order = receiptOrder!
-                const subtotal = order.totalAmount
+                const o = receiptOrder
+                const subtotal = o.totalAmount
                 const vat = +(subtotal * 0.075).toFixed(2)
                 const deliveryCharge = 500
-                const totalWeight = order.products.reduce((w,p) => w + p.quantity * 0.2, 0).toFixed(2)
+                const totalWeight = o.products.reduce((w,p) => w + p.quantity*0.2, 0).toFixed(2)
                 const courier = 'DHL Express'
-                const sym = order.currency === 'NGN' ? '₦' :
-                            order.currency === 'USD' ? '$' :
-                            order.currency === 'EUR' ? '€' : '£'
-                const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2)
+                const sym = o.currency==='NGN'?'₦':o.currency==='USD'?'$':o.currency==='EUR'?'€':'£'
+                const grandTotal = +(subtotal+vat+deliveryCharge).toFixed(2)
 
                 return (
                   <div className="px-2">
-                    {order.products.map(p => (
+                    {o.products.map(p => (
                       <div key={p.id} className="flex justify-between mb-2">
                         <div>
                           <div className="font-medium">{p.name}</div>
@@ -404,47 +420,30 @@ export default function OrderTable({ initialData }: Props) {
                             Color: {p.color} • Size: {p.size} • Qty: {p.quantity}
                           </div>
                         </div>
-                        <div className="font-medium">
-                          {sym}{p.lineTotal.toLocaleString()}
-                        </div>
+                        <div className="font-medium">{sym}{p.lineTotal.toLocaleString()}</div>
                       </div>
                     ))}
 
-                    <div className="flex justify-between font-medium">
-                      <span>Subtotal</span><span>{sym}{subtotal.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>VAT (7.5%)</span><span>{sym}{vat.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Delivery</span><span>{sym}{deliveryCharge.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Weight</span><span>{totalWeight}kg</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Courier</span><span>{courier}</span>
-                    </div>
-                    <div className="flex justify-between font-semibold mt-2">
-                      <span>Grand Total</span><span>{sym}{grandTotal.toLocaleString()}</span>
-                    </div>
-
+                    <div className="flex justify-between font-medium"><span>Subtotal</span><span>{sym}{subtotal.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span>VAT (7.5%)</span><span>{sym}{vat.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span>Delivery</span><span>{sym}{deliveryCharge.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span>Weight</span><span>{totalWeight}kg</span></div>
+                    <div className="flex justify-between"><span>Courier</span><span>{courier}</span></div>
+                    <div className="flex justify-between font-semibold mt-2"><span>Grand Total</span><span>{sym}{grandTotal.toLocaleString()}</span></div>
                     <div className="mt-4 text-sm space-y-1">
-                      <div><strong>Customer:</strong> {order.customer.name}</div>
-                      <div><strong>Email:</strong> {order.customer.email}</div>
-                      <div><strong>Phone:</strong> {order.customer.phone}</div>
-                      <div><strong>Address:</strong> {order.customer.address}</div>
+                      <div><strong>Customer:</strong> {o.customer.name}</div>
+                      <div><strong>Email:</strong> {o.customer.email}</div>
+                      <div><strong>Phone:</strong> {o.customer.phone}</div>
+                      <div><strong>Address:</strong> {o.customer.address}</div>
                     </div>
                   </div>
                 )
               })()}
             </ScrollArea>
             <DialogFooter className="space-x-2">
-              <Button variant="outline" onClick={() => setReceiptOpen(false)}>
-                Close
-              </Button>
+              <Button variant="outline" onClick={() => setReceiptOpen(false)}>Close</Button>
               <Button variant="secondary" onClick={() => handlePrint(receiptOrder!)}>
-                <Printer className="mr-1 h-4 w-4" /> Print
+                <Printer className="mr-1 h-4 w-4"/> Print
               </Button>
             </DialogFooter>
           </DialogContent>
