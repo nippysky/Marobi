@@ -1,6 +1,7 @@
-"use client";
+// components/admin/OrderTable.tsx
+'use client'
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react'
 import {
   ColumnDef,
   flexRender,
@@ -9,7 +10,8 @@ import {
   getPaginationRowModel,
   useReactTable,
   type SortingState,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table'
+import printJS from 'print-js'
 
 import {
   Table,
@@ -18,16 +20,16 @@ import {
   TableBody,
   TableRow,
   TableCell,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -35,228 +37,229 @@ import {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Printer } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { ChevronUp, ChevronDown, Printer } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
-import { AdminOrder } from "@/lib/orders";
+import { AdminOrder, OrderItem } from '@/lib/orders'
 
-type Props = { initialData: AdminOrder[] };
+type Props = { initialData: AdminOrder[] }
 
-// central source of truth for statuses & currencies
-const STATUS_OPTIONS: AdminOrder["status"][] = ["Processing", "Shipped", "Delivered"];
-const CURRENCY_OPTIONS: AdminOrder["currency"][] = ["NGN", "USD", "EUR", "GBP"];
+// possible values
+const STATUS_OPTIONS: AdminOrder['status'][] = ['Processing', 'Shipped', 'Delivered']
+const CURRENCY_OPTIONS: AdminOrder['currency'][] = ['NGN', 'USD', 'EUR', 'GBP']
 
 export default function OrderTable({ initialData }: Props) {
-  // — state
-  const [data, setData] = useState<AdminOrder[]>(initialData);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"All" | AdminOrder["status"]>("All");
-  const [currencyFilter, setCurrencyFilter] = useState<"All" | AdminOrder["currency"]>("All");
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
+  // table state
+  const [data, setData] = useState<AdminOrder[]>(initialData)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'All' | AdminOrder['status']>('All')
+  const [currencyFilter, setCurrencyFilter] = useState<'All' | AdminOrder['currency']>('All')
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 })
 
-  // — dialogs
-  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [receiptOrder, setReceiptOrder] = useState<AdminOrder | null>(null);
-  const [receiptOpen, setReceiptOpen] = useState(false);
+  // receipt modal state
+  const [receiptOrder, setReceiptOrder] = useState<AdminOrder | null>(null)
+  const [receiptOpen, setReceiptOpen] = useState(false)
 
-  function openReceipt(order: AdminOrder, autoPrint = false) {
-    setReceiptOrder(order);
-    setReceiptOpen(true);
-    // auto-print after 300ms
-    if (autoPrint) setTimeout(() => window.print(), 300);
+  // open on-screen preview
+  function openReceiptModal(order: AdminOrder) {
+    setReceiptOrder(order)
+    setReceiptOpen(true)
   }
 
-  // — filtering + searching
-  const filteredData = useMemo(() => {
-    return data.filter((o) => {
-      if (
-        search &&
-        !o.id.includes(search) &&
-        !o.customer.name.toLowerCase().includes(search.toLowerCase())
-      ) {
-        return false;
-      }
-      if (statusFilter !== "All" && o.status !== statusFilter) return false;
-      if (currencyFilter !== "All" && o.currency !== currencyFilter) return false;
-      return true;
-    });
-  }, [data, search, statusFilter, currencyFilter]);
+  // print-only CSS for 80mm receipt
+  const receiptCSS = `
+    @page { size: 80mm auto; margin: 0; }
+    body { width: 80mm; font-family: monospace; margin:0; padding:4mm; }
+    .header, .footer { text-align: center; margin-bottom:4mm; }
+    .line { display:flex; justify-content:space-between; margin-bottom:2mm; }
+    .total { font-weight:bold; display:flex; justify-content:space-between; margin-top:4mm; }
+    .small { font-size:0.8em; }
+  `
 
-  // — column definitions
+  // generate raw HTML receipt for Print.js
+  function generateReceiptHtml(order: AdminOrder) {
+    const now = new Date().toLocaleString()
+    const vatRate = 0.075
+    const subtotal = +order.totalAmount.toFixed(2)
+    const vat = +(subtotal * vatRate).toFixed(2)
+    const deliveryCharge = 500
+    const totalWeight = order.products.reduce((w,p) => w + p.quantity * 0.2, 0).toFixed(2)
+    const courier = 'DHL Express'
+    const sym =
+      order.currency === 'NGN' ? '₦' :
+      order.currency === 'USD' ? '$' :
+      order.currency === 'EUR' ? '€' :
+      '£'
+    const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2)
+
+    const itemsHtml = order.products.map((p: OrderItem) => `
+      <div class="line">
+        <div>
+          ${p.name}<br>
+          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${p.quantity}</span>
+        </div>
+        <div>${sym}${p.lineTotal.toLocaleString()}</div>
+      </div>
+    `).join('')
+
+    return `
+      <html><head><style>${receiptCSS}</style></head>
+      <body>
+        <div class="header">
+          <div>${now}</div>
+          <div>Marobi Receipt</div>
+          <div>Order: ${order.id}</div>
+        </div>
+        ${itemsHtml}
+        <div class="total"><span>Subtotal</span><span>${sym}${subtotal.toLocaleString()}</span></div>
+        <div class="line"><span>VAT (${(vatRate*100).toFixed(1)}%)</span><span>${sym}${vat.toLocaleString()}</span></div>
+        <div class="line"><span>Delivery</span><span>${sym}${deliveryCharge.toLocaleString()}</span></div>
+        <div class="line"><span>Weight</span><span>${totalWeight}kg</span></div>
+        <div class="line"><span>Courier</span><span>${courier}</span></div>
+        <div class="total"><span>Grand Total</span><span>${sym}${grandTotal.toLocaleString()}</span></div>
+        <div class="footer small">
+          Customer: ${order.customer.name}<br>
+          Email: ${order.customer.email}<br>
+          Phone: ${order.customer.phone}<br>
+          Address: ${order.customer.address}
+        </div>
+      </body></html>
+    `
+  }
+
+  // send to printer
+  function handlePrint(order: AdminOrder) {
+    const html = generateReceiptHtml(order)
+    printJS({
+      printable: html,
+      type: 'raw-html',
+      scanStyles: false,
+      style: receiptCSS,
+    })
+  }
+
+  // filtered data
+  const filteredData = useMemo(() => {
+    return data.filter(o => {
+      if (search && !o.id.includes(search) && !o.customer.name.toLowerCase().includes(search.toLowerCase())) return false
+      if (statusFilter !== 'All' && o.status !== statusFilter) return false
+      if (currencyFilter !== 'All' && o.currency !== currencyFilter) return false
+      return true
+    })
+  }, [data, search, statusFilter, currencyFilter])
+
+  // column defs
   const columns = useMemo<ColumnDef<AdminOrder>[]>(() => [
-    // 0) checkbox for multi‐select
     {
-      id: "select",
+      id: 'select',
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-          aria-label="Select all orders"
+          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(v) => row.toggleSelected(!!v)}
-          aria-label={`Select order ${row.original.id}`}
+          onCheckedChange={v => row.toggleSelected(!!v)}
         />
       ),
     },
-    // 1) Order ID
     {
-      accessorKey: "id",
-      header: "Order ID",
+      accessorKey: 'id',
+      header: 'Order ID',
       cell: ({ getValue }) => <code className="font-mono">{getValue<string>()}</code>,
     },
-    // 2) “Order” column: up to 3 stacked images + “View all”
     {
-      id: "order",
-      header: "Order",
+      id: 'order',
+      header: 'Order',
       cell: ({ row }) => {
-        const prods = row.original.products;
-        const display = prods.slice(0, 3);
+        const prods = row.original.products.slice(0, 3)
         return (
           <div className="flex items-center">
             <div className="flex -space-x-2">
-              {display.map((p, i) => (
+              {prods.map((p, i) => (
                 <img
                   key={p.id}
                   src={p.image}
                   alt={p.name}
                   className="h-8 w-8 rounded-md border-2 border-white object-cover"
-                  style={{ zIndex: display.length - i }}
+                  style={{ zIndex: prods.length - i }}
                 />
               ))}
-              {prods.length > 3 && (
+              {row.original.products.length > 3 && (
                 <div className="h-8 w-8 rounded-md bg-gray-200 flex items-center justify-center text-xs font-medium border-2 border-white">
-                  +{prods.length - 3}
+                  +{row.original.products.length - 3}
                 </div>
               )}
             </div>
-            <Button
-              variant="default"
-              size="sm"
-              className="ml-2"
-              onClick={() => openReceipt(row.original)}
-            >
+            <Button size="sm" className="ml-2" onClick={() => openReceiptModal(row.original)}>
               View all
             </Button>
           </div>
-        );
+        )
       },
     },
-    // 3) Status pill
     {
-      accessorKey: "status",
-      header: "Status",
+      accessorKey: 'status',
+      header: 'Status',
       cell: ({ row }) => {
-        const s = row.original.status;
+        const s = row.original.status
         const color =
-          s === "Processing"
-            ? "bg-blue-100 text-blue-800"
-            : s === "Shipped"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-green-100 text-green-800";
-        return <span className={`px-2 py-0.5 rounded-full ${color}`}>{s}</span>;
+          s === 'Processing'
+            ? 'bg-blue-100 text-blue-800'
+            : s === 'Shipped'
+            ? 'bg-yellow-100 text-yellow-800'
+            : 'bg-green-100 text-green-800'
+        return <span className={`px-2 py-0.5 rounded-full ${color}`}>{s}</span>
       },
     },
-    // 4) ₦ Amount
     {
-      id: "totalNGN",
-      header: "₦ Amount",
-      accessorFn: (row) => row.totalNGN,
+      id: 'totalNGN',
+      header: '₦ Amount',
+      accessorFn: row => row.totalNGN,
       cell: ({ getValue }) => `₦${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
-    // 5) Currency code
-    { accessorKey: "currency", header: "Order Currency" },
-    // 6) Amount in order currency
+    { accessorKey: 'currency', header: 'Currency' },
     {
-      id: "amount",
-      header: "Order Amount",
-      accessorFn: (row) => row.totalAmount,
+      id: 'amount',
+      header: 'Order Amount',
+      accessorFn: row => row.totalAmount,
       cell: ({ getValue, row }) => {
         const sym =
-          row.original.currency === "NGN"
-            ? "₦"
-            : row.original.currency === "USD"
-            ? "$"
-            : row.original.currency === "EUR"
-            ? "€"
-            : "£";
-        return `${sym}${getValue<number>().toLocaleString()}`;
+          row.original.currency === 'NGN'
+            ? '₦'
+            : row.original.currency === 'USD'
+            ? '$'
+            : row.original.currency === 'EUR'
+            ? '€'
+            : '£'
+        return `${sym}${getValue<number>().toLocaleString()}`
       },
       enableSorting: true,
     },
-    // 7) Customer ID or “—” if guest
     {
-      id: "customer",
-      header: "Customer ID",
-      cell: ({ row }) => {
-        const cid = row.original.customer.id;
-        return cid ? (
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => (window.location.href = `/admin/customers/${cid}`)}
-          >
-            {cid}
-          </Button>
-        ) : (
-          <p className="text-gray-400">Guest User</p>
-        );
-      },
-    },
-    // 8) Actions: change status + print icon
-    {
-      id: "actions",
-      header: "Actions",
+      id: 'actions',
+      header: 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center space-x-2">
-          <Select
-            defaultValue={row.original.status}
-            onValueChange={async (val) => {
-              // update UI immediately
-              setData((d) =>
-                d.map((o) =>
-                  o.id === row.original.id ? { ...o, status: val as any } : o
-                )
-              );
-              // send email via your API
-              await fetch(`/api/orders/${row.original.id}/status`, {
-                method: "PUT",
-                body: JSON.stringify({ status: val }),
-              });
-            }}
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <Button
             variant="outline"
             size="icon"
-            onClick={() => openReceipt(row.original, true)}
+            onClick={() => handlePrint(row.original)}
           >
             <Printer className="h-4 w-4" />
           </Button>
         </div>
       ),
     },
-  ], []);
+  ], [])
 
-  // — table instance
+  // table instance
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -266,59 +269,38 @@ export default function OrderTable({ initialData }: Props) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-  });
-
-  // — bulk‐select logic
-  const selectedIds = table.getSelectedRowModel().flatRows.map((r) => r.original.id);
-  function applyBulkStatus(status: AdminOrder["status"]) {
-    setData((d) => d.map((o) => (selectedIds.includes(o.id) ? { ...o, status } : o)));
-    setBulkDialogOpen(false);
-  }
+  })
 
   return (
-    <div>
-      {/* Bulk toolbar */}
-      {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between bg-gray-100 p-2 mb-4 rounded">
-          <strong>{selectedIds.length}</strong> selected
-          <Button variant="outline" onClick={() => setBulkDialogOpen(true)}>
-            Change Status
-          </Button>
-        </div>
-      )}
-
-      {/* Search & filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+    <>
+      {/* Search & Filters */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <Input
           placeholder="Search orders…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-            <SelectTrigger className="w-[180px]">
+          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
+            <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
-              {STATUS_OPTIONS.map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
-                </SelectItem>
+              {STATUS_OPTIONS.map(st => (
+                <SelectItem key={st} value={st}>{st}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={currencyFilter} onValueChange={(v) => setCurrencyFilter(v as any)}>
-            <SelectTrigger className="w-[180px]">
+          <Select value={currencyFilter} onValueChange={v => setCurrencyFilter(v as any)}>
+            <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Currencies" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Currencies</SelectItem>
-              {CURRENCY_OPTIONS.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
+              {CURRENCY_OPTIONS.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -329,22 +311,24 @@ export default function OrderTable({ initialData }: Props) {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
+            {table.getHeaderGroups().map(hg => (
               <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead key={header.id} className="p-2">
+                {hg.headers.map(header => (
+                  <TableHead
+                    key={header.id}
+                    className={`p-2 ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
                     {!header.isPlaceholder && (
-                      <>
+                      <div className="flex items-center">
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
-                          <span className="ml-1 inline-block align-middle">
-                            {{
-                              asc: <ChevronUp className="h-4 w-4" />,
-                              desc: <ChevronDown className="h-4 w-4" />,
-                            }[header.column.getIsSorted() as string] ?? null}
+                          <span className="ml-1">
+                            {header.column.getIsSorted() === 'asc' ? <ChevronUp className="h-4 w-4" /> :
+                             header.column.getIsSorted() === 'desc' ? <ChevronDown className="h-4 w-4" /> : null}
                           </span>
                         )}
-                      </>
+                      </div>
                     )}
                   </TableHead>
                 ))}
@@ -352,9 +336,9 @@ export default function OrderTable({ initialData }: Props) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="even:bg-gray-50">
-                {row.getVisibleCells().map((cell) => (
+            {table.getRowModel().rows.map(row => (
+              <TableRow key={row.id} className="even:bg-gray-50 hover:bg-gray-100">
+                {row.getVisibleCells().map(cell => (
                   <TableCell key={cell.id} className="p-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
@@ -376,166 +360,96 @@ export default function OrderTable({ initialData }: Props) {
         <Button variant="link" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Next →
         </Button>
-        <Select
-          value={String(table.getState().pagination.pageSize)}
-          onValueChange={(v) => table.setPageSize(Number(v))}
+        <select
+          className="ml-2 border rounded p-1"
+          value={table.getState().pagination.pageSize}
+          onChange={e => table.setPageSize(Number(e.target.value))}
         >
-          <SelectTrigger className="w-[80px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[10, 20, 30, 50].map((s) => (
-              <SelectItem key={s} value={String(s)}>
-                {s} / page
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {[10,20,30,50].map(s => (
+            <option key={s} value={s}>{s} / page</option>
+          ))}
+        </select>
       </div>
 
-      {/* Bulk‐status dialog */}
-      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-        <DialogContent className="sm:max-w-xs">
-          <DialogHeader>
-            <DialogTitle>Change Status</DialogTitle>
-            <DialogDescription>
-              Apply to {selectedIds.length} selected orders.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-4 space-y-2">
-            {STATUS_OPTIONS.map((st) => (
-              <Button key={st} className="w-full" onClick={() => applyBulkStatus(st)}>
-                {st}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Receipt dialog */}
+      {/* Receipt Preview Modal */}
       {receiptOrder && (
         <Dialog open={receiptOpen} onOpenChange={() => setReceiptOpen(false)}>
-          <DialogContent
-            className="
-              max-w-lg
-              print:max-w-full
-              print:p-8
-              print:shadow-none
-              print:bg-transparent
-            "
-          >
+          <DialogContent className="max-w-lg print:hidden">
             <DialogHeader>
-              <div className="flex justify-between items-center">
-                <img src="/marobi-logo.png" alt="Marobi" className="h-8" />
-                <div className="text-xs text-gray-500">{new Date().toLocaleString()}</div>
-              </div>
-              <DialogTitle className="mt-2">
-                Receipt — <span className="font-mono">{receiptOrder.id}</span>
-              </DialogTitle>
-              <DialogDescription className="mt-1">
-                Payment Method: <strong>Credit Card</strong>
+              <DialogTitle>Receipt — {receiptOrder.id}</DialogTitle>
+              <DialogDescription>
+                Payment: Credit Card — {new Date().toLocaleString()}
               </DialogDescription>
             </DialogHeader>
+            <ScrollArea className="max-h-[60vh] space-y-4">
+              {(() => {
+                const order = receiptOrder!
+                const subtotal = order.totalAmount
+                const vat = +(subtotal * 0.075).toFixed(2)
+                const deliveryCharge = 500
+                const totalWeight = order.products.reduce((w,p) => w + p.quantity * 0.2, 0).toFixed(2)
+                const courier = 'DHL Express'
+                const sym = order.currency === 'NGN' ? '₦' :
+                            order.currency === 'USD' ? '$' :
+                            order.currency === 'EUR' ? '€' : '£'
+                const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2)
 
-            {/* Web view: scrollable */}
-            <ScrollArea className="mt-6 max-h-[30vh] px-1 print:hidden">
-              <div className="flex flex-col space-y-4">
-                {receiptOrder.products.map((p) => (
-                  <div key={p.id} className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="h-12 w-12 object-cover rounded-md"
-                      />
-                      <div>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="text-sm text-gray-600">
-                          Color: {p.color} &bull; Size: {p.size} &bull; Qty: {p.quantity}
+                return (
+                  <div className="px-2">
+                    {order.products.map(p => (
+                      <div key={p.id} className="flex justify-between mb-2">
+                        <div>
+                          <div className="font-medium">{p.name}</div>
+                          <div className="text-sm text-gray-600">
+                            Color: {p.color} • Size: {p.size} • Qty: {p.quantity}
+                          </div>
+                        </div>
+                        <div className="font-medium">
+                          {sym}{p.lineTotal.toLocaleString()}
                         </div>
                       </div>
+                    ))}
+
+                    <div className="flex justify-between font-medium">
+                      <span>Subtotal</span><span>{sym}{subtotal.toLocaleString()}</span>
                     </div>
-                    <div className="font-medium">
-                      {p.currency === "NGN"
-                        ? `₦${p.lineTotal.toLocaleString()}`
-                        : p.currency === "USD"
-                        ? `$${p.lineTotal.toLocaleString()}`
-                        : p.currency === "EUR"
-                        ? `€${p.lineTotal.toLocaleString()}`
-                        : `£${p.lineTotal.toLocaleString()}`}
+                    <div className="flex justify-between">
+                      <span>VAT (7.5%)</span><span>{sym}{vat.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Delivery</span><span>{sym}{deliveryCharge.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Weight</span><span>{totalWeight}kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Courier</span><span>{courier}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold mt-2">
+                      <span>Grand Total</span><span>{sym}{grandTotal.toLocaleString()}</span>
+                    </div>
+
+                    <div className="mt-4 text-sm space-y-1">
+                      <div><strong>Customer:</strong> {order.customer.name}</div>
+                      <div><strong>Email:</strong> {order.customer.email}</div>
+                      <div><strong>Phone:</strong> {order.customer.phone}</div>
+                      <div><strong>Address:</strong> {order.customer.address}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                )
+              })()}
             </ScrollArea>
-
-            {/* Print view: full list (no scroll) */}
-            <div className="mt-6 px-1 hidden print:block">
-              <div className="flex flex-col space-y-4">
-                {receiptOrder.products.map((p) => (
-                  <div key={p.id} className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="h-12 w-12 object-cover rounded-md"
-                      />
-                      <div>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="text-sm text-gray-600">
-                          Color: {p.color} &bull; Size: {p.size} &bull; Qty: {p.quantity}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="font-medium">
-                      {p.currency === "NGN"
-                        ? `₦${p.lineTotal.toLocaleString()}`
-                        : p.currency === "USD"
-                        ? `$${p.lineTotal.toLocaleString()}`
-                        : p.currency === "EUR"
-                        ? `€${p.lineTotal.toLocaleString()}`
-                        : `£${p.lineTotal.toLocaleString()}`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Total */}
-            <div className="mt-6 flex justify-between text-lg font-semibold px-1">
-              <span>Total</span>
-              <span>₦{receiptOrder.totalNGN.toLocaleString()}</span>
-            </div>
-
-            {/* Customer & Addresses */}
-            <div className="mt-6 px-1 text-sm grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <h3 className="font-medium">Customer Details</h3>
-                <div>Name: {receiptOrder.customer.name}</div>
-                <div>Email: {receiptOrder.customer.email}</div>
-                <div>Phone: {receiptOrder.customer.phone}</div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Shipping Address</h3>
-                  <p className="mt-1">{receiptOrder.customer.address}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer (hidden when printing) */}
-            <DialogFooter className="mt-6 flex justify-end space-x-2 print:hidden px-1">
+            <DialogFooter className="space-x-2">
               <Button variant="outline" onClick={() => setReceiptOpen(false)}>
                 Close
               </Button>
-              <Button variant="secondary" onClick={() => openReceipt(receiptOrder, true)}>
-                <Printer className="mr-1 h-4 w-4" />
-                Print
+              <Button variant="secondary" onClick={() => handlePrint(receiptOrder!)}>
+                <Printer className="mr-1 h-4 w-4" /> Print
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
-    </div>
-  );
+    </>
+  )
 }
