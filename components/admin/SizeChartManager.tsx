@@ -1,10 +1,13 @@
 // components/admin/SizeChartManager.tsx
 'use client'
-import React, { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Trash2, Plus } from "lucide-react"
-import toast from "react-hot-toast"
+
+import React, { useState } from 'react'
+import { v4 as uuid } from 'uuid'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Trash2, Plus } from 'lucide-react'
+import toast from 'react-hot-toast'
+import BackButton from '../BackButton'
 
 interface Entry {
   id: string
@@ -17,114 +20,166 @@ interface Entry {
 
 interface Chart {
   id: string
-  name: string
   entries: Entry[]
 }
 
 export default function SizeChartManager({ initialChart }: { initialChart: Chart }) {
-  const [chartName, setChartName] = useState(initialChart.name)
-  const [entries, setEntries]     = useState<Entry[]>(initialChart.entries)
+  const [entries, setEntries] = useState<Entry[]>(initialChart.entries)
 
-  function updateEntry(idx: number, field: keyof Entry, val: string) {
-    setEntries(e => {
-      const c = [...e]
-      // @ts-ignore
-      c[idx][field] = field.includes("Min")||field.includes("Max") ? +val : val
-      return c
-    })
+  // Update a single field, clamping numbers ≥ 0
+  const updateEntry = (idx: number, field: keyof Entry, raw: string) => {
+    setEntries((prev) =>
+      prev.map((e, i) =>
+        i === idx
+          ? {
+              ...e,
+              [field]:
+                field === 'sizeLabel'
+                  ? raw
+                  : Math.max(0, Number(raw)),
+            }
+          : e
+      )
+    )
   }
 
-  function addEntry() {
-    setEntries(e => [...e, {
-      id: "",
-      sizeLabel: "",
-      chestMin: 0, chestMax: 0,
-      waistMin: 0, waistMax: 0
-    }])
+  // Remove a row
+  const removeRow = (idx: number) => {
+    setEntries((prev) => prev.filter((_, i) => i !== idx))
   }
 
-  async function save() {
+  // Add a fresh row
+  const addRow = () => {
+    setEntries((prev) => [
+      ...prev,
+      {
+        id: uuid(),
+        sizeLabel: '',
+        chestMin: 0,
+        chestMax: 0,
+        waistMin: 0,
+        waistMax: 0,
+      },
+    ])
+  }
+
+  // Every entry must have a non‐empty label and min ≤ max
+  const allValid = entries.every(
+    (e) =>
+      e.sizeLabel.trim() !== '' &&
+      e.chestMin <= e.chestMax &&
+      e.waistMin <= e.waistMax
+  )
+
+  // Persist to the backend
+  async function saveChart() {
+    if (!allValid) return
     try {
-      await fetch("/api/store-settings/size-chart", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: initialChart.id, name: chartName, entries })
+      await fetch('/api/store-settings/size-chart', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: initialChart.id, entries }),
       })
-      toast.success("Size chart saved")
+      toast.success('Size chart saved')
     } catch {
-      toast.error("Failed to save")
+      toast.error('Failed to save size chart')
     }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Input value={chartName} onChange={e => setChartName(e.target.value)} />
-      </div>
+    <div className="space-y-6">
+          <BackButton />
 
-      <div className="overflow-auto">
-        <table className="w-full table-auto border">
-          <thead>
-            <tr>
-              {["Size","Chest Min","Chest Max","Waist Min","Waist Max",""].map(h => (
-                <th key={h} className="border px-2 py-1 text-left">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((ent, i) => (
-              <tr key={i}>
-                <td className="border px-2 py-1">
-                  <Input
-                    value={ent.sizeLabel}
-                    onChange={e => updateEntry(i, "sizeLabel", e.target.value)}
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <Input
-                    type="number"
-                    value={ent.chestMin}
-                    onChange={e => updateEntry(i, "chestMin", e.target.value)}
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <Input
-                    type="number"
-                    value={ent.chestMax}
-                    onChange={e => updateEntry(i, "chestMax", e.target.value)}
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <Input
-                    type="number"
-                    value={ent.waistMin}
-                    onChange={e => updateEntry(i, "waistMin", e.target.value)}
-                  />
-                </td>
-                <td className="border px-2 py-1">
-                  <Input
-                    type="number"
-                    value={ent.waistMax}
-                    onChange={e => updateEntry(i, "waistMax", e.target.value)}
-                  />
-                </td>
-                <td className="border px-2 py-1 text-center">
-                  <button onClick={() => setEntries(e => e.filter((_, j) => j !== i))}>
-                    <Trash2 />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex space-x-2">
-        <Button variant="outline" size="sm" onClick={addEntry}>
-          <Plus /> Add Row
-        </Button>
-        <Button onClick={save}>Save Size Chart</Button>
-      </div>
+          
+      {entries.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="mb-4">No size chart entries.</p>
+          <Button variant="outline" onClick={addRow}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add First Row
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-auto">
+            <table className="w-full table-auto border-collapse border border-gray-200">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-3 py-2 text-left">Size</th>
+                  <th className="border px-3 py-2 text-left">Chest Min</th>
+                  <th className="border px-3 py-2 text-left">Chest Max</th>
+                  <th className="border px-3 py-2 text-left">Waist Min</th>
+                  <th className="border px-3 py-2 text-left">Waist Max</th>
+                  <th className="border px-3 py-2 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((e, i) => (
+                  <tr key={e.id} className="even:bg-gray-50">
+                    <td className="border px-2 py-1">
+                      <Input
+                        value={e.sizeLabel}
+                        placeholder="e.g. M"
+                        onChange={(ev) => updateEntry(i, 'sizeLabel', ev.target.value)}
+                      />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={e.chestMin}
+                        onChange={(ev) => updateEntry(i, 'chestMin', ev.target.value)}
+                      />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <Input
+                        type="number"
+                        min={e.chestMin}
+                        value={e.chestMax}
+                        onChange={(ev) => updateEntry(i, 'chestMax', ev.target.value)}
+                      />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={e.waistMin}
+                        onChange={(ev) => updateEntry(i, 'waistMin', ev.target.value)}
+                      />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <Input
+                        type="number"
+                        min={e.waistMin}
+                        value={e.waistMax}
+                        onChange={(ev) => updateEntry(i, 'waistMax', ev.target.value)}
+                      />
+                    </td>
+                    <td className="border px-2 py-1 text-center">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removeRow(i)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-between items-center">
+            <Button variant="outline" size="sm" onClick={addRow}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Row
+            </Button>
+            <Button onClick={saveChart} disabled={!allValid}>
+              Save Size Chart
+            </Button>
+          </div>
+        </>
+      )}
     </div>
-)
+  )
 }

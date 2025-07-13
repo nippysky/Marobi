@@ -1,31 +1,21 @@
-
 import { NextResponse } from "next/server"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export async function GET() {
-  // Try to fetch an existing chart (with its entries)
-  let chart = await prisma.sizeChart.findFirst({
-    include: { entries: true },
-  })
-
-  // If none exists yet, create a blank one
+  // Ensure there’s always exactly one size‐chart
+  let chart = await prisma.sizeChart.findFirst({ include: { entries: true } })
   if (!chart) {
     chart = await prisma.sizeChart.create({
-      data: {
-        name: "",
-        entries: { create: [] },
-      },
+      data: { name: "", entries: { create: [] } },
       include: { entries: true },
     })
   }
-
   return NextResponse.json(chart)
 }
 
 export async function PUT(req: Request) {
-  const payload: {
+  const { id, entries }: {
     id: string
-    name: string
     entries: Array<{
       id?: string
       sizeLabel: string
@@ -36,17 +26,17 @@ export async function PUT(req: Request) {
     }>
   } = await req.json()
 
-  // Ensure the chart itself exists (upsert)
+  // Upsert the chart itself (we ignore name since frontend no longer uses it)
   const chart = await prisma.sizeChart.upsert({
-    where: { id: payload.id },
-    create: { id: payload.id, name: payload.name },
-    update: { name: payload.name },
+    where: { id },
+    create: { id, name: "", entries: { create: [] } },
+    update: {}, // nothing to update on the chart row
   })
 
-  // Determine which entries should remain
-  const incomingIds = payload.entries.map((e) => e.id).filter(Boolean) as string[]
+  // Figure out which entry IDs are still present
+  const incomingIds = entries.map((e) => e.id).filter(Boolean) as string[]
 
-  // Delete entries that the client has removed
+  // Delete any entries the UI has removed
   await prisma.sizeChartEntry.deleteMany({
     where: {
       chartId: chart.id,
@@ -54,8 +44,8 @@ export async function PUT(req: Request) {
     },
   })
 
-  // Upsert each entry (create new or update existing)
-  const ops = payload.entries.map((e) =>
+  // Upsert each incoming row
+  const ops = entries.map((e) =>
     prisma.sizeChartEntry.upsert({
       where: { id: e.id ?? "" },
       create: {

@@ -1,48 +1,47 @@
-// app/admin/store-settings/page.tsx
-import HeroSlidesManager from "@/components/admin/HeroSlidesManager"
-import SizeChartManager from "@/components/admin/SizeChartManager"
-import StorePoliciesManager from "@/components/admin/StorePoliciesManager"
-import { headers } from "next/headers"
+import Link from "next/link"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { ImageIcon, Ruler} from "lucide-react"
 
-export default async function StoreSettingsPage() {
-  // Grab the current host and pick http vs https
-  const host = (await headers()).get("host")!
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http"
-  const origin = `${protocol}://${host}`
-
-  // Build fully-qualified URLs
-  const [slidesRes, sizeChartRes, policiesRes] = await Promise.all([
-    fetch(`${origin}/api/store-settings/hero-slides`),
-    fetch(`${origin}/api/store-settings/size-chart`),
-    fetch(`${origin}/api/store-settings/policies`),
-  ])
-
-  if (!slidesRes.ok || !sizeChartRes.ok || !policiesRes.ok) {
-    throw new Error("Failed to load store-settings data")
-  }
-
-  const slides    = await slidesRes.json()
-  const sizeChart = await sizeChartRes.json()
-  const policies  = await policiesRes.json()
+export default function StoreSettingsPage() {
+  const cards = [
+    {
+      href: "/admin/settings/hero-slider",
+      title: "Hero Slider",
+      description: "Manage homepage carousel images, headlines & CTAs",
+      icon: <ImageIcon className="h-8 w-8 text-green-700 group-hover:text-green-900" />,
+      bg: "bg-green-100",
+    },
+    {
+      href: "/admin/settings/size-chart",
+      title: "Size Chart",
+      description: "Edit product size guide: labels & measurements",
+      icon: <Ruler className="h-8 w-8 text-blue-700 group-hover:text-blue-900" />,
+      bg: "bg-blue-100",
+    },
+  ]
 
   return (
-    <div className="p-6 space-y-10">
-      <h1 className="text-3xl font-bold">Store Settings</h1>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Hero Slider</h2>
-        <HeroSlidesManager initialSlides={slides} />
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Size Chart</h2>
-        <SizeChartManager initialChart={sizeChart} />
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Store Policies</h2>
-        <StorePoliciesManager initialPolicies={policies} />
-      </section>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-8">Store Settings</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 self-center">
+        {cards.map(({ href, title, description, icon, bg }) => (
+          <Link key={href} href={href} className="block">
+            <Card className="group cursor-pointer hover:shadow-lg transition-shadow">
+              <CardContent className="flex flex-col items-center p-6 space-y-4">
+                <div className={`${bg} p-3 rounded-full`}>
+                  {icon}
+                </div>
+                <CardTitle className="text-xl font-semibold group-hover:text-gray-900">
+                  {title}
+                </CardTitle>
+                <p className="text-sm text-gray-600 text-center">
+                  {description}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

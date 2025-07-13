@@ -39,13 +39,6 @@ enum UserRole {
   SupportUser // lookup orders, view customers, reports
 }
 
-/// Types of store policies
-enum PolicyType {
-  Privacy
-  Shipping
-  Refund
-}
-
 model Customer {
   id           String    @id @default(cuid())
   firstName    String
@@ -168,12 +161,4 @@ model SizeChartEntry {
   waistMax  Int
   chart     SizeChart @relation(fields: [chartId], references: [id])
   chartId   String
-}
-
-/// Grouped store policies
-model StorePolicy {
-  id        String     @id @default(cuid())
-  type      PolicyType @unique
-  content   String // rich‐text or markdown
-  updatedAt DateTime   @updatedAt
 }

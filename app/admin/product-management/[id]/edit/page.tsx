@@ -2,11 +2,12 @@ import EditProductSection from "@/components/admin/EditProductSection";
 import BackButton from "@/components/BackButton";
 import { getProductByItsId, ProductPayload } from "@/lib/products";
 
-interface Params {
-  params: { id: string };
-}
-
-export default async function EditProductPage({ params: { id } }: Params) {
+export default async function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
   const product: ProductPayload = await getProductByItsId(id);
 
   return (
