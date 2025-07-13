@@ -71,6 +71,27 @@ export const Currency: {
 
 export type Currency = (typeof Currency)[keyof typeof Currency]
 
+
+export const JobRole: {
+  DispatchCoordinator: 'DispatchCoordinator',
+  OrderProcessingSpecialist: 'OrderProcessingSpecialist',
+  ProductCatalogManager: 'ProductCatalogManager',
+  CustomerSupportRep: 'CustomerSupportRep'
+};
+
+export type JobRole = (typeof JobRole)[keyof typeof JobRole]
+
+
+export const UserRole: {
+  SuperAdmin: 'SuperAdmin',
+  ProductAdmin: 'ProductAdmin',
+  OrderAdmin: 'OrderAdmin',
+  DispatchUser: 'DispatchUser',
+  SupportUser: 'SupportUser'
+};
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
 }
 
 export type OrderStatus = $Enums.OrderStatus
@@ -80,6 +101,14 @@ export const OrderStatus: typeof $Enums.OrderStatus
 export type Currency = $Enums.Currency
 
 export const Currency: typeof $Enums.Currency
+
+export type JobRole = $Enums.JobRole
+
+export const JobRole: typeof $Enums.JobRole
+
+export type UserRole = $Enums.UserRole
+
+export const UserRole: typeof $Enums.UserRole
 
 /**
  * ##  Prisma Client ʲˢ
@@ -2705,7 +2734,8 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     passwordHash: string | null
-    role: string | null
+    role: $Enums.JobRole | null
+    access: $Enums.UserRole | null
     createdAt: Date | null
   }
 
@@ -2716,7 +2746,8 @@ export namespace Prisma {
     email: string | null
     phone: string | null
     passwordHash: string | null
-    role: string | null
+    role: $Enums.JobRole | null
+    access: $Enums.UserRole | null
     createdAt: Date | null
   }
 
@@ -2728,6 +2759,7 @@ export namespace Prisma {
     phone: number
     passwordHash: number
     role: number
+    access: number
     createdAt: number
     _all: number
   }
@@ -2741,6 +2773,7 @@ export namespace Prisma {
     phone?: true
     passwordHash?: true
     role?: true
+    access?: true
     createdAt?: true
   }
 
@@ -2752,6 +2785,7 @@ export namespace Prisma {
     phone?: true
     passwordHash?: true
     role?: true
+    access?: true
     createdAt?: true
   }
 
@@ -2763,6 +2797,7 @@ export namespace Prisma {
     phone?: true
     passwordHash?: true
     role?: true
+    access?: true
     createdAt?: true
     _all?: true
   }
@@ -2846,7 +2881,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt: Date
     _count: StaffCountAggregateOutputType | null
     _min: StaffMinAggregateOutputType | null
@@ -2875,6 +2911,7 @@ export namespace Prisma {
     phone?: boolean
     passwordHash?: boolean
     role?: boolean
+    access?: boolean
     createdAt?: boolean
     orders?: boolean | Staff$ordersArgs<ExtArgs>
     offlineSales?: boolean | Staff$offlineSalesArgs<ExtArgs>
@@ -2889,6 +2926,7 @@ export namespace Prisma {
     phone?: boolean
     passwordHash?: boolean
     role?: boolean
+    access?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["staff"]>
 
@@ -2900,6 +2938,7 @@ export namespace Prisma {
     phone?: boolean
     passwordHash?: boolean
     role?: boolean
+    access?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["staff"]>
 
@@ -2911,10 +2950,11 @@ export namespace Prisma {
     phone?: boolean
     passwordHash?: boolean
     role?: boolean
+    access?: boolean
     createdAt?: boolean
   }
 
-  export type StaffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "phone" | "passwordHash" | "role" | "createdAt", ExtArgs["result"]["staff"]>
+  export type StaffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "phone" | "passwordHash" | "role" | "access" | "createdAt", ExtArgs["result"]["staff"]>
   export type StaffInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     orders?: boolean | Staff$ordersArgs<ExtArgs>
     offlineSales?: boolean | Staff$offlineSalesArgs<ExtArgs>
@@ -2936,7 +2976,14 @@ export namespace Prisma {
       email: string
       phone: string
       passwordHash: string
-      role: string
+      /**
+       * which business‐function they perform
+       */
+      role: $Enums.JobRole
+      /**
+       * what sections of the admin UI they can access
+       */
+      access: $Enums.UserRole
       createdAt: Date
     }, ExtArgs["result"]["staff"]>
     composites: {}
@@ -3369,7 +3416,8 @@ export namespace Prisma {
     readonly email: FieldRef<"Staff", 'String'>
     readonly phone: FieldRef<"Staff", 'String'>
     readonly passwordHash: FieldRef<"Staff", 'String'>
-    readonly role: FieldRef<"Staff", 'String'>
+    readonly role: FieldRef<"Staff", 'JobRole'>
+    readonly access: FieldRef<"Staff", 'UserRole'>
     readonly createdAt: FieldRef<"Staff", 'DateTime'>
   }
     
@@ -9580,6 +9628,7 @@ export namespace Prisma {
     phone: 'phone',
     passwordHash: 'passwordHash',
     role: 'role',
+    access: 'access',
     createdAt: 'createdAt'
   };
 
@@ -9708,6 +9757,34 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'JobRole'
+   */
+  export type EnumJobRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JobRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'JobRole[]'
+   */
+  export type ListEnumJobRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JobRole[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole'
+   */
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole[]'
+   */
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
     
 
 
@@ -9850,7 +9927,8 @@ export namespace Prisma {
     email?: StringFilter<"Staff"> | string
     phone?: StringFilter<"Staff"> | string
     passwordHash?: StringFilter<"Staff"> | string
-    role?: StringFilter<"Staff"> | string
+    role?: EnumJobRoleFilter<"Staff"> | $Enums.JobRole
+    access?: EnumUserRoleFilter<"Staff"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"Staff"> | Date | string
     orders?: OrderListRelationFilter
     offlineSales?: OfflineSaleListRelationFilter
@@ -9864,6 +9942,7 @@ export namespace Prisma {
     phone?: SortOrder
     passwordHash?: SortOrder
     role?: SortOrder
+    access?: SortOrder
     createdAt?: SortOrder
     orders?: OrderOrderByRelationAggregateInput
     offlineSales?: OfflineSaleOrderByRelationAggregateInput
@@ -9879,7 +9958,8 @@ export namespace Prisma {
     lastName?: StringFilter<"Staff"> | string
     phone?: StringFilter<"Staff"> | string
     passwordHash?: StringFilter<"Staff"> | string
-    role?: StringFilter<"Staff"> | string
+    role?: EnumJobRoleFilter<"Staff"> | $Enums.JobRole
+    access?: EnumUserRoleFilter<"Staff"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"Staff"> | Date | string
     orders?: OrderListRelationFilter
     offlineSales?: OfflineSaleListRelationFilter
@@ -9893,6 +9973,7 @@ export namespace Prisma {
     phone?: SortOrder
     passwordHash?: SortOrder
     role?: SortOrder
+    access?: SortOrder
     createdAt?: SortOrder
     _count?: StaffCountOrderByAggregateInput
     _max?: StaffMaxOrderByAggregateInput
@@ -9909,7 +9990,8 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"Staff"> | string
     phone?: StringWithAggregatesFilter<"Staff"> | string
     passwordHash?: StringWithAggregatesFilter<"Staff"> | string
-    role?: StringWithAggregatesFilter<"Staff"> | string
+    role?: EnumJobRoleWithAggregatesFilter<"Staff"> | $Enums.JobRole
+    access?: EnumUserRoleWithAggregatesFilter<"Staff"> | $Enums.UserRole
     createdAt?: DateTimeWithAggregatesFilter<"Staff"> | Date | string
   }
 
@@ -10361,7 +10443,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     orders?: OrderCreateNestedManyWithoutStaffInput
     offlineSales?: OfflineSaleCreateNestedManyWithoutStaffInput
@@ -10374,7 +10457,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutStaffInput
     offlineSales?: OfflineSaleUncheckedCreateNestedManyWithoutStaffInput
@@ -10387,7 +10471,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUpdateManyWithoutStaffNestedInput
     offlineSales?: OfflineSaleUpdateManyWithoutStaffNestedInput
@@ -10400,7 +10485,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutStaffNestedInput
     offlineSales?: OfflineSaleUncheckedUpdateManyWithoutStaffNestedInput
@@ -10413,7 +10499,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
   }
 
@@ -10424,7 +10511,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10435,7 +10523,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10947,6 +11036,20 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type EnumJobRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobRole | EnumJobRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobRoleFilter<$PrismaModel> | $Enums.JobRole
+  }
+
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
   export type OfflineSaleListRelationFilter = {
     every?: OfflineSaleWhereInput
     some?: OfflineSaleWhereInput
@@ -10965,6 +11068,7 @@ export namespace Prisma {
     phone?: SortOrder
     passwordHash?: SortOrder
     role?: SortOrder
+    access?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -10976,6 +11080,7 @@ export namespace Prisma {
     phone?: SortOrder
     passwordHash?: SortOrder
     role?: SortOrder
+    access?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -10987,7 +11092,28 @@ export namespace Prisma {
     phone?: SortOrder
     passwordHash?: SortOrder
     role?: SortOrder
+    access?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type EnumJobRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobRole | EnumJobRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobRoleWithAggregatesFilter<$PrismaModel> | $Enums.JobRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumJobRoleFilter<$PrismaModel>
+    _max?: NestedEnumJobRoleFilter<$PrismaModel>
+  }
+
+  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -11473,6 +11599,14 @@ export namespace Prisma {
     connect?: OfflineSaleWhereUniqueInput | OfflineSaleWhereUniqueInput[]
   }
 
+  export type EnumJobRoleFieldUpdateOperationsInput = {
+    set?: $Enums.JobRole
+  }
+
+  export type EnumUserRoleFieldUpdateOperationsInput = {
+    set?: $Enums.UserRole
+  }
+
   export type OrderUpdateManyWithoutStaffNestedInput = {
     create?: XOR<OrderCreateWithoutStaffInput, OrderUncheckedCreateWithoutStaffInput> | OrderCreateWithoutStaffInput[] | OrderUncheckedCreateWithoutStaffInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutStaffInput | OrderCreateOrConnectWithoutStaffInput[]
@@ -11868,6 +12002,40 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedEnumJobRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobRole | EnumJobRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobRoleFilter<$PrismaModel> | $Enums.JobRole
+  }
+
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type NestedEnumJobRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.JobRole | EnumJobRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.JobRole[] | ListEnumJobRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumJobRoleWithAggregatesFilter<$PrismaModel> | $Enums.JobRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumJobRoleFilter<$PrismaModel>
+    _max?: NestedEnumJobRoleFilter<$PrismaModel>
+  }
+
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
@@ -12322,7 +12490,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     offlineSales?: OfflineSaleCreateNestedManyWithoutStaffInput
   }
@@ -12334,7 +12503,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     offlineSales?: OfflineSaleUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -12446,7 +12616,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     offlineSales?: OfflineSaleUpdateManyWithoutStaffNestedInput
   }
@@ -12458,7 +12629,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     offlineSales?: OfflineSaleUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -12618,7 +12790,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     orders?: OrderCreateNestedManyWithoutStaffInput
   }
@@ -12630,7 +12803,8 @@ export namespace Prisma {
     email: string
     phone: string
     passwordHash: string
-    role: string
+    role: $Enums.JobRole
+    access: $Enums.UserRole
     createdAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -12693,7 +12867,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUpdateManyWithoutStaffNestedInput
   }
@@ -12705,7 +12880,8 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: StringFieldUpdateOperationsInput | string
+    role?: EnumJobRoleFieldUpdateOperationsInput | $Enums.JobRole
+    access?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutStaffNestedInput
   }

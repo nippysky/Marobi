@@ -1,6 +1,6 @@
 import React from "react";
 import { getCurrentUser } from "@/lib/session";
-import OfflineSaleForm from "@/components/admin/admin/OfflineSaleForm";
+import OfflineSaleForm from "@/components/admin/OfflineSaleForm";
 
 
 export default async function LogOfflineSalePage() {
