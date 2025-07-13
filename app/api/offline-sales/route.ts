@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import {prisma} from "@/lib/db";   // your lib/db.ts must `export default new PrismaClient()`
 
 export async function POST(request: NextRequest) {
   const {
@@ -28,53 +28,96 @@ export async function POST(request: NextRequest) {
     timestamp: string;
   } = await request.json();
 
-  // 1) Create the Order
+  // 1) Enrich each line item
+  const detailedItems = await Promise.all(
+    items.map(async (i) => {
+      const variant = await prisma.variant.findUniqueOrThrow({
+        where: {
+          product_color_size: {
+            productId: i.productId,
+            color: i.color,
+            size: i.size,
+          },
+        },
+        include: { product: true },
+      });
+      const unitPrice = variant.product.priceNGN ?? 0;
+      const lineTotal = unitPrice * i.quantity;
+      return {
+        productId: variant.productId,
+        name:      variant.product.name,
+        image:     variant.product.image,
+        category:  variant.product.category,
+        currency:  "NGN" as const,
+        lineTotal,
+        color:     variant.color,
+        size:      variant.size,
+        quantity:  i.quantity,
+      };
+    })
+  );
+
+  // 2) Compute order totals
+  const totalNGN    = detailedItems.reduce((sum, li) => sum + li.lineTotal, 0);
+  const totalAmount = totalNGN;
+  const currency    = "NGN";
+
+  // 3) Resolve a customerId (either existing or newly created)
+  let customerIdToUse: string;
+  if ("id" in customer) {
+    customerIdToUse = customer.id;
+  } else {
+    const newCust = await prisma.customer.create({
+      data: {
+        firstName: customer.firstName,
+        lastName:  customer.lastName,
+        email:     customer.email,
+        phone:     customer.phone,
+        address:   "",           // guest address blank
+      }
+    });
+    customerIdToUse = newCust.id;
+  }
+
+  // 4) Create the order (unchecked)
   const newOrder = await prisma.order.create({
     data: {
-      offline: true,
       staffId,
       paymentMethod,
-      createdAt: new Date(timestamp),
-      // customer fields
-      customerId: "id" in customer ? customer.id : undefined,
-      customerFirstName: "id" in customer ? undefined : customer.firstName,
-      customerLastName:  "id" in customer ? undefined : customer.lastName,
-      customerEmail:     "id" in customer ? undefined : customer.email,
-      customerPhone:     "id" in customer ? undefined : customer.phone,
-      // create items inline
+      currency,
+      totalAmount,
+      totalNGN,
+      createdAt:  new Date(timestamp),
+      customerId: customerIdToUse,
       items: {
-        create: items.map((i) => ({
-          productId: i.productId,
-          color:      i.color,
-          size:       i.size,
-          quantity:   i.quantity,
-        })),
-      },
+        create: detailedItems
+      }
     },
     include: { items: true },
   });
 
-  // 2) Decrement stock for each variant
+  // 5) Decrement stock
   await Promise.all(
-    items.map((i) =>
-      prisma.productVariant.update({
+    detailedItems.map((li) =>
+      prisma.variant.update({
         where: {
-          productId_color_size: {
-            productId: i.productId,
-            color:      i.color,
-            size:       i.size,
-          },
+          product_color_size: {
+            productId: li.productId,
+            color:     li.color,
+            size:      li.size,
+          }
         },
-        data: {
-          stock: { decrement: i.quantity },
-        },
+        data: { stock: { decrement: li.quantity } }
       })
     )
   );
 
-  // 3) Record in OfflineSale table
+  // 6) Log the offline‐sale record
   await prisma.offlineSale.create({
-    data: { orderId: newOrder.id },
+    data: {
+      orderId: newOrder.id,
+      staffId,
+    }
   });
 
   return NextResponse.json({ success: true, orderId: newOrder.id });

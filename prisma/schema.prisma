@@ -94,19 +94,25 @@ model Variant {
   stock      Int
   weight     Float?
   createdAt  DateTime @default(now())
+
+  @@unique([productId, color, size], name: "product_color_size")
 }
 
 model Order {
-  id           String       @id @default(uuid())
-  status       OrderStatus  @default(Processing)
-  currency     Currency
-  totalAmount  Float
-  totalNGN     Int
-  createdAt    DateTime     @default(now())
+  id            String       @id @default(uuid())
+  status        OrderStatus  @default(Processing)
+  currency      Currency
+  totalAmount   Float
+  totalNGN      Int
+  paymentMethod String
+  createdAt     DateTime     @default(now())
+
   customer     Customer     @relation(fields: [customerId], references: [id])
   customerId   String
+
   staff        Staff?       @relation(fields: [staffId], references: [id])
   staffId      String?
+
   items        OrderItem[]
   offlineSale  OfflineSale?
 }
@@ -171,4 +177,3 @@ model StorePolicy {
   content   String     // rich‐text or markdown
   updatedAt DateTime   @updatedAt
 }
-

@@ -48,6 +48,26 @@ export type OrderItem = $Result.DefaultSelection<Prisma.$OrderItemPayload>
  * 
  */
 export type OfflineSale = $Result.DefaultSelection<Prisma.$OfflineSalePayload>
+/**
+ * Model HeroSlide
+ * Hero‐slider banners
+ */
+export type HeroSlide = $Result.DefaultSelection<Prisma.$HeroSlidePayload>
+/**
+ * Model SizeChart
+ * Size charts broken into rows
+ */
+export type SizeChart = $Result.DefaultSelection<Prisma.$SizeChartPayload>
+/**
+ * Model SizeChartEntry
+ * 
+ */
+export type SizeChartEntry = $Result.DefaultSelection<Prisma.$SizeChartEntryPayload>
+/**
+ * Model StorePolicy
+ * Grouped store policies
+ */
+export type StorePolicy = $Result.DefaultSelection<Prisma.$StorePolicyPayload>
 
 /**
  * Enums
@@ -92,6 +112,15 @@ export const UserRole: {
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
+
+export const PolicyType: {
+  Privacy: 'Privacy',
+  Shipping: 'Shipping',
+  Refund: 'Refund'
+};
+
+export type PolicyType = (typeof PolicyType)[keyof typeof PolicyType]
+
 }
 
 export type OrderStatus = $Enums.OrderStatus
@@ -109,6 +138,10 @@ export const JobRole: typeof $Enums.JobRole
 export type UserRole = $Enums.UserRole
 
 export const UserRole: typeof $Enums.UserRole
+
+export type PolicyType = $Enums.PolicyType
+
+export const PolicyType: typeof $Enums.PolicyType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -304,6 +337,46 @@ export class PrismaClient<
     * ```
     */
   get offlineSale(): Prisma.OfflineSaleDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.heroSlide`: Exposes CRUD operations for the **HeroSlide** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more HeroSlides
+    * const heroSlides = await prisma.heroSlide.findMany()
+    * ```
+    */
+  get heroSlide(): Prisma.HeroSlideDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.sizeChart`: Exposes CRUD operations for the **SizeChart** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SizeCharts
+    * const sizeCharts = await prisma.sizeChart.findMany()
+    * ```
+    */
+  get sizeChart(): Prisma.SizeChartDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.sizeChartEntry`: Exposes CRUD operations for the **SizeChartEntry** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SizeChartEntries
+    * const sizeChartEntries = await prisma.sizeChartEntry.findMany()
+    * ```
+    */
+  get sizeChartEntry(): Prisma.SizeChartEntryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.storePolicy`: Exposes CRUD operations for the **StorePolicy** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StorePolicies
+    * const storePolicies = await prisma.storePolicy.findMany()
+    * ```
+    */
+  get storePolicy(): Prisma.StorePolicyDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -750,7 +823,11 @@ export namespace Prisma {
     Variant: 'Variant',
     Order: 'Order',
     OrderItem: 'OrderItem',
-    OfflineSale: 'OfflineSale'
+    OfflineSale: 'OfflineSale',
+    HeroSlide: 'HeroSlide',
+    SizeChart: 'SizeChart',
+    SizeChartEntry: 'SizeChartEntry',
+    StorePolicy: 'StorePolicy'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -769,7 +846,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "customer" | "staff" | "product" | "variant" | "order" | "orderItem" | "offlineSale"
+      modelProps: "customer" | "staff" | "product" | "variant" | "order" | "orderItem" | "offlineSale" | "heroSlide" | "sizeChart" | "sizeChartEntry" | "storePolicy"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1291,6 +1368,302 @@ export namespace Prisma {
           }
         }
       }
+      HeroSlide: {
+        payload: Prisma.$HeroSlidePayload<ExtArgs>
+        fields: Prisma.HeroSlideFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.HeroSlideFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.HeroSlideFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          findFirst: {
+            args: Prisma.HeroSlideFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.HeroSlideFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          findMany: {
+            args: Prisma.HeroSlideFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>[]
+          }
+          create: {
+            args: Prisma.HeroSlideCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          createMany: {
+            args: Prisma.HeroSlideCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.HeroSlideCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>[]
+          }
+          delete: {
+            args: Prisma.HeroSlideDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          update: {
+            args: Prisma.HeroSlideUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          deleteMany: {
+            args: Prisma.HeroSlideDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.HeroSlideUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.HeroSlideUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>[]
+          }
+          upsert: {
+            args: Prisma.HeroSlideUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HeroSlidePayload>
+          }
+          aggregate: {
+            args: Prisma.HeroSlideAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHeroSlide>
+          }
+          groupBy: {
+            args: Prisma.HeroSlideGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HeroSlideGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.HeroSlideCountArgs<ExtArgs>
+            result: $Utils.Optional<HeroSlideCountAggregateOutputType> | number
+          }
+        }
+      }
+      SizeChart: {
+        payload: Prisma.$SizeChartPayload<ExtArgs>
+        fields: Prisma.SizeChartFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SizeChartFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SizeChartFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          findFirst: {
+            args: Prisma.SizeChartFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SizeChartFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          findMany: {
+            args: Prisma.SizeChartFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>[]
+          }
+          create: {
+            args: Prisma.SizeChartCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          createMany: {
+            args: Prisma.SizeChartCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SizeChartCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>[]
+          }
+          delete: {
+            args: Prisma.SizeChartDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          update: {
+            args: Prisma.SizeChartUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          deleteMany: {
+            args: Prisma.SizeChartDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SizeChartUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SizeChartUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>[]
+          }
+          upsert: {
+            args: Prisma.SizeChartUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartPayload>
+          }
+          aggregate: {
+            args: Prisma.SizeChartAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSizeChart>
+          }
+          groupBy: {
+            args: Prisma.SizeChartGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SizeChartGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SizeChartCountArgs<ExtArgs>
+            result: $Utils.Optional<SizeChartCountAggregateOutputType> | number
+          }
+        }
+      }
+      SizeChartEntry: {
+        payload: Prisma.$SizeChartEntryPayload<ExtArgs>
+        fields: Prisma.SizeChartEntryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SizeChartEntryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SizeChartEntryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          findFirst: {
+            args: Prisma.SizeChartEntryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SizeChartEntryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          findMany: {
+            args: Prisma.SizeChartEntryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>[]
+          }
+          create: {
+            args: Prisma.SizeChartEntryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          createMany: {
+            args: Prisma.SizeChartEntryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SizeChartEntryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>[]
+          }
+          delete: {
+            args: Prisma.SizeChartEntryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          update: {
+            args: Prisma.SizeChartEntryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          deleteMany: {
+            args: Prisma.SizeChartEntryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SizeChartEntryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SizeChartEntryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>[]
+          }
+          upsert: {
+            args: Prisma.SizeChartEntryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SizeChartEntryPayload>
+          }
+          aggregate: {
+            args: Prisma.SizeChartEntryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSizeChartEntry>
+          }
+          groupBy: {
+            args: Prisma.SizeChartEntryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SizeChartEntryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SizeChartEntryCountArgs<ExtArgs>
+            result: $Utils.Optional<SizeChartEntryCountAggregateOutputType> | number
+          }
+        }
+      }
+      StorePolicy: {
+        payload: Prisma.$StorePolicyPayload<ExtArgs>
+        fields: Prisma.StorePolicyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StorePolicyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StorePolicyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          findFirst: {
+            args: Prisma.StorePolicyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StorePolicyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          findMany: {
+            args: Prisma.StorePolicyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>[]
+          }
+          create: {
+            args: Prisma.StorePolicyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          createMany: {
+            args: Prisma.StorePolicyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StorePolicyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>[]
+          }
+          delete: {
+            args: Prisma.StorePolicyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          update: {
+            args: Prisma.StorePolicyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          deleteMany: {
+            args: Prisma.StorePolicyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StorePolicyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StorePolicyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>[]
+          }
+          upsert: {
+            args: Prisma.StorePolicyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StorePolicyPayload>
+          }
+          aggregate: {
+            args: Prisma.StorePolicyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStorePolicy>
+          }
+          groupBy: {
+            args: Prisma.StorePolicyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StorePolicyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StorePolicyCountArgs<ExtArgs>
+            result: $Utils.Optional<StorePolicyCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1382,6 +1755,10 @@ export namespace Prisma {
     order?: OrderOmit
     orderItem?: OrderItemOmit
     offlineSale?: OfflineSaleOmit
+    heroSlide?: HeroSlideOmit
+    sizeChart?: SizeChartOmit
+    sizeChartEntry?: SizeChartEntryOmit
+    storePolicy?: StorePolicyOmit
   }
 
   /* Types for Logging */
@@ -1601,6 +1978,37 @@ export namespace Prisma {
    */
   export type OrderCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: OrderItemWhereInput
+  }
+
+
+  /**
+   * Count Type SizeChartCountOutputType
+   */
+
+  export type SizeChartCountOutputType = {
+    entries: number
+  }
+
+  export type SizeChartCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    entries?: boolean | SizeChartCountOutputTypeCountEntriesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * SizeChartCountOutputType without action
+   */
+  export type SizeChartCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartCountOutputType
+     */
+    select?: SizeChartCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * SizeChartCountOutputType without action
+   */
+  export type SizeChartCountOutputTypeCountEntriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SizeChartEntryWhereInput
   }
 
 
@@ -2976,13 +3384,7 @@ export namespace Prisma {
       email: string
       phone: string
       passwordHash: string
-      /**
-       * which business‐function they perform
-       */
       role: $Enums.JobRole
-      /**
-       * what sections of the admin UI they can access
-       */
       access: $Enums.UserRole
       createdAt: Date
     }, ExtArgs["result"]["staff"]>
@@ -6191,6 +6593,7 @@ export namespace Prisma {
     currency: $Enums.Currency | null
     totalAmount: number | null
     totalNGN: number | null
+    paymentMethod: string | null
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
@@ -6202,6 +6605,7 @@ export namespace Prisma {
     currency: $Enums.Currency | null
     totalAmount: number | null
     totalNGN: number | null
+    paymentMethod: string | null
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
@@ -6213,6 +6617,7 @@ export namespace Prisma {
     currency: number
     totalAmount: number
     totalNGN: number
+    paymentMethod: number
     createdAt: number
     customerId: number
     staffId: number
@@ -6236,6 +6641,7 @@ export namespace Prisma {
     currency?: true
     totalAmount?: true
     totalNGN?: true
+    paymentMethod?: true
     createdAt?: true
     customerId?: true
     staffId?: true
@@ -6247,6 +6653,7 @@ export namespace Prisma {
     currency?: true
     totalAmount?: true
     totalNGN?: true
+    paymentMethod?: true
     createdAt?: true
     customerId?: true
     staffId?: true
@@ -6258,6 +6665,7 @@ export namespace Prisma {
     currency?: true
     totalAmount?: true
     totalNGN?: true
+    paymentMethod?: true
     createdAt?: true
     customerId?: true
     staffId?: true
@@ -6356,6 +6764,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt: Date
     customerId: string
     staffId: string | null
@@ -6386,6 +6795,7 @@ export namespace Prisma {
     currency?: boolean
     totalAmount?: boolean
     totalNGN?: boolean
+    paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
     staffId?: boolean
@@ -6402,6 +6812,7 @@ export namespace Prisma {
     currency?: boolean
     totalAmount?: boolean
     totalNGN?: boolean
+    paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
     staffId?: boolean
@@ -6415,6 +6826,7 @@ export namespace Prisma {
     currency?: boolean
     totalAmount?: boolean
     totalNGN?: boolean
+    paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
     staffId?: boolean
@@ -6428,12 +6840,13 @@ export namespace Prisma {
     currency?: boolean
     totalAmount?: boolean
     totalNGN?: boolean
+    paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
     staffId?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "createdAt" | "customerId" | "staffId", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "staffId", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
@@ -6464,6 +6877,7 @@ export namespace Prisma {
       currency: $Enums.Currency
       totalAmount: number
       totalNGN: number
+      paymentMethod: string
       createdAt: Date
       customerId: string
       staffId: string | null
@@ -6899,6 +7313,7 @@ export namespace Prisma {
     readonly currency: FieldRef<"Order", 'Currency'>
     readonly totalAmount: FieldRef<"Order", 'Float'>
     readonly totalNGN: FieldRef<"Order", 'Int'>
+    readonly paymentMethod: FieldRef<"Order", 'String'>
     readonly createdAt: FieldRef<"Order", 'DateTime'>
     readonly customerId: FieldRef<"Order", 'String'>
     readonly staffId: FieldRef<"Order", 'String'>
@@ -9593,6 +10008,4217 @@ export namespace Prisma {
 
 
   /**
+   * Model HeroSlide
+   */
+
+  export type AggregateHeroSlide = {
+    _count: HeroSlideCountAggregateOutputType | null
+    _avg: HeroSlideAvgAggregateOutputType | null
+    _sum: HeroSlideSumAggregateOutputType | null
+    _min: HeroSlideMinAggregateOutputType | null
+    _max: HeroSlideMaxAggregateOutputType | null
+  }
+
+  export type HeroSlideAvgAggregateOutputType = {
+    order: number | null
+  }
+
+  export type HeroSlideSumAggregateOutputType = {
+    order: number | null
+  }
+
+  export type HeroSlideMinAggregateOutputType = {
+    id: string | null
+    imageUrl: string | null
+    headline: string | null
+    subheadline: string | null
+    ctaText: string | null
+    ctaUrl: string | null
+    order: number | null
+  }
+
+  export type HeroSlideMaxAggregateOutputType = {
+    id: string | null
+    imageUrl: string | null
+    headline: string | null
+    subheadline: string | null
+    ctaText: string | null
+    ctaUrl: string | null
+    order: number | null
+  }
+
+  export type HeroSlideCountAggregateOutputType = {
+    id: number
+    imageUrl: number
+    headline: number
+    subheadline: number
+    ctaText: number
+    ctaUrl: number
+    order: number
+    _all: number
+  }
+
+
+  export type HeroSlideAvgAggregateInputType = {
+    order?: true
+  }
+
+  export type HeroSlideSumAggregateInputType = {
+    order?: true
+  }
+
+  export type HeroSlideMinAggregateInputType = {
+    id?: true
+    imageUrl?: true
+    headline?: true
+    subheadline?: true
+    ctaText?: true
+    ctaUrl?: true
+    order?: true
+  }
+
+  export type HeroSlideMaxAggregateInputType = {
+    id?: true
+    imageUrl?: true
+    headline?: true
+    subheadline?: true
+    ctaText?: true
+    ctaUrl?: true
+    order?: true
+  }
+
+  export type HeroSlideCountAggregateInputType = {
+    id?: true
+    imageUrl?: true
+    headline?: true
+    subheadline?: true
+    ctaText?: true
+    ctaUrl?: true
+    order?: true
+    _all?: true
+  }
+
+  export type HeroSlideAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HeroSlide to aggregate.
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HeroSlides to fetch.
+     */
+    orderBy?: HeroSlideOrderByWithRelationInput | HeroSlideOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: HeroSlideWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HeroSlides from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HeroSlides.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned HeroSlides
+    **/
+    _count?: true | HeroSlideCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: HeroSlideAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: HeroSlideSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: HeroSlideMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: HeroSlideMaxAggregateInputType
+  }
+
+  export type GetHeroSlideAggregateType<T extends HeroSlideAggregateArgs> = {
+        [P in keyof T & keyof AggregateHeroSlide]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateHeroSlide[P]>
+      : GetScalarType<T[P], AggregateHeroSlide[P]>
+  }
+
+
+
+
+  export type HeroSlideGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HeroSlideWhereInput
+    orderBy?: HeroSlideOrderByWithAggregationInput | HeroSlideOrderByWithAggregationInput[]
+    by: HeroSlideScalarFieldEnum[] | HeroSlideScalarFieldEnum
+    having?: HeroSlideScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: HeroSlideCountAggregateInputType | true
+    _avg?: HeroSlideAvgAggregateInputType
+    _sum?: HeroSlideSumAggregateInputType
+    _min?: HeroSlideMinAggregateInputType
+    _max?: HeroSlideMaxAggregateInputType
+  }
+
+  export type HeroSlideGroupByOutputType = {
+    id: string
+    imageUrl: string
+    headline: string | null
+    subheadline: string | null
+    ctaText: string | null
+    ctaUrl: string | null
+    order: number
+    _count: HeroSlideCountAggregateOutputType | null
+    _avg: HeroSlideAvgAggregateOutputType | null
+    _sum: HeroSlideSumAggregateOutputType | null
+    _min: HeroSlideMinAggregateOutputType | null
+    _max: HeroSlideMaxAggregateOutputType | null
+  }
+
+  type GetHeroSlideGroupByPayload<T extends HeroSlideGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<HeroSlideGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof HeroSlideGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], HeroSlideGroupByOutputType[P]>
+            : GetScalarType<T[P], HeroSlideGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type HeroSlideSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    imageUrl?: boolean
+    headline?: boolean
+    subheadline?: boolean
+    ctaText?: boolean
+    ctaUrl?: boolean
+    order?: boolean
+  }, ExtArgs["result"]["heroSlide"]>
+
+  export type HeroSlideSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    imageUrl?: boolean
+    headline?: boolean
+    subheadline?: boolean
+    ctaText?: boolean
+    ctaUrl?: boolean
+    order?: boolean
+  }, ExtArgs["result"]["heroSlide"]>
+
+  export type HeroSlideSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    imageUrl?: boolean
+    headline?: boolean
+    subheadline?: boolean
+    ctaText?: boolean
+    ctaUrl?: boolean
+    order?: boolean
+  }, ExtArgs["result"]["heroSlide"]>
+
+  export type HeroSlideSelectScalar = {
+    id?: boolean
+    imageUrl?: boolean
+    headline?: boolean
+    subheadline?: boolean
+    ctaText?: boolean
+    ctaUrl?: boolean
+    order?: boolean
+  }
+
+  export type HeroSlideOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "imageUrl" | "headline" | "subheadline" | "ctaText" | "ctaUrl" | "order", ExtArgs["result"]["heroSlide"]>
+
+  export type $HeroSlidePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HeroSlide"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      imageUrl: string
+      headline: string | null
+      subheadline: string | null
+      ctaText: string | null
+      ctaUrl: string | null
+      order: number
+    }, ExtArgs["result"]["heroSlide"]>
+    composites: {}
+  }
+
+  type HeroSlideGetPayload<S extends boolean | null | undefined | HeroSlideDefaultArgs> = $Result.GetResult<Prisma.$HeroSlidePayload, S>
+
+  type HeroSlideCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<HeroSlideFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: HeroSlideCountAggregateInputType | true
+    }
+
+  export interface HeroSlideDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HeroSlide'], meta: { name: 'HeroSlide' } }
+    /**
+     * Find zero or one HeroSlide that matches the filter.
+     * @param {HeroSlideFindUniqueArgs} args - Arguments to find a HeroSlide
+     * @example
+     * // Get one HeroSlide
+     * const heroSlide = await prisma.heroSlide.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends HeroSlideFindUniqueArgs>(args: SelectSubset<T, HeroSlideFindUniqueArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one HeroSlide that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {HeroSlideFindUniqueOrThrowArgs} args - Arguments to find a HeroSlide
+     * @example
+     * // Get one HeroSlide
+     * const heroSlide = await prisma.heroSlide.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends HeroSlideFindUniqueOrThrowArgs>(args: SelectSubset<T, HeroSlideFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HeroSlide that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideFindFirstArgs} args - Arguments to find a HeroSlide
+     * @example
+     * // Get one HeroSlide
+     * const heroSlide = await prisma.heroSlide.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends HeroSlideFindFirstArgs>(args?: SelectSubset<T, HeroSlideFindFirstArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first HeroSlide that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideFindFirstOrThrowArgs} args - Arguments to find a HeroSlide
+     * @example
+     * // Get one HeroSlide
+     * const heroSlide = await prisma.heroSlide.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends HeroSlideFindFirstOrThrowArgs>(args?: SelectSubset<T, HeroSlideFindFirstOrThrowArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more HeroSlides that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all HeroSlides
+     * const heroSlides = await prisma.heroSlide.findMany()
+     * 
+     * // Get first 10 HeroSlides
+     * const heroSlides = await prisma.heroSlide.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const heroSlideWithIdOnly = await prisma.heroSlide.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends HeroSlideFindManyArgs>(args?: SelectSubset<T, HeroSlideFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a HeroSlide.
+     * @param {HeroSlideCreateArgs} args - Arguments to create a HeroSlide.
+     * @example
+     * // Create one HeroSlide
+     * const HeroSlide = await prisma.heroSlide.create({
+     *   data: {
+     *     // ... data to create a HeroSlide
+     *   }
+     * })
+     * 
+     */
+    create<T extends HeroSlideCreateArgs>(args: SelectSubset<T, HeroSlideCreateArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many HeroSlides.
+     * @param {HeroSlideCreateManyArgs} args - Arguments to create many HeroSlides.
+     * @example
+     * // Create many HeroSlides
+     * const heroSlide = await prisma.heroSlide.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends HeroSlideCreateManyArgs>(args?: SelectSubset<T, HeroSlideCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many HeroSlides and returns the data saved in the database.
+     * @param {HeroSlideCreateManyAndReturnArgs} args - Arguments to create many HeroSlides.
+     * @example
+     * // Create many HeroSlides
+     * const heroSlide = await prisma.heroSlide.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many HeroSlides and only return the `id`
+     * const heroSlideWithIdOnly = await prisma.heroSlide.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends HeroSlideCreateManyAndReturnArgs>(args?: SelectSubset<T, HeroSlideCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a HeroSlide.
+     * @param {HeroSlideDeleteArgs} args - Arguments to delete one HeroSlide.
+     * @example
+     * // Delete one HeroSlide
+     * const HeroSlide = await prisma.heroSlide.delete({
+     *   where: {
+     *     // ... filter to delete one HeroSlide
+     *   }
+     * })
+     * 
+     */
+    delete<T extends HeroSlideDeleteArgs>(args: SelectSubset<T, HeroSlideDeleteArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one HeroSlide.
+     * @param {HeroSlideUpdateArgs} args - Arguments to update one HeroSlide.
+     * @example
+     * // Update one HeroSlide
+     * const heroSlide = await prisma.heroSlide.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends HeroSlideUpdateArgs>(args: SelectSubset<T, HeroSlideUpdateArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more HeroSlides.
+     * @param {HeroSlideDeleteManyArgs} args - Arguments to filter HeroSlides to delete.
+     * @example
+     * // Delete a few HeroSlides
+     * const { count } = await prisma.heroSlide.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends HeroSlideDeleteManyArgs>(args?: SelectSubset<T, HeroSlideDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HeroSlides.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many HeroSlides
+     * const heroSlide = await prisma.heroSlide.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends HeroSlideUpdateManyArgs>(args: SelectSubset<T, HeroSlideUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more HeroSlides and returns the data updated in the database.
+     * @param {HeroSlideUpdateManyAndReturnArgs} args - Arguments to update many HeroSlides.
+     * @example
+     * // Update many HeroSlides
+     * const heroSlide = await prisma.heroSlide.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more HeroSlides and only return the `id`
+     * const heroSlideWithIdOnly = await prisma.heroSlide.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends HeroSlideUpdateManyAndReturnArgs>(args: SelectSubset<T, HeroSlideUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one HeroSlide.
+     * @param {HeroSlideUpsertArgs} args - Arguments to update or create a HeroSlide.
+     * @example
+     * // Update or create a HeroSlide
+     * const heroSlide = await prisma.heroSlide.upsert({
+     *   create: {
+     *     // ... data to create a HeroSlide
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the HeroSlide we want to update
+     *   }
+     * })
+     */
+    upsert<T extends HeroSlideUpsertArgs>(args: SelectSubset<T, HeroSlideUpsertArgs<ExtArgs>>): Prisma__HeroSlideClient<$Result.GetResult<Prisma.$HeroSlidePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of HeroSlides.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideCountArgs} args - Arguments to filter HeroSlides to count.
+     * @example
+     * // Count the number of HeroSlides
+     * const count = await prisma.heroSlide.count({
+     *   where: {
+     *     // ... the filter for the HeroSlides we want to count
+     *   }
+     * })
+    **/
+    count<T extends HeroSlideCountArgs>(
+      args?: Subset<T, HeroSlideCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], HeroSlideCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a HeroSlide.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends HeroSlideAggregateArgs>(args: Subset<T, HeroSlideAggregateArgs>): Prisma.PrismaPromise<GetHeroSlideAggregateType<T>>
+
+    /**
+     * Group by HeroSlide.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {HeroSlideGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends HeroSlideGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: HeroSlideGroupByArgs['orderBy'] }
+        : { orderBy?: HeroSlideGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, HeroSlideGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHeroSlideGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the HeroSlide model
+   */
+  readonly fields: HeroSlideFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for HeroSlide.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__HeroSlideClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the HeroSlide model
+   */
+  interface HeroSlideFieldRefs {
+    readonly id: FieldRef<"HeroSlide", 'String'>
+    readonly imageUrl: FieldRef<"HeroSlide", 'String'>
+    readonly headline: FieldRef<"HeroSlide", 'String'>
+    readonly subheadline: FieldRef<"HeroSlide", 'String'>
+    readonly ctaText: FieldRef<"HeroSlide", 'String'>
+    readonly ctaUrl: FieldRef<"HeroSlide", 'String'>
+    readonly order: FieldRef<"HeroSlide", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * HeroSlide findUnique
+   */
+  export type HeroSlideFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter, which HeroSlide to fetch.
+     */
+    where: HeroSlideWhereUniqueInput
+  }
+
+  /**
+   * HeroSlide findUniqueOrThrow
+   */
+  export type HeroSlideFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter, which HeroSlide to fetch.
+     */
+    where: HeroSlideWhereUniqueInput
+  }
+
+  /**
+   * HeroSlide findFirst
+   */
+  export type HeroSlideFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter, which HeroSlide to fetch.
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HeroSlides to fetch.
+     */
+    orderBy?: HeroSlideOrderByWithRelationInput | HeroSlideOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HeroSlides.
+     */
+    cursor?: HeroSlideWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HeroSlides from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HeroSlides.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HeroSlides.
+     */
+    distinct?: HeroSlideScalarFieldEnum | HeroSlideScalarFieldEnum[]
+  }
+
+  /**
+   * HeroSlide findFirstOrThrow
+   */
+  export type HeroSlideFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter, which HeroSlide to fetch.
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HeroSlides to fetch.
+     */
+    orderBy?: HeroSlideOrderByWithRelationInput | HeroSlideOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for HeroSlides.
+     */
+    cursor?: HeroSlideWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HeroSlides from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HeroSlides.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of HeroSlides.
+     */
+    distinct?: HeroSlideScalarFieldEnum | HeroSlideScalarFieldEnum[]
+  }
+
+  /**
+   * HeroSlide findMany
+   */
+  export type HeroSlideFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter, which HeroSlides to fetch.
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of HeroSlides to fetch.
+     */
+    orderBy?: HeroSlideOrderByWithRelationInput | HeroSlideOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing HeroSlides.
+     */
+    cursor?: HeroSlideWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` HeroSlides from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` HeroSlides.
+     */
+    skip?: number
+    distinct?: HeroSlideScalarFieldEnum | HeroSlideScalarFieldEnum[]
+  }
+
+  /**
+   * HeroSlide create
+   */
+  export type HeroSlideCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * The data needed to create a HeroSlide.
+     */
+    data: XOR<HeroSlideCreateInput, HeroSlideUncheckedCreateInput>
+  }
+
+  /**
+   * HeroSlide createMany
+   */
+  export type HeroSlideCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many HeroSlides.
+     */
+    data: HeroSlideCreateManyInput | HeroSlideCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HeroSlide createManyAndReturn
+   */
+  export type HeroSlideCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * The data used to create many HeroSlides.
+     */
+    data: HeroSlideCreateManyInput | HeroSlideCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * HeroSlide update
+   */
+  export type HeroSlideUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * The data needed to update a HeroSlide.
+     */
+    data: XOR<HeroSlideUpdateInput, HeroSlideUncheckedUpdateInput>
+    /**
+     * Choose, which HeroSlide to update.
+     */
+    where: HeroSlideWhereUniqueInput
+  }
+
+  /**
+   * HeroSlide updateMany
+   */
+  export type HeroSlideUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update HeroSlides.
+     */
+    data: XOR<HeroSlideUpdateManyMutationInput, HeroSlideUncheckedUpdateManyInput>
+    /**
+     * Filter which HeroSlides to update
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * Limit how many HeroSlides to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * HeroSlide updateManyAndReturn
+   */
+  export type HeroSlideUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * The data used to update HeroSlides.
+     */
+    data: XOR<HeroSlideUpdateManyMutationInput, HeroSlideUncheckedUpdateManyInput>
+    /**
+     * Filter which HeroSlides to update
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * Limit how many HeroSlides to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * HeroSlide upsert
+   */
+  export type HeroSlideUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * The filter to search for the HeroSlide to update in case it exists.
+     */
+    where: HeroSlideWhereUniqueInput
+    /**
+     * In case the HeroSlide found by the `where` argument doesn't exist, create a new HeroSlide with this data.
+     */
+    create: XOR<HeroSlideCreateInput, HeroSlideUncheckedCreateInput>
+    /**
+     * In case the HeroSlide was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<HeroSlideUpdateInput, HeroSlideUncheckedUpdateInput>
+  }
+
+  /**
+   * HeroSlide delete
+   */
+  export type HeroSlideDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+    /**
+     * Filter which HeroSlide to delete.
+     */
+    where: HeroSlideWhereUniqueInput
+  }
+
+  /**
+   * HeroSlide deleteMany
+   */
+  export type HeroSlideDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which HeroSlides to delete
+     */
+    where?: HeroSlideWhereInput
+    /**
+     * Limit how many HeroSlides to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * HeroSlide without action
+   */
+  export type HeroSlideDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HeroSlide
+     */
+    select?: HeroSlideSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the HeroSlide
+     */
+    omit?: HeroSlideOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SizeChart
+   */
+
+  export type AggregateSizeChart = {
+    _count: SizeChartCountAggregateOutputType | null
+    _min: SizeChartMinAggregateOutputType | null
+    _max: SizeChartMaxAggregateOutputType | null
+  }
+
+  export type SizeChartMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    updatedAt: Date | null
+  }
+
+  export type SizeChartMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    updatedAt: Date | null
+  }
+
+  export type SizeChartCountAggregateOutputType = {
+    id: number
+    name: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SizeChartMinAggregateInputType = {
+    id?: true
+    name?: true
+    updatedAt?: true
+  }
+
+  export type SizeChartMaxAggregateInputType = {
+    id?: true
+    name?: true
+    updatedAt?: true
+  }
+
+  export type SizeChartCountAggregateInputType = {
+    id?: true
+    name?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SizeChartAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SizeChart to aggregate.
+     */
+    where?: SizeChartWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeCharts to fetch.
+     */
+    orderBy?: SizeChartOrderByWithRelationInput | SizeChartOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SizeChartWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeCharts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeCharts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SizeCharts
+    **/
+    _count?: true | SizeChartCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SizeChartMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SizeChartMaxAggregateInputType
+  }
+
+  export type GetSizeChartAggregateType<T extends SizeChartAggregateArgs> = {
+        [P in keyof T & keyof AggregateSizeChart]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSizeChart[P]>
+      : GetScalarType<T[P], AggregateSizeChart[P]>
+  }
+
+
+
+
+  export type SizeChartGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SizeChartWhereInput
+    orderBy?: SizeChartOrderByWithAggregationInput | SizeChartOrderByWithAggregationInput[]
+    by: SizeChartScalarFieldEnum[] | SizeChartScalarFieldEnum
+    having?: SizeChartScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SizeChartCountAggregateInputType | true
+    _min?: SizeChartMinAggregateInputType
+    _max?: SizeChartMaxAggregateInputType
+  }
+
+  export type SizeChartGroupByOutputType = {
+    id: string
+    name: string
+    updatedAt: Date
+    _count: SizeChartCountAggregateOutputType | null
+    _min: SizeChartMinAggregateOutputType | null
+    _max: SizeChartMaxAggregateOutputType | null
+  }
+
+  type GetSizeChartGroupByPayload<T extends SizeChartGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SizeChartGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SizeChartGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SizeChartGroupByOutputType[P]>
+            : GetScalarType<T[P], SizeChartGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SizeChartSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    updatedAt?: boolean
+    entries?: boolean | SizeChart$entriesArgs<ExtArgs>
+    _count?: boolean | SizeChartCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sizeChart"]>
+
+  export type SizeChartSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["sizeChart"]>
+
+  export type SizeChartSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["sizeChart"]>
+
+  export type SizeChartSelectScalar = {
+    id?: boolean
+    name?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SizeChartOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "updatedAt", ExtArgs["result"]["sizeChart"]>
+  export type SizeChartInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    entries?: boolean | SizeChart$entriesArgs<ExtArgs>
+    _count?: boolean | SizeChartCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type SizeChartIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type SizeChartIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $SizeChartPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SizeChart"
+    objects: {
+      entries: Prisma.$SizeChartEntryPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      updatedAt: Date
+    }, ExtArgs["result"]["sizeChart"]>
+    composites: {}
+  }
+
+  type SizeChartGetPayload<S extends boolean | null | undefined | SizeChartDefaultArgs> = $Result.GetResult<Prisma.$SizeChartPayload, S>
+
+  type SizeChartCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SizeChartFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SizeChartCountAggregateInputType | true
+    }
+
+  export interface SizeChartDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SizeChart'], meta: { name: 'SizeChart' } }
+    /**
+     * Find zero or one SizeChart that matches the filter.
+     * @param {SizeChartFindUniqueArgs} args - Arguments to find a SizeChart
+     * @example
+     * // Get one SizeChart
+     * const sizeChart = await prisma.sizeChart.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SizeChartFindUniqueArgs>(args: SelectSubset<T, SizeChartFindUniqueArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SizeChart that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SizeChartFindUniqueOrThrowArgs} args - Arguments to find a SizeChart
+     * @example
+     * // Get one SizeChart
+     * const sizeChart = await prisma.sizeChart.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SizeChartFindUniqueOrThrowArgs>(args: SelectSubset<T, SizeChartFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SizeChart that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartFindFirstArgs} args - Arguments to find a SizeChart
+     * @example
+     * // Get one SizeChart
+     * const sizeChart = await prisma.sizeChart.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SizeChartFindFirstArgs>(args?: SelectSubset<T, SizeChartFindFirstArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SizeChart that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartFindFirstOrThrowArgs} args - Arguments to find a SizeChart
+     * @example
+     * // Get one SizeChart
+     * const sizeChart = await prisma.sizeChart.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SizeChartFindFirstOrThrowArgs>(args?: SelectSubset<T, SizeChartFindFirstOrThrowArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SizeCharts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SizeCharts
+     * const sizeCharts = await prisma.sizeChart.findMany()
+     * 
+     * // Get first 10 SizeCharts
+     * const sizeCharts = await prisma.sizeChart.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sizeChartWithIdOnly = await prisma.sizeChart.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SizeChartFindManyArgs>(args?: SelectSubset<T, SizeChartFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SizeChart.
+     * @param {SizeChartCreateArgs} args - Arguments to create a SizeChart.
+     * @example
+     * // Create one SizeChart
+     * const SizeChart = await prisma.sizeChart.create({
+     *   data: {
+     *     // ... data to create a SizeChart
+     *   }
+     * })
+     * 
+     */
+    create<T extends SizeChartCreateArgs>(args: SelectSubset<T, SizeChartCreateArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SizeCharts.
+     * @param {SizeChartCreateManyArgs} args - Arguments to create many SizeCharts.
+     * @example
+     * // Create many SizeCharts
+     * const sizeChart = await prisma.sizeChart.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SizeChartCreateManyArgs>(args?: SelectSubset<T, SizeChartCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SizeCharts and returns the data saved in the database.
+     * @param {SizeChartCreateManyAndReturnArgs} args - Arguments to create many SizeCharts.
+     * @example
+     * // Create many SizeCharts
+     * const sizeChart = await prisma.sizeChart.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SizeCharts and only return the `id`
+     * const sizeChartWithIdOnly = await prisma.sizeChart.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SizeChartCreateManyAndReturnArgs>(args?: SelectSubset<T, SizeChartCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SizeChart.
+     * @param {SizeChartDeleteArgs} args - Arguments to delete one SizeChart.
+     * @example
+     * // Delete one SizeChart
+     * const SizeChart = await prisma.sizeChart.delete({
+     *   where: {
+     *     // ... filter to delete one SizeChart
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SizeChartDeleteArgs>(args: SelectSubset<T, SizeChartDeleteArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SizeChart.
+     * @param {SizeChartUpdateArgs} args - Arguments to update one SizeChart.
+     * @example
+     * // Update one SizeChart
+     * const sizeChart = await prisma.sizeChart.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SizeChartUpdateArgs>(args: SelectSubset<T, SizeChartUpdateArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SizeCharts.
+     * @param {SizeChartDeleteManyArgs} args - Arguments to filter SizeCharts to delete.
+     * @example
+     * // Delete a few SizeCharts
+     * const { count } = await prisma.sizeChart.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SizeChartDeleteManyArgs>(args?: SelectSubset<T, SizeChartDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SizeCharts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SizeCharts
+     * const sizeChart = await prisma.sizeChart.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SizeChartUpdateManyArgs>(args: SelectSubset<T, SizeChartUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SizeCharts and returns the data updated in the database.
+     * @param {SizeChartUpdateManyAndReturnArgs} args - Arguments to update many SizeCharts.
+     * @example
+     * // Update many SizeCharts
+     * const sizeChart = await prisma.sizeChart.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SizeCharts and only return the `id`
+     * const sizeChartWithIdOnly = await prisma.sizeChart.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SizeChartUpdateManyAndReturnArgs>(args: SelectSubset<T, SizeChartUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SizeChart.
+     * @param {SizeChartUpsertArgs} args - Arguments to update or create a SizeChart.
+     * @example
+     * // Update or create a SizeChart
+     * const sizeChart = await prisma.sizeChart.upsert({
+     *   create: {
+     *     // ... data to create a SizeChart
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SizeChart we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SizeChartUpsertArgs>(args: SelectSubset<T, SizeChartUpsertArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SizeCharts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartCountArgs} args - Arguments to filter SizeCharts to count.
+     * @example
+     * // Count the number of SizeCharts
+     * const count = await prisma.sizeChart.count({
+     *   where: {
+     *     // ... the filter for the SizeCharts we want to count
+     *   }
+     * })
+    **/
+    count<T extends SizeChartCountArgs>(
+      args?: Subset<T, SizeChartCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SizeChartCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SizeChart.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SizeChartAggregateArgs>(args: Subset<T, SizeChartAggregateArgs>): Prisma.PrismaPromise<GetSizeChartAggregateType<T>>
+
+    /**
+     * Group by SizeChart.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SizeChartGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SizeChartGroupByArgs['orderBy'] }
+        : { orderBy?: SizeChartGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SizeChartGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSizeChartGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SizeChart model
+   */
+  readonly fields: SizeChartFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SizeChart.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SizeChartClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    entries<T extends SizeChart$entriesArgs<ExtArgs> = {}>(args?: Subset<T, SizeChart$entriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SizeChart model
+   */
+  interface SizeChartFieldRefs {
+    readonly id: FieldRef<"SizeChart", 'String'>
+    readonly name: FieldRef<"SizeChart", 'String'>
+    readonly updatedAt: FieldRef<"SizeChart", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SizeChart findUnique
+   */
+  export type SizeChartFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChart to fetch.
+     */
+    where: SizeChartWhereUniqueInput
+  }
+
+  /**
+   * SizeChart findUniqueOrThrow
+   */
+  export type SizeChartFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChart to fetch.
+     */
+    where: SizeChartWhereUniqueInput
+  }
+
+  /**
+   * SizeChart findFirst
+   */
+  export type SizeChartFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChart to fetch.
+     */
+    where?: SizeChartWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeCharts to fetch.
+     */
+    orderBy?: SizeChartOrderByWithRelationInput | SizeChartOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SizeCharts.
+     */
+    cursor?: SizeChartWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeCharts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeCharts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SizeCharts.
+     */
+    distinct?: SizeChartScalarFieldEnum | SizeChartScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChart findFirstOrThrow
+   */
+  export type SizeChartFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChart to fetch.
+     */
+    where?: SizeChartWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeCharts to fetch.
+     */
+    orderBy?: SizeChartOrderByWithRelationInput | SizeChartOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SizeCharts.
+     */
+    cursor?: SizeChartWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeCharts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeCharts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SizeCharts.
+     */
+    distinct?: SizeChartScalarFieldEnum | SizeChartScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChart findMany
+   */
+  export type SizeChartFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeCharts to fetch.
+     */
+    where?: SizeChartWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeCharts to fetch.
+     */
+    orderBy?: SizeChartOrderByWithRelationInput | SizeChartOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SizeCharts.
+     */
+    cursor?: SizeChartWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeCharts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeCharts.
+     */
+    skip?: number
+    distinct?: SizeChartScalarFieldEnum | SizeChartScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChart create
+   */
+  export type SizeChartCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SizeChart.
+     */
+    data: XOR<SizeChartCreateInput, SizeChartUncheckedCreateInput>
+  }
+
+  /**
+   * SizeChart createMany
+   */
+  export type SizeChartCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SizeCharts.
+     */
+    data: SizeChartCreateManyInput | SizeChartCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SizeChart createManyAndReturn
+   */
+  export type SizeChartCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * The data used to create many SizeCharts.
+     */
+    data: SizeChartCreateManyInput | SizeChartCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SizeChart update
+   */
+  export type SizeChartUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SizeChart.
+     */
+    data: XOR<SizeChartUpdateInput, SizeChartUncheckedUpdateInput>
+    /**
+     * Choose, which SizeChart to update.
+     */
+    where: SizeChartWhereUniqueInput
+  }
+
+  /**
+   * SizeChart updateMany
+   */
+  export type SizeChartUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SizeCharts.
+     */
+    data: XOR<SizeChartUpdateManyMutationInput, SizeChartUncheckedUpdateManyInput>
+    /**
+     * Filter which SizeCharts to update
+     */
+    where?: SizeChartWhereInput
+    /**
+     * Limit how many SizeCharts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SizeChart updateManyAndReturn
+   */
+  export type SizeChartUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * The data used to update SizeCharts.
+     */
+    data: XOR<SizeChartUpdateManyMutationInput, SizeChartUncheckedUpdateManyInput>
+    /**
+     * Filter which SizeCharts to update
+     */
+    where?: SizeChartWhereInput
+    /**
+     * Limit how many SizeCharts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SizeChart upsert
+   */
+  export type SizeChartUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SizeChart to update in case it exists.
+     */
+    where: SizeChartWhereUniqueInput
+    /**
+     * In case the SizeChart found by the `where` argument doesn't exist, create a new SizeChart with this data.
+     */
+    create: XOR<SizeChartCreateInput, SizeChartUncheckedCreateInput>
+    /**
+     * In case the SizeChart was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SizeChartUpdateInput, SizeChartUncheckedUpdateInput>
+  }
+
+  /**
+   * SizeChart delete
+   */
+  export type SizeChartDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+    /**
+     * Filter which SizeChart to delete.
+     */
+    where: SizeChartWhereUniqueInput
+  }
+
+  /**
+   * SizeChart deleteMany
+   */
+  export type SizeChartDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SizeCharts to delete
+     */
+    where?: SizeChartWhereInput
+    /**
+     * Limit how many SizeCharts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SizeChart.entries
+   */
+  export type SizeChart$entriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    where?: SizeChartEntryWhereInput
+    orderBy?: SizeChartEntryOrderByWithRelationInput | SizeChartEntryOrderByWithRelationInput[]
+    cursor?: SizeChartEntryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SizeChartEntryScalarFieldEnum | SizeChartEntryScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChart without action
+   */
+  export type SizeChartDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChart
+     */
+    select?: SizeChartSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChart
+     */
+    omit?: SizeChartOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SizeChartEntry
+   */
+
+  export type AggregateSizeChartEntry = {
+    _count: SizeChartEntryCountAggregateOutputType | null
+    _avg: SizeChartEntryAvgAggregateOutputType | null
+    _sum: SizeChartEntrySumAggregateOutputType | null
+    _min: SizeChartEntryMinAggregateOutputType | null
+    _max: SizeChartEntryMaxAggregateOutputType | null
+  }
+
+  export type SizeChartEntryAvgAggregateOutputType = {
+    chestMin: number | null
+    chestMax: number | null
+    waistMin: number | null
+    waistMax: number | null
+  }
+
+  export type SizeChartEntrySumAggregateOutputType = {
+    chestMin: number | null
+    chestMax: number | null
+    waistMin: number | null
+    waistMax: number | null
+  }
+
+  export type SizeChartEntryMinAggregateOutputType = {
+    id: string | null
+    sizeLabel: string | null
+    chestMin: number | null
+    chestMax: number | null
+    waistMin: number | null
+    waistMax: number | null
+    chartId: string | null
+  }
+
+  export type SizeChartEntryMaxAggregateOutputType = {
+    id: string | null
+    sizeLabel: string | null
+    chestMin: number | null
+    chestMax: number | null
+    waistMin: number | null
+    waistMax: number | null
+    chartId: string | null
+  }
+
+  export type SizeChartEntryCountAggregateOutputType = {
+    id: number
+    sizeLabel: number
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+    chartId: number
+    _all: number
+  }
+
+
+  export type SizeChartEntryAvgAggregateInputType = {
+    chestMin?: true
+    chestMax?: true
+    waistMin?: true
+    waistMax?: true
+  }
+
+  export type SizeChartEntrySumAggregateInputType = {
+    chestMin?: true
+    chestMax?: true
+    waistMin?: true
+    waistMax?: true
+  }
+
+  export type SizeChartEntryMinAggregateInputType = {
+    id?: true
+    sizeLabel?: true
+    chestMin?: true
+    chestMax?: true
+    waistMin?: true
+    waistMax?: true
+    chartId?: true
+  }
+
+  export type SizeChartEntryMaxAggregateInputType = {
+    id?: true
+    sizeLabel?: true
+    chestMin?: true
+    chestMax?: true
+    waistMin?: true
+    waistMax?: true
+    chartId?: true
+  }
+
+  export type SizeChartEntryCountAggregateInputType = {
+    id?: true
+    sizeLabel?: true
+    chestMin?: true
+    chestMax?: true
+    waistMin?: true
+    waistMax?: true
+    chartId?: true
+    _all?: true
+  }
+
+  export type SizeChartEntryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SizeChartEntry to aggregate.
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeChartEntries to fetch.
+     */
+    orderBy?: SizeChartEntryOrderByWithRelationInput | SizeChartEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SizeChartEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeChartEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeChartEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SizeChartEntries
+    **/
+    _count?: true | SizeChartEntryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SizeChartEntryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SizeChartEntrySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SizeChartEntryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SizeChartEntryMaxAggregateInputType
+  }
+
+  export type GetSizeChartEntryAggregateType<T extends SizeChartEntryAggregateArgs> = {
+        [P in keyof T & keyof AggregateSizeChartEntry]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSizeChartEntry[P]>
+      : GetScalarType<T[P], AggregateSizeChartEntry[P]>
+  }
+
+
+
+
+  export type SizeChartEntryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SizeChartEntryWhereInput
+    orderBy?: SizeChartEntryOrderByWithAggregationInput | SizeChartEntryOrderByWithAggregationInput[]
+    by: SizeChartEntryScalarFieldEnum[] | SizeChartEntryScalarFieldEnum
+    having?: SizeChartEntryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SizeChartEntryCountAggregateInputType | true
+    _avg?: SizeChartEntryAvgAggregateInputType
+    _sum?: SizeChartEntrySumAggregateInputType
+    _min?: SizeChartEntryMinAggregateInputType
+    _max?: SizeChartEntryMaxAggregateInputType
+  }
+
+  export type SizeChartEntryGroupByOutputType = {
+    id: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+    chartId: string
+    _count: SizeChartEntryCountAggregateOutputType | null
+    _avg: SizeChartEntryAvgAggregateOutputType | null
+    _sum: SizeChartEntrySumAggregateOutputType | null
+    _min: SizeChartEntryMinAggregateOutputType | null
+    _max: SizeChartEntryMaxAggregateOutputType | null
+  }
+
+  type GetSizeChartEntryGroupByPayload<T extends SizeChartEntryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SizeChartEntryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SizeChartEntryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SizeChartEntryGroupByOutputType[P]>
+            : GetScalarType<T[P], SizeChartEntryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SizeChartEntrySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sizeLabel?: boolean
+    chestMin?: boolean
+    chestMax?: boolean
+    waistMin?: boolean
+    waistMax?: boolean
+    chartId?: boolean
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sizeChartEntry"]>
+
+  export type SizeChartEntrySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sizeLabel?: boolean
+    chestMin?: boolean
+    chestMax?: boolean
+    waistMin?: boolean
+    waistMax?: boolean
+    chartId?: boolean
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sizeChartEntry"]>
+
+  export type SizeChartEntrySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sizeLabel?: boolean
+    chestMin?: boolean
+    chestMax?: boolean
+    waistMin?: boolean
+    waistMax?: boolean
+    chartId?: boolean
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["sizeChartEntry"]>
+
+  export type SizeChartEntrySelectScalar = {
+    id?: boolean
+    sizeLabel?: boolean
+    chestMin?: boolean
+    chestMax?: boolean
+    waistMin?: boolean
+    waistMax?: boolean
+    chartId?: boolean
+  }
+
+  export type SizeChartEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sizeLabel" | "chestMin" | "chestMax" | "waistMin" | "waistMax" | "chartId", ExtArgs["result"]["sizeChartEntry"]>
+  export type SizeChartEntryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }
+  export type SizeChartEntryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }
+  export type SizeChartEntryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    chart?: boolean | SizeChartDefaultArgs<ExtArgs>
+  }
+
+  export type $SizeChartEntryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SizeChartEntry"
+    objects: {
+      chart: Prisma.$SizeChartPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      sizeLabel: string
+      chestMin: number
+      chestMax: number
+      waistMin: number
+      waistMax: number
+      chartId: string
+    }, ExtArgs["result"]["sizeChartEntry"]>
+    composites: {}
+  }
+
+  type SizeChartEntryGetPayload<S extends boolean | null | undefined | SizeChartEntryDefaultArgs> = $Result.GetResult<Prisma.$SizeChartEntryPayload, S>
+
+  type SizeChartEntryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SizeChartEntryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SizeChartEntryCountAggregateInputType | true
+    }
+
+  export interface SizeChartEntryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SizeChartEntry'], meta: { name: 'SizeChartEntry' } }
+    /**
+     * Find zero or one SizeChartEntry that matches the filter.
+     * @param {SizeChartEntryFindUniqueArgs} args - Arguments to find a SizeChartEntry
+     * @example
+     * // Get one SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SizeChartEntryFindUniqueArgs>(args: SelectSubset<T, SizeChartEntryFindUniqueArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SizeChartEntry that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SizeChartEntryFindUniqueOrThrowArgs} args - Arguments to find a SizeChartEntry
+     * @example
+     * // Get one SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SizeChartEntryFindUniqueOrThrowArgs>(args: SelectSubset<T, SizeChartEntryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SizeChartEntry that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryFindFirstArgs} args - Arguments to find a SizeChartEntry
+     * @example
+     * // Get one SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SizeChartEntryFindFirstArgs>(args?: SelectSubset<T, SizeChartEntryFindFirstArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SizeChartEntry that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryFindFirstOrThrowArgs} args - Arguments to find a SizeChartEntry
+     * @example
+     * // Get one SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SizeChartEntryFindFirstOrThrowArgs>(args?: SelectSubset<T, SizeChartEntryFindFirstOrThrowArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SizeChartEntries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SizeChartEntries
+     * const sizeChartEntries = await prisma.sizeChartEntry.findMany()
+     * 
+     * // Get first 10 SizeChartEntries
+     * const sizeChartEntries = await prisma.sizeChartEntry.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const sizeChartEntryWithIdOnly = await prisma.sizeChartEntry.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SizeChartEntryFindManyArgs>(args?: SelectSubset<T, SizeChartEntryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SizeChartEntry.
+     * @param {SizeChartEntryCreateArgs} args - Arguments to create a SizeChartEntry.
+     * @example
+     * // Create one SizeChartEntry
+     * const SizeChartEntry = await prisma.sizeChartEntry.create({
+     *   data: {
+     *     // ... data to create a SizeChartEntry
+     *   }
+     * })
+     * 
+     */
+    create<T extends SizeChartEntryCreateArgs>(args: SelectSubset<T, SizeChartEntryCreateArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SizeChartEntries.
+     * @param {SizeChartEntryCreateManyArgs} args - Arguments to create many SizeChartEntries.
+     * @example
+     * // Create many SizeChartEntries
+     * const sizeChartEntry = await prisma.sizeChartEntry.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SizeChartEntryCreateManyArgs>(args?: SelectSubset<T, SizeChartEntryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SizeChartEntries and returns the data saved in the database.
+     * @param {SizeChartEntryCreateManyAndReturnArgs} args - Arguments to create many SizeChartEntries.
+     * @example
+     * // Create many SizeChartEntries
+     * const sizeChartEntry = await prisma.sizeChartEntry.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SizeChartEntries and only return the `id`
+     * const sizeChartEntryWithIdOnly = await prisma.sizeChartEntry.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SizeChartEntryCreateManyAndReturnArgs>(args?: SelectSubset<T, SizeChartEntryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SizeChartEntry.
+     * @param {SizeChartEntryDeleteArgs} args - Arguments to delete one SizeChartEntry.
+     * @example
+     * // Delete one SizeChartEntry
+     * const SizeChartEntry = await prisma.sizeChartEntry.delete({
+     *   where: {
+     *     // ... filter to delete one SizeChartEntry
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SizeChartEntryDeleteArgs>(args: SelectSubset<T, SizeChartEntryDeleteArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SizeChartEntry.
+     * @param {SizeChartEntryUpdateArgs} args - Arguments to update one SizeChartEntry.
+     * @example
+     * // Update one SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SizeChartEntryUpdateArgs>(args: SelectSubset<T, SizeChartEntryUpdateArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SizeChartEntries.
+     * @param {SizeChartEntryDeleteManyArgs} args - Arguments to filter SizeChartEntries to delete.
+     * @example
+     * // Delete a few SizeChartEntries
+     * const { count } = await prisma.sizeChartEntry.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SizeChartEntryDeleteManyArgs>(args?: SelectSubset<T, SizeChartEntryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SizeChartEntries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SizeChartEntries
+     * const sizeChartEntry = await prisma.sizeChartEntry.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SizeChartEntryUpdateManyArgs>(args: SelectSubset<T, SizeChartEntryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SizeChartEntries and returns the data updated in the database.
+     * @param {SizeChartEntryUpdateManyAndReturnArgs} args - Arguments to update many SizeChartEntries.
+     * @example
+     * // Update many SizeChartEntries
+     * const sizeChartEntry = await prisma.sizeChartEntry.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SizeChartEntries and only return the `id`
+     * const sizeChartEntryWithIdOnly = await prisma.sizeChartEntry.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SizeChartEntryUpdateManyAndReturnArgs>(args: SelectSubset<T, SizeChartEntryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SizeChartEntry.
+     * @param {SizeChartEntryUpsertArgs} args - Arguments to update or create a SizeChartEntry.
+     * @example
+     * // Update or create a SizeChartEntry
+     * const sizeChartEntry = await prisma.sizeChartEntry.upsert({
+     *   create: {
+     *     // ... data to create a SizeChartEntry
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SizeChartEntry we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SizeChartEntryUpsertArgs>(args: SelectSubset<T, SizeChartEntryUpsertArgs<ExtArgs>>): Prisma__SizeChartEntryClient<$Result.GetResult<Prisma.$SizeChartEntryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SizeChartEntries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryCountArgs} args - Arguments to filter SizeChartEntries to count.
+     * @example
+     * // Count the number of SizeChartEntries
+     * const count = await prisma.sizeChartEntry.count({
+     *   where: {
+     *     // ... the filter for the SizeChartEntries we want to count
+     *   }
+     * })
+    **/
+    count<T extends SizeChartEntryCountArgs>(
+      args?: Subset<T, SizeChartEntryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SizeChartEntryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SizeChartEntry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SizeChartEntryAggregateArgs>(args: Subset<T, SizeChartEntryAggregateArgs>): Prisma.PrismaPromise<GetSizeChartEntryAggregateType<T>>
+
+    /**
+     * Group by SizeChartEntry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SizeChartEntryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SizeChartEntryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SizeChartEntryGroupByArgs['orderBy'] }
+        : { orderBy?: SizeChartEntryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SizeChartEntryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSizeChartEntryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SizeChartEntry model
+   */
+  readonly fields: SizeChartEntryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SizeChartEntry.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SizeChartEntryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    chart<T extends SizeChartDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SizeChartDefaultArgs<ExtArgs>>): Prisma__SizeChartClient<$Result.GetResult<Prisma.$SizeChartPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SizeChartEntry model
+   */
+  interface SizeChartEntryFieldRefs {
+    readonly id: FieldRef<"SizeChartEntry", 'String'>
+    readonly sizeLabel: FieldRef<"SizeChartEntry", 'String'>
+    readonly chestMin: FieldRef<"SizeChartEntry", 'Int'>
+    readonly chestMax: FieldRef<"SizeChartEntry", 'Int'>
+    readonly waistMin: FieldRef<"SizeChartEntry", 'Int'>
+    readonly waistMax: FieldRef<"SizeChartEntry", 'Int'>
+    readonly chartId: FieldRef<"SizeChartEntry", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SizeChartEntry findUnique
+   */
+  export type SizeChartEntryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChartEntry to fetch.
+     */
+    where: SizeChartEntryWhereUniqueInput
+  }
+
+  /**
+   * SizeChartEntry findUniqueOrThrow
+   */
+  export type SizeChartEntryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChartEntry to fetch.
+     */
+    where: SizeChartEntryWhereUniqueInput
+  }
+
+  /**
+   * SizeChartEntry findFirst
+   */
+  export type SizeChartEntryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChartEntry to fetch.
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeChartEntries to fetch.
+     */
+    orderBy?: SizeChartEntryOrderByWithRelationInput | SizeChartEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SizeChartEntries.
+     */
+    cursor?: SizeChartEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeChartEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeChartEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SizeChartEntries.
+     */
+    distinct?: SizeChartEntryScalarFieldEnum | SizeChartEntryScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChartEntry findFirstOrThrow
+   */
+  export type SizeChartEntryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChartEntry to fetch.
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeChartEntries to fetch.
+     */
+    orderBy?: SizeChartEntryOrderByWithRelationInput | SizeChartEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SizeChartEntries.
+     */
+    cursor?: SizeChartEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeChartEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeChartEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SizeChartEntries.
+     */
+    distinct?: SizeChartEntryScalarFieldEnum | SizeChartEntryScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChartEntry findMany
+   */
+  export type SizeChartEntryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter, which SizeChartEntries to fetch.
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SizeChartEntries to fetch.
+     */
+    orderBy?: SizeChartEntryOrderByWithRelationInput | SizeChartEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SizeChartEntries.
+     */
+    cursor?: SizeChartEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SizeChartEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SizeChartEntries.
+     */
+    skip?: number
+    distinct?: SizeChartEntryScalarFieldEnum | SizeChartEntryScalarFieldEnum[]
+  }
+
+  /**
+   * SizeChartEntry create
+   */
+  export type SizeChartEntryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SizeChartEntry.
+     */
+    data: XOR<SizeChartEntryCreateInput, SizeChartEntryUncheckedCreateInput>
+  }
+
+  /**
+   * SizeChartEntry createMany
+   */
+  export type SizeChartEntryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SizeChartEntries.
+     */
+    data: SizeChartEntryCreateManyInput | SizeChartEntryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SizeChartEntry createManyAndReturn
+   */
+  export type SizeChartEntryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * The data used to create many SizeChartEntries.
+     */
+    data: SizeChartEntryCreateManyInput | SizeChartEntryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SizeChartEntry update
+   */
+  export type SizeChartEntryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SizeChartEntry.
+     */
+    data: XOR<SizeChartEntryUpdateInput, SizeChartEntryUncheckedUpdateInput>
+    /**
+     * Choose, which SizeChartEntry to update.
+     */
+    where: SizeChartEntryWhereUniqueInput
+  }
+
+  /**
+   * SizeChartEntry updateMany
+   */
+  export type SizeChartEntryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SizeChartEntries.
+     */
+    data: XOR<SizeChartEntryUpdateManyMutationInput, SizeChartEntryUncheckedUpdateManyInput>
+    /**
+     * Filter which SizeChartEntries to update
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * Limit how many SizeChartEntries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SizeChartEntry updateManyAndReturn
+   */
+  export type SizeChartEntryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * The data used to update SizeChartEntries.
+     */
+    data: XOR<SizeChartEntryUpdateManyMutationInput, SizeChartEntryUncheckedUpdateManyInput>
+    /**
+     * Filter which SizeChartEntries to update
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * Limit how many SizeChartEntries to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SizeChartEntry upsert
+   */
+  export type SizeChartEntryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SizeChartEntry to update in case it exists.
+     */
+    where: SizeChartEntryWhereUniqueInput
+    /**
+     * In case the SizeChartEntry found by the `where` argument doesn't exist, create a new SizeChartEntry with this data.
+     */
+    create: XOR<SizeChartEntryCreateInput, SizeChartEntryUncheckedCreateInput>
+    /**
+     * In case the SizeChartEntry was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SizeChartEntryUpdateInput, SizeChartEntryUncheckedUpdateInput>
+  }
+
+  /**
+   * SizeChartEntry delete
+   */
+  export type SizeChartEntryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+    /**
+     * Filter which SizeChartEntry to delete.
+     */
+    where: SizeChartEntryWhereUniqueInput
+  }
+
+  /**
+   * SizeChartEntry deleteMany
+   */
+  export type SizeChartEntryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SizeChartEntries to delete
+     */
+    where?: SizeChartEntryWhereInput
+    /**
+     * Limit how many SizeChartEntries to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SizeChartEntry without action
+   */
+  export type SizeChartEntryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SizeChartEntry
+     */
+    select?: SizeChartEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SizeChartEntry
+     */
+    omit?: SizeChartEntryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SizeChartEntryInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model StorePolicy
+   */
+
+  export type AggregateStorePolicy = {
+    _count: StorePolicyCountAggregateOutputType | null
+    _min: StorePolicyMinAggregateOutputType | null
+    _max: StorePolicyMaxAggregateOutputType | null
+  }
+
+  export type StorePolicyMinAggregateOutputType = {
+    id: string | null
+    type: $Enums.PolicyType | null
+    content: string | null
+    updatedAt: Date | null
+  }
+
+  export type StorePolicyMaxAggregateOutputType = {
+    id: string | null
+    type: $Enums.PolicyType | null
+    content: string | null
+    updatedAt: Date | null
+  }
+
+  export type StorePolicyCountAggregateOutputType = {
+    id: number
+    type: number
+    content: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type StorePolicyMinAggregateInputType = {
+    id?: true
+    type?: true
+    content?: true
+    updatedAt?: true
+  }
+
+  export type StorePolicyMaxAggregateInputType = {
+    id?: true
+    type?: true
+    content?: true
+    updatedAt?: true
+  }
+
+  export type StorePolicyCountAggregateInputType = {
+    id?: true
+    type?: true
+    content?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type StorePolicyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StorePolicy to aggregate.
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StorePolicies to fetch.
+     */
+    orderBy?: StorePolicyOrderByWithRelationInput | StorePolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StorePolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StorePolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StorePolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StorePolicies
+    **/
+    _count?: true | StorePolicyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StorePolicyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StorePolicyMaxAggregateInputType
+  }
+
+  export type GetStorePolicyAggregateType<T extends StorePolicyAggregateArgs> = {
+        [P in keyof T & keyof AggregateStorePolicy]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStorePolicy[P]>
+      : GetScalarType<T[P], AggregateStorePolicy[P]>
+  }
+
+
+
+
+  export type StorePolicyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StorePolicyWhereInput
+    orderBy?: StorePolicyOrderByWithAggregationInput | StorePolicyOrderByWithAggregationInput[]
+    by: StorePolicyScalarFieldEnum[] | StorePolicyScalarFieldEnum
+    having?: StorePolicyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StorePolicyCountAggregateInputType | true
+    _min?: StorePolicyMinAggregateInputType
+    _max?: StorePolicyMaxAggregateInputType
+  }
+
+  export type StorePolicyGroupByOutputType = {
+    id: string
+    type: $Enums.PolicyType
+    content: string
+    updatedAt: Date
+    _count: StorePolicyCountAggregateOutputType | null
+    _min: StorePolicyMinAggregateOutputType | null
+    _max: StorePolicyMaxAggregateOutputType | null
+  }
+
+  type GetStorePolicyGroupByPayload<T extends StorePolicyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StorePolicyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StorePolicyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StorePolicyGroupByOutputType[P]>
+            : GetScalarType<T[P], StorePolicyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StorePolicySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    content?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["storePolicy"]>
+
+  export type StorePolicySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    content?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["storePolicy"]>
+
+  export type StorePolicySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    content?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["storePolicy"]>
+
+  export type StorePolicySelectScalar = {
+    id?: boolean
+    type?: boolean
+    content?: boolean
+    updatedAt?: boolean
+  }
+
+  export type StorePolicyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "content" | "updatedAt", ExtArgs["result"]["storePolicy"]>
+
+  export type $StorePolicyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StorePolicy"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      type: $Enums.PolicyType
+      content: string
+      updatedAt: Date
+    }, ExtArgs["result"]["storePolicy"]>
+    composites: {}
+  }
+
+  type StorePolicyGetPayload<S extends boolean | null | undefined | StorePolicyDefaultArgs> = $Result.GetResult<Prisma.$StorePolicyPayload, S>
+
+  type StorePolicyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StorePolicyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StorePolicyCountAggregateInputType | true
+    }
+
+  export interface StorePolicyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StorePolicy'], meta: { name: 'StorePolicy' } }
+    /**
+     * Find zero or one StorePolicy that matches the filter.
+     * @param {StorePolicyFindUniqueArgs} args - Arguments to find a StorePolicy
+     * @example
+     * // Get one StorePolicy
+     * const storePolicy = await prisma.storePolicy.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StorePolicyFindUniqueArgs>(args: SelectSubset<T, StorePolicyFindUniqueArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StorePolicy that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StorePolicyFindUniqueOrThrowArgs} args - Arguments to find a StorePolicy
+     * @example
+     * // Get one StorePolicy
+     * const storePolicy = await prisma.storePolicy.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StorePolicyFindUniqueOrThrowArgs>(args: SelectSubset<T, StorePolicyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StorePolicy that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyFindFirstArgs} args - Arguments to find a StorePolicy
+     * @example
+     * // Get one StorePolicy
+     * const storePolicy = await prisma.storePolicy.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StorePolicyFindFirstArgs>(args?: SelectSubset<T, StorePolicyFindFirstArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StorePolicy that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyFindFirstOrThrowArgs} args - Arguments to find a StorePolicy
+     * @example
+     * // Get one StorePolicy
+     * const storePolicy = await prisma.storePolicy.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StorePolicyFindFirstOrThrowArgs>(args?: SelectSubset<T, StorePolicyFindFirstOrThrowArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StorePolicies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StorePolicies
+     * const storePolicies = await prisma.storePolicy.findMany()
+     * 
+     * // Get first 10 StorePolicies
+     * const storePolicies = await prisma.storePolicy.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const storePolicyWithIdOnly = await prisma.storePolicy.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StorePolicyFindManyArgs>(args?: SelectSubset<T, StorePolicyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StorePolicy.
+     * @param {StorePolicyCreateArgs} args - Arguments to create a StorePolicy.
+     * @example
+     * // Create one StorePolicy
+     * const StorePolicy = await prisma.storePolicy.create({
+     *   data: {
+     *     // ... data to create a StorePolicy
+     *   }
+     * })
+     * 
+     */
+    create<T extends StorePolicyCreateArgs>(args: SelectSubset<T, StorePolicyCreateArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StorePolicies.
+     * @param {StorePolicyCreateManyArgs} args - Arguments to create many StorePolicies.
+     * @example
+     * // Create many StorePolicies
+     * const storePolicy = await prisma.storePolicy.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StorePolicyCreateManyArgs>(args?: SelectSubset<T, StorePolicyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StorePolicies and returns the data saved in the database.
+     * @param {StorePolicyCreateManyAndReturnArgs} args - Arguments to create many StorePolicies.
+     * @example
+     * // Create many StorePolicies
+     * const storePolicy = await prisma.storePolicy.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StorePolicies and only return the `id`
+     * const storePolicyWithIdOnly = await prisma.storePolicy.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StorePolicyCreateManyAndReturnArgs>(args?: SelectSubset<T, StorePolicyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a StorePolicy.
+     * @param {StorePolicyDeleteArgs} args - Arguments to delete one StorePolicy.
+     * @example
+     * // Delete one StorePolicy
+     * const StorePolicy = await prisma.storePolicy.delete({
+     *   where: {
+     *     // ... filter to delete one StorePolicy
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StorePolicyDeleteArgs>(args: SelectSubset<T, StorePolicyDeleteArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StorePolicy.
+     * @param {StorePolicyUpdateArgs} args - Arguments to update one StorePolicy.
+     * @example
+     * // Update one StorePolicy
+     * const storePolicy = await prisma.storePolicy.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StorePolicyUpdateArgs>(args: SelectSubset<T, StorePolicyUpdateArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StorePolicies.
+     * @param {StorePolicyDeleteManyArgs} args - Arguments to filter StorePolicies to delete.
+     * @example
+     * // Delete a few StorePolicies
+     * const { count } = await prisma.storePolicy.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StorePolicyDeleteManyArgs>(args?: SelectSubset<T, StorePolicyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StorePolicies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StorePolicies
+     * const storePolicy = await prisma.storePolicy.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StorePolicyUpdateManyArgs>(args: SelectSubset<T, StorePolicyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StorePolicies and returns the data updated in the database.
+     * @param {StorePolicyUpdateManyAndReturnArgs} args - Arguments to update many StorePolicies.
+     * @example
+     * // Update many StorePolicies
+     * const storePolicy = await prisma.storePolicy.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StorePolicies and only return the `id`
+     * const storePolicyWithIdOnly = await prisma.storePolicy.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StorePolicyUpdateManyAndReturnArgs>(args: SelectSubset<T, StorePolicyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one StorePolicy.
+     * @param {StorePolicyUpsertArgs} args - Arguments to update or create a StorePolicy.
+     * @example
+     * // Update or create a StorePolicy
+     * const storePolicy = await prisma.storePolicy.upsert({
+     *   create: {
+     *     // ... data to create a StorePolicy
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StorePolicy we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StorePolicyUpsertArgs>(args: SelectSubset<T, StorePolicyUpsertArgs<ExtArgs>>): Prisma__StorePolicyClient<$Result.GetResult<Prisma.$StorePolicyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StorePolicies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyCountArgs} args - Arguments to filter StorePolicies to count.
+     * @example
+     * // Count the number of StorePolicies
+     * const count = await prisma.storePolicy.count({
+     *   where: {
+     *     // ... the filter for the StorePolicies we want to count
+     *   }
+     * })
+    **/
+    count<T extends StorePolicyCountArgs>(
+      args?: Subset<T, StorePolicyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StorePolicyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StorePolicy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StorePolicyAggregateArgs>(args: Subset<T, StorePolicyAggregateArgs>): Prisma.PrismaPromise<GetStorePolicyAggregateType<T>>
+
+    /**
+     * Group by StorePolicy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StorePolicyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StorePolicyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StorePolicyGroupByArgs['orderBy'] }
+        : { orderBy?: StorePolicyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StorePolicyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStorePolicyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StorePolicy model
+   */
+  readonly fields: StorePolicyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StorePolicy.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StorePolicyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StorePolicy model
+   */
+  interface StorePolicyFieldRefs {
+    readonly id: FieldRef<"StorePolicy", 'String'>
+    readonly type: FieldRef<"StorePolicy", 'PolicyType'>
+    readonly content: FieldRef<"StorePolicy", 'String'>
+    readonly updatedAt: FieldRef<"StorePolicy", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StorePolicy findUnique
+   */
+  export type StorePolicyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter, which StorePolicy to fetch.
+     */
+    where: StorePolicyWhereUniqueInput
+  }
+
+  /**
+   * StorePolicy findUniqueOrThrow
+   */
+  export type StorePolicyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter, which StorePolicy to fetch.
+     */
+    where: StorePolicyWhereUniqueInput
+  }
+
+  /**
+   * StorePolicy findFirst
+   */
+  export type StorePolicyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter, which StorePolicy to fetch.
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StorePolicies to fetch.
+     */
+    orderBy?: StorePolicyOrderByWithRelationInput | StorePolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StorePolicies.
+     */
+    cursor?: StorePolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StorePolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StorePolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StorePolicies.
+     */
+    distinct?: StorePolicyScalarFieldEnum | StorePolicyScalarFieldEnum[]
+  }
+
+  /**
+   * StorePolicy findFirstOrThrow
+   */
+  export type StorePolicyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter, which StorePolicy to fetch.
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StorePolicies to fetch.
+     */
+    orderBy?: StorePolicyOrderByWithRelationInput | StorePolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StorePolicies.
+     */
+    cursor?: StorePolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StorePolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StorePolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StorePolicies.
+     */
+    distinct?: StorePolicyScalarFieldEnum | StorePolicyScalarFieldEnum[]
+  }
+
+  /**
+   * StorePolicy findMany
+   */
+  export type StorePolicyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter, which StorePolicies to fetch.
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StorePolicies to fetch.
+     */
+    orderBy?: StorePolicyOrderByWithRelationInput | StorePolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StorePolicies.
+     */
+    cursor?: StorePolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StorePolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StorePolicies.
+     */
+    skip?: number
+    distinct?: StorePolicyScalarFieldEnum | StorePolicyScalarFieldEnum[]
+  }
+
+  /**
+   * StorePolicy create
+   */
+  export type StorePolicyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * The data needed to create a StorePolicy.
+     */
+    data: XOR<StorePolicyCreateInput, StorePolicyUncheckedCreateInput>
+  }
+
+  /**
+   * StorePolicy createMany
+   */
+  export type StorePolicyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StorePolicies.
+     */
+    data: StorePolicyCreateManyInput | StorePolicyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * StorePolicy createManyAndReturn
+   */
+  export type StorePolicyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * The data used to create many StorePolicies.
+     */
+    data: StorePolicyCreateManyInput | StorePolicyCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * StorePolicy update
+   */
+  export type StorePolicyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * The data needed to update a StorePolicy.
+     */
+    data: XOR<StorePolicyUpdateInput, StorePolicyUncheckedUpdateInput>
+    /**
+     * Choose, which StorePolicy to update.
+     */
+    where: StorePolicyWhereUniqueInput
+  }
+
+  /**
+   * StorePolicy updateMany
+   */
+  export type StorePolicyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StorePolicies.
+     */
+    data: XOR<StorePolicyUpdateManyMutationInput, StorePolicyUncheckedUpdateManyInput>
+    /**
+     * Filter which StorePolicies to update
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * Limit how many StorePolicies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StorePolicy updateManyAndReturn
+   */
+  export type StorePolicyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * The data used to update StorePolicies.
+     */
+    data: XOR<StorePolicyUpdateManyMutationInput, StorePolicyUncheckedUpdateManyInput>
+    /**
+     * Filter which StorePolicies to update
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * Limit how many StorePolicies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StorePolicy upsert
+   */
+  export type StorePolicyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * The filter to search for the StorePolicy to update in case it exists.
+     */
+    where: StorePolicyWhereUniqueInput
+    /**
+     * In case the StorePolicy found by the `where` argument doesn't exist, create a new StorePolicy with this data.
+     */
+    create: XOR<StorePolicyCreateInput, StorePolicyUncheckedCreateInput>
+    /**
+     * In case the StorePolicy was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StorePolicyUpdateInput, StorePolicyUncheckedUpdateInput>
+  }
+
+  /**
+   * StorePolicy delete
+   */
+  export type StorePolicyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+    /**
+     * Filter which StorePolicy to delete.
+     */
+    where: StorePolicyWhereUniqueInput
+  }
+
+  /**
+   * StorePolicy deleteMany
+   */
+  export type StorePolicyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StorePolicies to delete
+     */
+    where?: StorePolicyWhereInput
+    /**
+     * Limit how many StorePolicies to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StorePolicy without action
+   */
+  export type StorePolicyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StorePolicy
+     */
+    select?: StorePolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StorePolicy
+     */
+    omit?: StorePolicyOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -9669,6 +14295,7 @@ export namespace Prisma {
     currency: 'currency',
     totalAmount: 'totalAmount',
     totalNGN: 'totalNGN',
+    paymentMethod: 'paymentMethod',
     createdAt: 'createdAt',
     customerId: 'customerId',
     staffId: 'staffId'
@@ -9701,6 +14328,51 @@ export namespace Prisma {
   };
 
   export type OfflineSaleScalarFieldEnum = (typeof OfflineSaleScalarFieldEnum)[keyof typeof OfflineSaleScalarFieldEnum]
+
+
+  export const HeroSlideScalarFieldEnum: {
+    id: 'id',
+    imageUrl: 'imageUrl',
+    headline: 'headline',
+    subheadline: 'subheadline',
+    ctaText: 'ctaText',
+    ctaUrl: 'ctaUrl',
+    order: 'order'
+  };
+
+  export type HeroSlideScalarFieldEnum = (typeof HeroSlideScalarFieldEnum)[keyof typeof HeroSlideScalarFieldEnum]
+
+
+  export const SizeChartScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SizeChartScalarFieldEnum = (typeof SizeChartScalarFieldEnum)[keyof typeof SizeChartScalarFieldEnum]
+
+
+  export const SizeChartEntryScalarFieldEnum: {
+    id: 'id',
+    sizeLabel: 'sizeLabel',
+    chestMin: 'chestMin',
+    chestMax: 'chestMax',
+    waistMin: 'waistMin',
+    waistMax: 'waistMax',
+    chartId: 'chartId'
+  };
+
+  export type SizeChartEntryScalarFieldEnum = (typeof SizeChartEntryScalarFieldEnum)[keyof typeof SizeChartEntryScalarFieldEnum]
+
+
+  export const StorePolicyScalarFieldEnum: {
+    id: 'id',
+    type: 'type',
+    content: 'content',
+    updatedAt: 'updatedAt'
+  };
+
+  export type StorePolicyScalarFieldEnum = (typeof StorePolicyScalarFieldEnum)[keyof typeof StorePolicyScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -9841,6 +14513,20 @@ export namespace Prisma {
    * Reference to a field of type 'Currency[]'
    */
   export type ListEnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PolicyType'
+   */
+  export type EnumPolicyTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PolicyType'>
+    
+
+
+  /**
+   * Reference to a field of type 'PolicyType[]'
+   */
+  export type ListEnumPolicyTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PolicyType[]'>
     
   /**
    * Deep Input Types
@@ -10099,6 +14785,7 @@ export namespace Prisma {
 
   export type VariantWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    product_color_size?: VariantProduct_color_sizeCompoundUniqueInput
     AND?: VariantWhereInput | VariantWhereInput[]
     OR?: VariantWhereInput[]
     NOT?: VariantWhereInput | VariantWhereInput[]
@@ -10109,7 +14796,7 @@ export namespace Prisma {
     weight?: FloatNullableFilter<"Variant"> | number | null
     createdAt?: DateTimeFilter<"Variant"> | Date | string
     product?: XOR<ProductScalarRelationFilter, ProductWhereInput>
-  }, "id">
+  }, "id" | "product_color_size">
 
   export type VariantOrderByWithAggregationInput = {
     id?: SortOrder
@@ -10148,6 +14835,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFilter<"Order"> | $Enums.Currency
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
+    paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringFilter<"Order"> | string
     staffId?: StringNullableFilter<"Order"> | string | null
@@ -10163,6 +14851,7 @@ export namespace Prisma {
     currency?: SortOrder
     totalAmount?: SortOrder
     totalNGN?: SortOrder
+    paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrderInput | SortOrder
@@ -10181,6 +14870,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFilter<"Order"> | $Enums.Currency
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
+    paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringFilter<"Order"> | string
     staffId?: StringNullableFilter<"Order"> | string | null
@@ -10196,6 +14886,7 @@ export namespace Prisma {
     currency?: SortOrder
     totalAmount?: SortOrder
     totalNGN?: SortOrder
+    paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrderInput | SortOrder
@@ -10215,6 +14906,7 @@ export namespace Prisma {
     currency?: EnumCurrencyWithAggregatesFilter<"Order"> | $Enums.Currency
     totalAmount?: FloatWithAggregatesFilter<"Order"> | number
     totalNGN?: IntWithAggregatesFilter<"Order"> | number
+    paymentMethod?: StringWithAggregatesFilter<"Order"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
     customerId?: StringWithAggregatesFilter<"Order"> | string
     staffId?: StringNullableWithAggregatesFilter<"Order"> | string | null
@@ -10353,6 +15045,229 @@ export namespace Prisma {
     orderId?: StringWithAggregatesFilter<"OfflineSale"> | string
     staffId?: StringWithAggregatesFilter<"OfflineSale"> | string
     timestamp?: DateTimeWithAggregatesFilter<"OfflineSale"> | Date | string
+  }
+
+  export type HeroSlideWhereInput = {
+    AND?: HeroSlideWhereInput | HeroSlideWhereInput[]
+    OR?: HeroSlideWhereInput[]
+    NOT?: HeroSlideWhereInput | HeroSlideWhereInput[]
+    id?: StringFilter<"HeroSlide"> | string
+    imageUrl?: StringFilter<"HeroSlide"> | string
+    headline?: StringNullableFilter<"HeroSlide"> | string | null
+    subheadline?: StringNullableFilter<"HeroSlide"> | string | null
+    ctaText?: StringNullableFilter<"HeroSlide"> | string | null
+    ctaUrl?: StringNullableFilter<"HeroSlide"> | string | null
+    order?: IntFilter<"HeroSlide"> | number
+  }
+
+  export type HeroSlideOrderByWithRelationInput = {
+    id?: SortOrder
+    imageUrl?: SortOrder
+    headline?: SortOrderInput | SortOrder
+    subheadline?: SortOrderInput | SortOrder
+    ctaText?: SortOrderInput | SortOrder
+    ctaUrl?: SortOrderInput | SortOrder
+    order?: SortOrder
+  }
+
+  export type HeroSlideWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: HeroSlideWhereInput | HeroSlideWhereInput[]
+    OR?: HeroSlideWhereInput[]
+    NOT?: HeroSlideWhereInput | HeroSlideWhereInput[]
+    imageUrl?: StringFilter<"HeroSlide"> | string
+    headline?: StringNullableFilter<"HeroSlide"> | string | null
+    subheadline?: StringNullableFilter<"HeroSlide"> | string | null
+    ctaText?: StringNullableFilter<"HeroSlide"> | string | null
+    ctaUrl?: StringNullableFilter<"HeroSlide"> | string | null
+    order?: IntFilter<"HeroSlide"> | number
+  }, "id">
+
+  export type HeroSlideOrderByWithAggregationInput = {
+    id?: SortOrder
+    imageUrl?: SortOrder
+    headline?: SortOrderInput | SortOrder
+    subheadline?: SortOrderInput | SortOrder
+    ctaText?: SortOrderInput | SortOrder
+    ctaUrl?: SortOrderInput | SortOrder
+    order?: SortOrder
+    _count?: HeroSlideCountOrderByAggregateInput
+    _avg?: HeroSlideAvgOrderByAggregateInput
+    _max?: HeroSlideMaxOrderByAggregateInput
+    _min?: HeroSlideMinOrderByAggregateInput
+    _sum?: HeroSlideSumOrderByAggregateInput
+  }
+
+  export type HeroSlideScalarWhereWithAggregatesInput = {
+    AND?: HeroSlideScalarWhereWithAggregatesInput | HeroSlideScalarWhereWithAggregatesInput[]
+    OR?: HeroSlideScalarWhereWithAggregatesInput[]
+    NOT?: HeroSlideScalarWhereWithAggregatesInput | HeroSlideScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HeroSlide"> | string
+    imageUrl?: StringWithAggregatesFilter<"HeroSlide"> | string
+    headline?: StringNullableWithAggregatesFilter<"HeroSlide"> | string | null
+    subheadline?: StringNullableWithAggregatesFilter<"HeroSlide"> | string | null
+    ctaText?: StringNullableWithAggregatesFilter<"HeroSlide"> | string | null
+    ctaUrl?: StringNullableWithAggregatesFilter<"HeroSlide"> | string | null
+    order?: IntWithAggregatesFilter<"HeroSlide"> | number
+  }
+
+  export type SizeChartWhereInput = {
+    AND?: SizeChartWhereInput | SizeChartWhereInput[]
+    OR?: SizeChartWhereInput[]
+    NOT?: SizeChartWhereInput | SizeChartWhereInput[]
+    id?: StringFilter<"SizeChart"> | string
+    name?: StringFilter<"SizeChart"> | string
+    updatedAt?: DateTimeFilter<"SizeChart"> | Date | string
+    entries?: SizeChartEntryListRelationFilter
+  }
+
+  export type SizeChartOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    updatedAt?: SortOrder
+    entries?: SizeChartEntryOrderByRelationAggregateInput
+  }
+
+  export type SizeChartWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SizeChartWhereInput | SizeChartWhereInput[]
+    OR?: SizeChartWhereInput[]
+    NOT?: SizeChartWhereInput | SizeChartWhereInput[]
+    name?: StringFilter<"SizeChart"> | string
+    updatedAt?: DateTimeFilter<"SizeChart"> | Date | string
+    entries?: SizeChartEntryListRelationFilter
+  }, "id">
+
+  export type SizeChartOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SizeChartCountOrderByAggregateInput
+    _max?: SizeChartMaxOrderByAggregateInput
+    _min?: SizeChartMinOrderByAggregateInput
+  }
+
+  export type SizeChartScalarWhereWithAggregatesInput = {
+    AND?: SizeChartScalarWhereWithAggregatesInput | SizeChartScalarWhereWithAggregatesInput[]
+    OR?: SizeChartScalarWhereWithAggregatesInput[]
+    NOT?: SizeChartScalarWhereWithAggregatesInput | SizeChartScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SizeChart"> | string
+    name?: StringWithAggregatesFilter<"SizeChart"> | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SizeChart"> | Date | string
+  }
+
+  export type SizeChartEntryWhereInput = {
+    AND?: SizeChartEntryWhereInput | SizeChartEntryWhereInput[]
+    OR?: SizeChartEntryWhereInput[]
+    NOT?: SizeChartEntryWhereInput | SizeChartEntryWhereInput[]
+    id?: StringFilter<"SizeChartEntry"> | string
+    sizeLabel?: StringFilter<"SizeChartEntry"> | string
+    chestMin?: IntFilter<"SizeChartEntry"> | number
+    chestMax?: IntFilter<"SizeChartEntry"> | number
+    waistMin?: IntFilter<"SizeChartEntry"> | number
+    waistMax?: IntFilter<"SizeChartEntry"> | number
+    chartId?: StringFilter<"SizeChartEntry"> | string
+    chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
+  }
+
+  export type SizeChartEntryOrderByWithRelationInput = {
+    id?: SortOrder
+    sizeLabel?: SortOrder
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+    chartId?: SortOrder
+    chart?: SizeChartOrderByWithRelationInput
+  }
+
+  export type SizeChartEntryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SizeChartEntryWhereInput | SizeChartEntryWhereInput[]
+    OR?: SizeChartEntryWhereInput[]
+    NOT?: SizeChartEntryWhereInput | SizeChartEntryWhereInput[]
+    sizeLabel?: StringFilter<"SizeChartEntry"> | string
+    chestMin?: IntFilter<"SizeChartEntry"> | number
+    chestMax?: IntFilter<"SizeChartEntry"> | number
+    waistMin?: IntFilter<"SizeChartEntry"> | number
+    waistMax?: IntFilter<"SizeChartEntry"> | number
+    chartId?: StringFilter<"SizeChartEntry"> | string
+    chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
+  }, "id">
+
+  export type SizeChartEntryOrderByWithAggregationInput = {
+    id?: SortOrder
+    sizeLabel?: SortOrder
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+    chartId?: SortOrder
+    _count?: SizeChartEntryCountOrderByAggregateInput
+    _avg?: SizeChartEntryAvgOrderByAggregateInput
+    _max?: SizeChartEntryMaxOrderByAggregateInput
+    _min?: SizeChartEntryMinOrderByAggregateInput
+    _sum?: SizeChartEntrySumOrderByAggregateInput
+  }
+
+  export type SizeChartEntryScalarWhereWithAggregatesInput = {
+    AND?: SizeChartEntryScalarWhereWithAggregatesInput | SizeChartEntryScalarWhereWithAggregatesInput[]
+    OR?: SizeChartEntryScalarWhereWithAggregatesInput[]
+    NOT?: SizeChartEntryScalarWhereWithAggregatesInput | SizeChartEntryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SizeChartEntry"> | string
+    sizeLabel?: StringWithAggregatesFilter<"SizeChartEntry"> | string
+    chestMin?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    chestMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    waistMin?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    waistMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    chartId?: StringWithAggregatesFilter<"SizeChartEntry"> | string
+  }
+
+  export type StorePolicyWhereInput = {
+    AND?: StorePolicyWhereInput | StorePolicyWhereInput[]
+    OR?: StorePolicyWhereInput[]
+    NOT?: StorePolicyWhereInput | StorePolicyWhereInput[]
+    id?: StringFilter<"StorePolicy"> | string
+    type?: EnumPolicyTypeFilter<"StorePolicy"> | $Enums.PolicyType
+    content?: StringFilter<"StorePolicy"> | string
+    updatedAt?: DateTimeFilter<"StorePolicy"> | Date | string
+  }
+
+  export type StorePolicyOrderByWithRelationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    content?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StorePolicyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    type?: $Enums.PolicyType
+    AND?: StorePolicyWhereInput | StorePolicyWhereInput[]
+    OR?: StorePolicyWhereInput[]
+    NOT?: StorePolicyWhereInput | StorePolicyWhereInput[]
+    content?: StringFilter<"StorePolicy"> | string
+    updatedAt?: DateTimeFilter<"StorePolicy"> | Date | string
+  }, "id" | "type">
+
+  export type StorePolicyOrderByWithAggregationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    content?: SortOrder
+    updatedAt?: SortOrder
+    _count?: StorePolicyCountOrderByAggregateInput
+    _max?: StorePolicyMaxOrderByAggregateInput
+    _min?: StorePolicyMinOrderByAggregateInput
+  }
+
+  export type StorePolicyScalarWhereWithAggregatesInput = {
+    AND?: StorePolicyScalarWhereWithAggregatesInput | StorePolicyScalarWhereWithAggregatesInput[]
+    OR?: StorePolicyScalarWhereWithAggregatesInput[]
+    NOT?: StorePolicyScalarWhereWithAggregatesInput | StorePolicyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StorePolicy"> | string
+    type?: EnumPolicyTypeWithAggregatesFilter<"StorePolicy"> | $Enums.PolicyType
+    content?: StringWithAggregatesFilter<"StorePolicy"> | string
+    updatedAt?: DateTimeWithAggregatesFilter<"StorePolicy"> | Date | string
   }
 
   export type CustomerCreateInput = {
@@ -10691,6 +15606,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customer: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
@@ -10704,6 +15620,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
     staffId?: string | null
@@ -10717,6 +15634,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
@@ -10730,6 +15648,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10743,6 +15662,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
     staffId?: string | null
@@ -10754,6 +15674,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10763,6 +15684,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10903,6 +15825,240 @@ export namespace Prisma {
     orderId?: StringFieldUpdateOperationsInput | string
     staffId?: StringFieldUpdateOperationsInput | string
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type HeroSlideCreateInput = {
+    id?: string
+    imageUrl: string
+    headline?: string | null
+    subheadline?: string | null
+    ctaText?: string | null
+    ctaUrl?: string | null
+    order?: number
+  }
+
+  export type HeroSlideUncheckedCreateInput = {
+    id?: string
+    imageUrl: string
+    headline?: string | null
+    subheadline?: string | null
+    ctaText?: string | null
+    ctaUrl?: string | null
+    order?: number
+  }
+
+  export type HeroSlideUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    imageUrl?: StringFieldUpdateOperationsInput | string
+    headline?: NullableStringFieldUpdateOperationsInput | string | null
+    subheadline?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaText?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type HeroSlideUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    imageUrl?: StringFieldUpdateOperationsInput | string
+    headline?: NullableStringFieldUpdateOperationsInput | string | null
+    subheadline?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaText?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type HeroSlideCreateManyInput = {
+    id?: string
+    imageUrl: string
+    headline?: string | null
+    subheadline?: string | null
+    ctaText?: string | null
+    ctaUrl?: string | null
+    order?: number
+  }
+
+  export type HeroSlideUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    imageUrl?: StringFieldUpdateOperationsInput | string
+    headline?: NullableStringFieldUpdateOperationsInput | string | null
+    subheadline?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaText?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type HeroSlideUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    imageUrl?: StringFieldUpdateOperationsInput | string
+    headline?: NullableStringFieldUpdateOperationsInput | string | null
+    subheadline?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaText?: NullableStringFieldUpdateOperationsInput | string | null
+    ctaUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type SizeChartCreateInput = {
+    id?: string
+    name: string
+    updatedAt?: Date | string
+    entries?: SizeChartEntryCreateNestedManyWithoutChartInput
+  }
+
+  export type SizeChartUncheckedCreateInput = {
+    id?: string
+    name: string
+    updatedAt?: Date | string
+    entries?: SizeChartEntryUncheckedCreateNestedManyWithoutChartInput
+  }
+
+  export type SizeChartUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    entries?: SizeChartEntryUpdateManyWithoutChartNestedInput
+  }
+
+  export type SizeChartUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    entries?: SizeChartEntryUncheckedUpdateManyWithoutChartNestedInput
+  }
+
+  export type SizeChartCreateManyInput = {
+    id?: string
+    name: string
+    updatedAt?: Date | string
+  }
+
+  export type SizeChartUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SizeChartUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SizeChartEntryCreateInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+    chart: SizeChartCreateNestedOneWithoutEntriesInput
+  }
+
+  export type SizeChartEntryUncheckedCreateInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+    chartId: string
+  }
+
+  export type SizeChartEntryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+    chart?: SizeChartUpdateOneRequiredWithoutEntriesNestedInput
+  }
+
+  export type SizeChartEntryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+    chartId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type SizeChartEntryCreateManyInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+    chartId: string
+  }
+
+  export type SizeChartEntryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type SizeChartEntryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+    chartId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type StorePolicyCreateInput = {
+    id?: string
+    type: $Enums.PolicyType
+    content: string
+    updatedAt?: Date | string
+  }
+
+  export type StorePolicyUncheckedCreateInput = {
+    id?: string
+    type: $Enums.PolicyType
+    content: string
+    updatedAt?: Date | string
+  }
+
+  export type StorePolicyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumPolicyTypeFieldUpdateOperationsInput | $Enums.PolicyType
+    content?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StorePolicyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumPolicyTypeFieldUpdateOperationsInput | $Enums.PolicyType
+    content?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StorePolicyCreateManyInput = {
+    id?: string
+    type: $Enums.PolicyType
+    content: string
+    updatedAt?: Date | string
+  }
+
+  export type StorePolicyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumPolicyTypeFieldUpdateOperationsInput | $Enums.PolicyType
+    content?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StorePolicyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumPolicyTypeFieldUpdateOperationsInput | $Enums.PolicyType
+    content?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -11219,6 +16375,12 @@ export namespace Prisma {
     isNot?: ProductWhereInput
   }
 
+  export type VariantProduct_color_sizeCompoundUniqueInput = {
+    productId: string
+    color: string
+    size: string
+  }
+
   export type VariantCountOrderByAggregateInput = {
     id?: SortOrder
     productId?: SortOrder
@@ -11346,6 +16508,7 @@ export namespace Prisma {
     currency?: SortOrder
     totalAmount?: SortOrder
     totalNGN?: SortOrder
+    paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
@@ -11362,6 +16525,7 @@ export namespace Prisma {
     currency?: SortOrder
     totalAmount?: SortOrder
     totalNGN?: SortOrder
+    paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
@@ -11373,6 +16537,7 @@ export namespace Prisma {
     currency?: SortOrder
     totalAmount?: SortOrder
     totalNGN?: SortOrder
+    paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
@@ -11515,6 +16680,159 @@ export namespace Prisma {
     orderId?: SortOrder
     staffId?: SortOrder
     timestamp?: SortOrder
+  }
+
+  export type HeroSlideCountOrderByAggregateInput = {
+    id?: SortOrder
+    imageUrl?: SortOrder
+    headline?: SortOrder
+    subheadline?: SortOrder
+    ctaText?: SortOrder
+    ctaUrl?: SortOrder
+    order?: SortOrder
+  }
+
+  export type HeroSlideAvgOrderByAggregateInput = {
+    order?: SortOrder
+  }
+
+  export type HeroSlideMaxOrderByAggregateInput = {
+    id?: SortOrder
+    imageUrl?: SortOrder
+    headline?: SortOrder
+    subheadline?: SortOrder
+    ctaText?: SortOrder
+    ctaUrl?: SortOrder
+    order?: SortOrder
+  }
+
+  export type HeroSlideMinOrderByAggregateInput = {
+    id?: SortOrder
+    imageUrl?: SortOrder
+    headline?: SortOrder
+    subheadline?: SortOrder
+    ctaText?: SortOrder
+    ctaUrl?: SortOrder
+    order?: SortOrder
+  }
+
+  export type HeroSlideSumOrderByAggregateInput = {
+    order?: SortOrder
+  }
+
+  export type SizeChartEntryListRelationFilter = {
+    every?: SizeChartEntryWhereInput
+    some?: SizeChartEntryWhereInput
+    none?: SizeChartEntryWhereInput
+  }
+
+  export type SizeChartEntryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SizeChartCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SizeChartMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SizeChartMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SizeChartScalarRelationFilter = {
+    is?: SizeChartWhereInput
+    isNot?: SizeChartWhereInput
+  }
+
+  export type SizeChartEntryCountOrderByAggregateInput = {
+    id?: SortOrder
+    sizeLabel?: SortOrder
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+    chartId?: SortOrder
+  }
+
+  export type SizeChartEntryAvgOrderByAggregateInput = {
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+  }
+
+  export type SizeChartEntryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sizeLabel?: SortOrder
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+    chartId?: SortOrder
+  }
+
+  export type SizeChartEntryMinOrderByAggregateInput = {
+    id?: SortOrder
+    sizeLabel?: SortOrder
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+    chartId?: SortOrder
+  }
+
+  export type SizeChartEntrySumOrderByAggregateInput = {
+    chestMin?: SortOrder
+    chestMax?: SortOrder
+    waistMin?: SortOrder
+    waistMax?: SortOrder
+  }
+
+  export type EnumPolicyTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.PolicyType | EnumPolicyTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPolicyTypeFilter<$PrismaModel> | $Enums.PolicyType
+  }
+
+  export type StorePolicyCountOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    content?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StorePolicyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    content?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type StorePolicyMinOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    content?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumPolicyTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PolicyType | EnumPolicyTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPolicyTypeWithAggregatesFilter<$PrismaModel> | $Enums.PolicyType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPolicyTypeFilter<$PrismaModel>
+    _max?: NestedEnumPolicyTypeFilter<$PrismaModel>
   }
 
   export type OrderCreateNestedManyWithoutCustomerInput = {
@@ -11901,6 +17219,66 @@ export namespace Prisma {
     update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutOfflineSalesInput, StaffUpdateWithoutOfflineSalesInput>, StaffUncheckedUpdateWithoutOfflineSalesInput>
   }
 
+  export type SizeChartEntryCreateNestedManyWithoutChartInput = {
+    create?: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput> | SizeChartEntryCreateWithoutChartInput[] | SizeChartEntryUncheckedCreateWithoutChartInput[]
+    connectOrCreate?: SizeChartEntryCreateOrConnectWithoutChartInput | SizeChartEntryCreateOrConnectWithoutChartInput[]
+    createMany?: SizeChartEntryCreateManyChartInputEnvelope
+    connect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+  }
+
+  export type SizeChartEntryUncheckedCreateNestedManyWithoutChartInput = {
+    create?: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput> | SizeChartEntryCreateWithoutChartInput[] | SizeChartEntryUncheckedCreateWithoutChartInput[]
+    connectOrCreate?: SizeChartEntryCreateOrConnectWithoutChartInput | SizeChartEntryCreateOrConnectWithoutChartInput[]
+    createMany?: SizeChartEntryCreateManyChartInputEnvelope
+    connect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+  }
+
+  export type SizeChartEntryUpdateManyWithoutChartNestedInput = {
+    create?: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput> | SizeChartEntryCreateWithoutChartInput[] | SizeChartEntryUncheckedCreateWithoutChartInput[]
+    connectOrCreate?: SizeChartEntryCreateOrConnectWithoutChartInput | SizeChartEntryCreateOrConnectWithoutChartInput[]
+    upsert?: SizeChartEntryUpsertWithWhereUniqueWithoutChartInput | SizeChartEntryUpsertWithWhereUniqueWithoutChartInput[]
+    createMany?: SizeChartEntryCreateManyChartInputEnvelope
+    set?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    disconnect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    delete?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    connect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    update?: SizeChartEntryUpdateWithWhereUniqueWithoutChartInput | SizeChartEntryUpdateWithWhereUniqueWithoutChartInput[]
+    updateMany?: SizeChartEntryUpdateManyWithWhereWithoutChartInput | SizeChartEntryUpdateManyWithWhereWithoutChartInput[]
+    deleteMany?: SizeChartEntryScalarWhereInput | SizeChartEntryScalarWhereInput[]
+  }
+
+  export type SizeChartEntryUncheckedUpdateManyWithoutChartNestedInput = {
+    create?: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput> | SizeChartEntryCreateWithoutChartInput[] | SizeChartEntryUncheckedCreateWithoutChartInput[]
+    connectOrCreate?: SizeChartEntryCreateOrConnectWithoutChartInput | SizeChartEntryCreateOrConnectWithoutChartInput[]
+    upsert?: SizeChartEntryUpsertWithWhereUniqueWithoutChartInput | SizeChartEntryUpsertWithWhereUniqueWithoutChartInput[]
+    createMany?: SizeChartEntryCreateManyChartInputEnvelope
+    set?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    disconnect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    delete?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    connect?: SizeChartEntryWhereUniqueInput | SizeChartEntryWhereUniqueInput[]
+    update?: SizeChartEntryUpdateWithWhereUniqueWithoutChartInput | SizeChartEntryUpdateWithWhereUniqueWithoutChartInput[]
+    updateMany?: SizeChartEntryUpdateManyWithWhereWithoutChartInput | SizeChartEntryUpdateManyWithWhereWithoutChartInput[]
+    deleteMany?: SizeChartEntryScalarWhereInput | SizeChartEntryScalarWhereInput[]
+  }
+
+  export type SizeChartCreateNestedOneWithoutEntriesInput = {
+    create?: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
+    connectOrCreate?: SizeChartCreateOrConnectWithoutEntriesInput
+    connect?: SizeChartWhereUniqueInput
+  }
+
+  export type SizeChartUpdateOneRequiredWithoutEntriesNestedInput = {
+    create?: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
+    connectOrCreate?: SizeChartCreateOrConnectWithoutEntriesInput
+    upsert?: SizeChartUpsertWithoutEntriesInput
+    connect?: SizeChartWhereUniqueInput
+    update?: XOR<XOR<SizeChartUpdateToOneWithWhereWithoutEntriesInput, SizeChartUpdateWithoutEntriesInput>, SizeChartUncheckedUpdateWithoutEntriesInput>
+  }
+
+  export type EnumPolicyTypeFieldUpdateOperationsInput = {
+    set?: $Enums.PolicyType
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -12173,12 +17551,30 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumPolicyTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.PolicyType | EnumPolicyTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPolicyTypeFilter<$PrismaModel> | $Enums.PolicyType
+  }
+
+  export type NestedEnumPolicyTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PolicyType | EnumPolicyTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PolicyType[] | ListEnumPolicyTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPolicyTypeWithAggregatesFilter<$PrismaModel> | $Enums.PolicyType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPolicyTypeFilter<$PrismaModel>
+    _max?: NestedEnumPolicyTypeFilter<$PrismaModel>
+  }
+
   export type OrderCreateWithoutCustomerInput = {
     id?: string
     status?: $Enums.OrderStatus
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -12191,6 +17587,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     staffId?: string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
@@ -12232,6 +17629,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFilter<"Order"> | $Enums.Currency
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
+    paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringFilter<"Order"> | string
     staffId?: StringNullableFilter<"Order"> | string | null
@@ -12243,6 +17641,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customer: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -12255,6 +17654,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
@@ -12696,6 +18096,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customer: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
@@ -12708,6 +18109,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
     staffId?: string | null
@@ -12736,6 +18138,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
@@ -12748,6 +18151,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12760,6 +18164,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customer: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
@@ -12772,6 +18177,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
     staffId?: string | null
@@ -12831,6 +18237,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
@@ -12843,6 +18250,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -12886,12 +18294,110 @@ export namespace Prisma {
     orders?: OrderUncheckedUpdateManyWithoutStaffNestedInput
   }
 
+  export type SizeChartEntryCreateWithoutChartInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+  }
+
+  export type SizeChartEntryUncheckedCreateWithoutChartInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+  }
+
+  export type SizeChartEntryCreateOrConnectWithoutChartInput = {
+    where: SizeChartEntryWhereUniqueInput
+    create: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput>
+  }
+
+  export type SizeChartEntryCreateManyChartInputEnvelope = {
+    data: SizeChartEntryCreateManyChartInput | SizeChartEntryCreateManyChartInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type SizeChartEntryUpsertWithWhereUniqueWithoutChartInput = {
+    where: SizeChartEntryWhereUniqueInput
+    update: XOR<SizeChartEntryUpdateWithoutChartInput, SizeChartEntryUncheckedUpdateWithoutChartInput>
+    create: XOR<SizeChartEntryCreateWithoutChartInput, SizeChartEntryUncheckedCreateWithoutChartInput>
+  }
+
+  export type SizeChartEntryUpdateWithWhereUniqueWithoutChartInput = {
+    where: SizeChartEntryWhereUniqueInput
+    data: XOR<SizeChartEntryUpdateWithoutChartInput, SizeChartEntryUncheckedUpdateWithoutChartInput>
+  }
+
+  export type SizeChartEntryUpdateManyWithWhereWithoutChartInput = {
+    where: SizeChartEntryScalarWhereInput
+    data: XOR<SizeChartEntryUpdateManyMutationInput, SizeChartEntryUncheckedUpdateManyWithoutChartInput>
+  }
+
+  export type SizeChartEntryScalarWhereInput = {
+    AND?: SizeChartEntryScalarWhereInput | SizeChartEntryScalarWhereInput[]
+    OR?: SizeChartEntryScalarWhereInput[]
+    NOT?: SizeChartEntryScalarWhereInput | SizeChartEntryScalarWhereInput[]
+    id?: StringFilter<"SizeChartEntry"> | string
+    sizeLabel?: StringFilter<"SizeChartEntry"> | string
+    chestMin?: IntFilter<"SizeChartEntry"> | number
+    chestMax?: IntFilter<"SizeChartEntry"> | number
+    waistMin?: IntFilter<"SizeChartEntry"> | number
+    waistMax?: IntFilter<"SizeChartEntry"> | number
+    chartId?: StringFilter<"SizeChartEntry"> | string
+  }
+
+  export type SizeChartCreateWithoutEntriesInput = {
+    id?: string
+    name: string
+    updatedAt?: Date | string
+  }
+
+  export type SizeChartUncheckedCreateWithoutEntriesInput = {
+    id?: string
+    name: string
+    updatedAt?: Date | string
+  }
+
+  export type SizeChartCreateOrConnectWithoutEntriesInput = {
+    where: SizeChartWhereUniqueInput
+    create: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
+  }
+
+  export type SizeChartUpsertWithoutEntriesInput = {
+    update: XOR<SizeChartUpdateWithoutEntriesInput, SizeChartUncheckedUpdateWithoutEntriesInput>
+    create: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
+    where?: SizeChartWhereInput
+  }
+
+  export type SizeChartUpdateToOneWithWhereWithoutEntriesInput = {
+    where?: SizeChartWhereInput
+    data: XOR<SizeChartUpdateWithoutEntriesInput, SizeChartUncheckedUpdateWithoutEntriesInput>
+  }
+
+  export type SizeChartUpdateWithoutEntriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SizeChartUncheckedUpdateWithoutEntriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrderCreateManyCustomerInput = {
     id?: string
     status?: $Enums.OrderStatus
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     staffId?: string | null
   }
@@ -12902,6 +18408,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -12914,6 +18421,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
@@ -12926,6 +18434,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -12936,6 +18445,7 @@ export namespace Prisma {
     currency: $Enums.Currency
     totalAmount: number
     totalNGN: number
+    paymentMethod: string
     createdAt?: Date | string
     customerId: string
   }
@@ -12952,6 +18462,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -12964,6 +18475,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
@@ -12976,6 +18488,7 @@ export namespace Prisma {
     currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: StringFieldUpdateOperationsInput | string
   }
@@ -13080,6 +18593,42 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type SizeChartEntryCreateManyChartInput = {
+    id?: string
+    sizeLabel: string
+    chestMin: number
+    chestMax: number
+    waistMin: number
+    waistMax: number
+  }
+
+  export type SizeChartEntryUpdateWithoutChartInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type SizeChartEntryUncheckedUpdateWithoutChartInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type SizeChartEntryUncheckedUpdateManyWithoutChartInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sizeLabel?: StringFieldUpdateOperationsInput | string
+    chestMin?: IntFieldUpdateOperationsInput | number
+    chestMax?: IntFieldUpdateOperationsInput | number
+    waistMin?: IntFieldUpdateOperationsInput | number
+    waistMax?: IntFieldUpdateOperationsInput | number
   }
 
 

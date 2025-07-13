@@ -8,6 +8,7 @@ generator client {
   output   = "../lib/generated/prisma-client"
 }
 
+/// Order‐related enums
 enum OrderStatus {
   Processing
   Shipped
@@ -31,11 +32,18 @@ enum JobRole {
 
 /// UI‐level permissions / access scope
 enum UserRole {
-  SuperAdmin // full access to everything
-  ProductAdmin // can only manage products/catalog
-  OrderAdmin // can only view and update orders
-  DispatchUser // can only ship (Ready→Shipped) and print slips
-  SupportUser // can only lookup orders, view customers, run reports
+  SuperAdmin // full access
+  ProductAdmin // manage products/catalog
+  OrderAdmin // view/update orders
+  DispatchUser // ship orders, print slips
+  SupportUser // lookup orders, view customers, reports
+}
+
+/// Types of store policies
+enum PolicyType {
+  Privacy
+  Shipping
+  Refund
 }
 
 model Customer {
@@ -57,12 +65,10 @@ model Staff {
   email        String        @unique
   phone        String
   passwordHash String
-  /// which business‐function they perform
   role         JobRole
-  /// what sections of the admin UI they can access
   access       UserRole
-  orders       Order[] // orders created by this staff
-  offlineSales OfflineSale[] // offline‐sale logs
+  orders       Order[] // created orders
+  offlineSales OfflineSale[] // offline sale logs
   createdAt    DateTime      @default(now())
 }
 
@@ -88,19 +94,25 @@ model Variant {
   stock     Int
   weight    Float?
   createdAt DateTime @default(now())
+
+  @@unique([productId, color, size], name: "product_color_size")
 }
 
 model Order {
-  id          String       @id @default(uuid())
-  status      OrderStatus  @default(Processing)
-  currency    Currency
-  totalAmount Float
-  totalNGN    Int
-  createdAt   DateTime     @default(now())
-  customer    Customer     @relation(fields: [customerId], references: [id])
-  customerId  String
-  staff       Staff?       @relation(fields: [staffId], references: [id])
-  staffId     String?
+  id            String      @id @default(uuid())
+  status        OrderStatus @default(Processing)
+  currency      Currency
+  totalAmount   Float
+  totalNGN      Int
+  paymentMethod String
+  createdAt     DateTime    @default(now())
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+
+  staff   Staff?  @relation(fields: [staffId], references: [id])
+  staffId String?
+
   items       OrderItem[]
   offlineSale OfflineSale?
 }
@@ -126,4 +138,42 @@ model OfflineSale {
   staff     Staff    @relation(fields: [staffId], references: [id])
   staffId   String
   timestamp DateTime @default(now())
+}
+
+/// Hero‐slider banners
+model HeroSlide {
+  id          String  @id @default(cuid())
+  imageUrl    String
+  headline    String? // optional
+  subheadline String? // optional
+  ctaText     String? // optional
+  ctaUrl      String? // optional, front‐end can default to “#”
+  order       Int     @default(0)
+}
+
+/// Size charts broken into rows
+model SizeChart {
+  id        String           @id @default(cuid())
+  name      String // e.g. "Men's T-Shirt Chart"
+  entries   SizeChartEntry[]
+  updatedAt DateTime         @updatedAt
+}
+
+model SizeChartEntry {
+  id        String    @id @default(cuid())
+  sizeLabel String // "S", "M", "L", "XL", etc.
+  chestMin  Int
+  chestMax  Int
+  waistMin  Int
+  waistMax  Int
+  chart     SizeChart @relation(fields: [chartId], references: [id])
+  chartId   String
+}
+
+/// Grouped store policies
+model StorePolicy {
+  id        String     @id @default(cuid())
+  type      PolicyType @unique
+  content   String // rich‐text or markdown
+  updatedAt DateTime   @updatedAt
 }
