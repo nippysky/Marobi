@@ -1,6 +1,6 @@
 // app/admin/page.tsx
 import AdminDashboardClient from "@/components/admin/AdminDashboardClient";
-import { generateDummyOrders, type AdminOrder } from "@/lib/orders";
+import { generateDummyOrders } from "@/lib/orders";
 
 export default async function AdminDashboardPage() {
   // 1) Top‐line stats
@@ -14,6 +14,7 @@ export default async function AdminDashboardPage() {
     { name: "Floral Summer Dress", sold: 20, revenue: 400_000, image: "/dummy1.jpg" },
     { name: "Denim Jacket",          sold: 15, revenue:  75_000, image: "/dummy2.jpg" },
     { name: "Silk Scarf",            sold: 10, revenue:  50_000, image: "/dummy3.jpg" },
+    { name: "Test Cloth",            sold: 10, revenue:  50_000, image: "/dummy5.jpg" },
   ];
 
   // 3) Recent orders (take the first 5 of a longer list)

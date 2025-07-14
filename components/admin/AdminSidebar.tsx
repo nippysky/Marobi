@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Boxes,
   Users,
-  BarChart2,
   Settings,
   LogOut,
   NotebookPen,
@@ -25,7 +24,6 @@ const navItems = [
   { name: "Order Inventory",     href: "/admin/order-inventory",   icon: <BsBag size={20} /> },
   { name: "Customers",           href: "/admin/customers",         icon: <Users size={20} /> },
   { name: "Staff & Admin",       href: "/admin/staff-admins",      icon: <RiAdminLine size={20} /> },
-  { name: "Reports & Analytics", href: "/admin/reports",           icon: <BarChart2 size={20} /> },
   { name: "Store Settings",      href: "/admin/settings",          icon: <Settings size={20} /> },
 ];
 
