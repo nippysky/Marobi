@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FaArrowLeftLong, FaEye, FaEyeSlash } from "react-icons/fa6";
+import { Toaster, toast } from "react-hot-toast";
 
 interface CountryData {
   name: string;
@@ -155,12 +156,13 @@ export default function RegisterClient() {
   const countryLoading = countryList.length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (password !== confirm) {
-      alert("Passwords must match");
-      return;
+      toast.error("Passwords must match")
+      return
     }
-    setLoading(true);
+    setLoading(true)
+
     const payload = {
       name: `${firstName} ${lastName}`.trim(),
       email,
@@ -169,21 +171,32 @@ export default function RegisterClient() {
       state: stateVal,
       address,
       password,
-    };
+    }
+
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Registration failed");
-      router.push("/auth/login");
-    } catch {
-      // TODO: show toast
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Registration failed")
+      } else {
+        // ← redirect to your verify-email page instead of login
+        toast.success("Registration successful! Check your email to verify.")
+        setTimeout(() => router.push(
+        `/auth/verify-email?email=${encodeURIComponent(email)}`
+        ), 1500
+ )
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Server error. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto py-16 px-6">

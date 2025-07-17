@@ -24,6 +24,7 @@ enum Currency {
 
 /// Day‐to‐day role within the business
 enum JobRole {
+  SystemAdministrator // manage everything, system settings
   DispatchCoordinator // books courier pickups, prints labels
   OrderProcessingSpecialist // updates statuses, handles refunds
   ProductCatalogManager // creates/edits products, manages variants
@@ -40,29 +41,38 @@ enum UserRole {
 }
 
 model Customer {
-  id           String    @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String    @unique
-  phone        String
-  address      String
-  registeredAt DateTime  @default(now())
-  lastLogin    DateTime?
-  orders       Order[]
+  id                      String    @id @default(cuid())
+  firstName               String
+  lastName                String
+  email                   String    @unique
+  phone                   String
+  passwordHash            String?
+  address                 String
+  registeredAt            DateTime  @default(now())
+  lastLogin               DateTime?
+  orders                  Order[]
+  emailVerified           Boolean   @default(false)
+  verificationTokenExpiry DateTime? // when verificationToken expires
+  verificationToken       String? // random token for “click to verify email”
+  resetToken              String? // random token for “forgot password”
+  resetTokenExpiry        DateTime? // when resetToken expires
 }
 
 model Staff {
-  id           String        @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String        @unique
-  phone        String
-  passwordHash String
-  role         JobRole
-  access       UserRole
-  orders       Order[] // created orders
-  offlineSales OfflineSale[] // offline sale logs
-  createdAt    DateTime      @default(now())
+  id               String        @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String        @unique
+  phone            String
+  passwordHash     String
+  jobRoles         JobRole[]     @default([])
+  access           UserRole
+  orders           Order[] // created orders
+  offlineSales     OfflineSale[] // offline sale logs
+  createdAt        DateTime      @default(now())
+  emailVerified    Boolean       @default(true) // assume internal staff already verified
+  resetToken       String?
+  resetTokenExpiry DateTime?
 }
 
 model Product {

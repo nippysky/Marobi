@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { Toaster as HotToaster } from "react-hot-toast"
 import React from "react";
 import { CurrencyProvider } from "@/lib/context/currencyContext";
@@ -92,11 +91,8 @@ export default function RootLayout({
             </SizeChartProvider>
           </SearchModalProvider>
         </CurrencyProvider>
-   
-        {/* Sonner toaster (your existing one) */}
-        <SonnerToaster />
         {/* React-Hot-Toast toaster */}
-        <HotToaster />
+        <HotToaster position="top-right" />
         <ScrollToTop/>
       </body>
     </html>
