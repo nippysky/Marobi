@@ -41,22 +41,28 @@ enum UserRole {
 }
 
 model Customer {
-  id           String   @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String   @unique
-  phone        String
-  passwordHash String?
-  address      String
-  registeredAt DateTime @default(now())
-  lastLogin    DateTime?
-  orders       Order[]
-  emailVerified    Boolean   @default(false)
-  verificationTokenExpiry DateTime? // when verificationToken expires
-  verificationToken String?   // random token for “click to verify email”
-  resetToken        String?   // random token for “forgot password”
-  resetTokenExpiry  DateTime? // when resetToken expires
+  id                   String   @id @default(cuid())
+  firstName            String
+  lastName             String
+  email                String   @unique
+  phone                String
+  passwordHash         String?
+  deliveryAddress      String?
+  billingAddress       String?
+  country              String? 
+  state                String?    
+  registeredAt         DateTime @default(now())
+  lastLogin            DateTime?
+  orders               Order[]
+  wishlistItems        WishlistItem[]
+  reviews      Review[]
+  emailVerified        Boolean  @default(false)
+  verificationToken        String?
+  verificationTokenExpiry DateTime?
+  resetToken           String?
+  resetTokenExpiry     DateTime?
 }
+
 
 model Staff {
   id           String        @id @default(cuid())
@@ -85,6 +91,10 @@ model Product {
   priceEUR   Float?
   priceGBP   Float?
   variants   Variant[]
+  reviews      Review[] 
+   averageRating Float     @default(0)  
+  ratingCount   Int       @default(0) 
+  wishlistItems          WishlistItem[]
   createdAt  DateTime  @default(now())
 }
 
@@ -100,6 +110,24 @@ model Variant {
 
   @@unique([productId, color, size], name: "product_color_size")
 }
+
+model Review {
+  id         String   @id @default(cuid())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  rating     Int
+  body       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productId, customerId], name: "product_customer_unique_review")
+  @@index([productId])
+  @@index([customerId])
+  @@index([rating])
+}
+
 
 model Order {
   id            String       @id @default(uuid())
@@ -133,6 +161,8 @@ model OrderItem {
   color      String
   size       String
 }
+
+
 
 model OfflineSale {
   id         String   @id @default(uuid())
@@ -171,4 +201,15 @@ model SizeChartEntry {
   waistMax   Int
   chart      SizeChart @relation(fields: [chartId], references: [id])
   chartId    String
+}
+
+model WishlistItem {
+  id          String    @id @default(cuid())
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  customerId  String
+  product     Product   @relation(fields: [productId], references: [id])
+  productId   String
+  addedAt     DateTime  @default(now())
+
+  @@unique([customerId, productId])
 }

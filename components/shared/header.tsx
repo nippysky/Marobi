@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { Search as SearchIcon, PencilRuler, UserRound } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  Search as SearchIcon,
+  PencilRuler,
+  UserRound,
+  User as UserIcon,
+  LogOut as LogoutIcon,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import { signOut, useSession } from "next-auth/react";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { CurrencySelector } from "./currency-selector";
 import { SizeChartModal } from "../SizeChartModal";
@@ -17,7 +24,6 @@ import {
 } from "@/components/ui/tooltip";
 import { useSearchModal } from "@/lib/context/searchModalContext";
 import { SearchModal } from "../SearchModal";
-import { getCurrentUser, User as AppUser } from "@/lib/session";
 import { Skeleton } from "@/components/ui/skeleton";
 import MobileMenuSheet from "./mobile-menu-sheet";
 import SearchBar from "../SearchBar";
@@ -38,18 +44,26 @@ const navItems: { label: string; href: string }[] = [
 
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { openSizeChart } = useSizeChart();
-  const { isOpen, openModal, closeModal } = useSearchModal();
-  const [mounted, setMounted] = useState(false);
+  const { isOpen,  openModal } = useSearchModal();
+  const { data: session, status } = useSession();
 
-  const [user, setUser] = useState<AppUser | null | undefined>(undefined);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // close menu on outside click
   useEffect(() => {
-    setMounted(true);
-    getCurrentUser().then((u) => setUser(u));
-  }, []);
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [menuOpen]);
 
+  // collapse header on scroll
   useEffect(() => {
     const onScroll = () => setIsCollapsed(window.scrollY > 2);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -57,31 +71,27 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // motion variants
   const headerVariants = {
     expanded: { height: "auto", backgroundColor: "#ffffff" },
     collapsed: { height: "4rem", backgroundColor: "#ffffff" },
   };
-
   const logoTextVariants = {
     expanded: { opacity: 1, x: 0, transition: { duration: 0.2 } },
     collapsed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
   };
-
   const logoIconVariants = {
     expanded: { opacity: 0, x: 20, transition: { duration: 0.2 } },
     collapsed: { opacity: 1, x: 0, transition: { duration: 0.2 } },
   };
-
   const searchInputVariants = {
     expanded: { opacity: 1, width: "40vw", transition: { duration: 0.3 } },
     collapsed: { opacity: 0, width: 0, transition: { duration: 0.2 } },
   };
-
   const searchIconVariants = {
     expanded: { opacity: 0, x: 10 },
     collapsed: { opacity: 1, x: 0, transition: { duration: 0.3 } },
   };
-
   const topNavVariants = {
     expanded: {
       height: "auto",
@@ -99,18 +109,63 @@ export const Header: React.FC = () => {
     },
   };
 
-  const accountTooltip = (() => {
-    if (user === undefined) return null;
-    return user ? `Hello, ${user.name}` : "Login to your account";
-  })();
-
   const linkBaseClasses =
     "tracking-widest font-semibold uppercase py-1 px-3 rounded-full transition duration-300 ease-in-out";
+
+  // user menu UI
+  const UserMenu = () => {
+    if (status === "loading") {
+      return <Skeleton className="h-8 w-8 rounded-full" />;
+    }
+    if (!session) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link href="/auth/login" className="p-2 text-gray-600 hover:text-gray-800">
+              <UserRound className="w-5 h-5" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Login to your account</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return (
+      <div className="relative" ref={menuRef}>
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          className="p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+        >
+          <UserRound className="w-5 h-5" />
+        </button>
+        {menuOpen && (
+          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
+            <Link
+              href="/account"
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+              onClick={() => setMenuOpen(false)}
+            >
+              <UserIcon className="w-4 h-4" />
+              <span>Profile</span>
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
+            >
+              <LogoutIcon className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
       <motion.header
-        className="sticky top-0 inset-x-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-black lg:px-20 md:px-10 px-5"
+        className="sticky top-0 inset-x-0 z-50 border-b border-gray-200 bg-white lg:px-20 md:px-10 px-5"
         variants={headerVariants}
         animate={isCollapsed ? "collapsed" : "expanded"}
         initial="expanded"
@@ -119,7 +174,7 @@ export const Header: React.FC = () => {
         <div className="w-full max-w-[1920px] mx-auto">
           {/* Desktop */}
           <div className="hidden lg:block">
-            {/* Collapsed Header */}
+            {/* Collapsed */}
             <motion.div
               className={`${
                 isCollapsed ? "flex" : "hidden"
@@ -168,7 +223,7 @@ export const Header: React.FC = () => {
                       <button
                         type="button"
                         onClick={openModal}
-                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                        className="text-gray-600 hover:text-gray-800 p-2"
                       >
                         <SearchIcon className="w-5 h-5" />
                       </button>
@@ -183,7 +238,7 @@ export const Header: React.FC = () => {
                   <TooltipTrigger asChild>
                     <button
                       onClick={openSizeChart}
-                      className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                      className="text-gray-600 hover:text-gray-800 p-2"
                     >
                       <PencilRuler className="w-5 h-5" />
                     </button>
@@ -193,19 +248,8 @@ export const Header: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
 
-                <Tooltip>
-                  <Link
-                    href="/account"
-                    className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  >
-                    <TooltipTrigger asChild>
-                      <UserRound className="w-5 h-5" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {accountTooltip ?? <Skeleton className="h-4 w-20" />}
-                    </TooltipContent>
-                  </Link>
-                </Tooltip>
+                {/* user/profile */}
+                <UserMenu />
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -220,7 +264,7 @@ export const Header: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Expanded Header */}
+            {/* Expanded */}
             <motion.div className={`${isCollapsed ? "hidden" : "block"}`}>
               <div className="grid grid-cols-3 items-center h-16">
                 <motion.div
@@ -229,10 +273,7 @@ export const Header: React.FC = () => {
                   animate={isCollapsed ? "collapsed" : "expanded"}
                   className="flex items-center"
                 >
-                  <Link
-                    href="/"
-                    className="text-2xl font-bold text-gray-900 dark:text-gray-100"
-                  >
+                  <Link href="/" className="text-2xl font-bold text-gray-900">
                     MAROB!
                   </Link>
                 </motion.div>
@@ -253,7 +294,7 @@ export const Header: React.FC = () => {
                     <TooltipTrigger asChild>
                       <button
                         onClick={openSizeChart}
-                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                        className="text-gray-600 hover:text-gray-800 p-2"
                       >
                         <PencilRuler className="w-5 h-5" />
                       </button>
@@ -263,19 +304,7 @@ export const Header: React.FC = () => {
                     </TooltipContent>
                   </Tooltip>
 
-                  <Tooltip>
-                    <Link
-                      href="/account"
-                      className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                    >
-                      <TooltipTrigger asChild>
-                        <UserRound className="w-5 h-5" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {accountTooltip ?? <Skeleton className="h-4 w-20" />}
-                      </TooltipContent>
-                    </Link>
-                  </Tooltip>
+                  <UserMenu />
 
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -328,7 +357,7 @@ export const Header: React.FC = () => {
                 <TooltipTrigger asChild>
                   <button
                     onClick={openModal}
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 p-2"
+                    className="text-gray-600 hover:text-gray-800 p-2"
                   >
                     <SearchIcon className="w-5 h-5" />
                   </button>

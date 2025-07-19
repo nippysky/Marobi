@@ -1,7 +1,8 @@
+// app/api/auth/resend-verification/route.ts
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { randomUUID } from "crypto"
-import { sendVerificationEmail } from "@/lib/mail" 
+import { sendVerificationEmail } from "@/lib/mail"
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
     if (user.emailVerified) {
-      return NextResponse.json({ message: "Email already verified" }, { status: 200 })
+      return NextResponse.json(
+        { message: "Email already verified" },
+        { status: 200 }
+      )
     }
 
     const token = randomUUID()
@@ -29,8 +33,8 @@ export async function POST(request: Request) {
       },
     })
 
-    // send email asynchronously
-    sendVerificationEmail(email, token)
+    // send the fresh code
+    await sendVerificationEmail(email, token)
 
     return NextResponse.json(
       { message: "Verification email sent" },

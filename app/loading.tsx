@@ -1,27 +1,25 @@
-export default function GlobalLoading() {
+export default function GlobalLoadingDots() {
   return (
     <div
       className="
-        fixed inset-0
-        z-[9999]
-        flex items-center justify-center
-        bg-black/75     /* darker semi-transparent overlay */
-        backdrop-blur-sm /* subtle blur behind overlay */
+        fixed inset-0 z-[9999]
+        flex flex-col items-center justify-center
+        bg-brand
       "
+      aria-live="polite"
+      aria-busy="true"
+      role="status"
     >
-      <div className="flex flex-col items-center space-y-4">
-        {/* pure CSS spinner */}
-        <div
-          className="
-            animate-spin
-            h-12 w-12
-            border-4 border-white
-            border-t-transparent
-            rounded-full
-          "
-        />
-        <p className="text-white text-lg">Loading…</p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="block h-2 w-2 rounded-full bg-neutral-200 animate-bounce [animation-delay:-0.2s]" />
+          <span className="block h-2 w-2 rounded-full bg-neutral-200 animate-bounce [animation-delay:-0.1s]" />
+          <span className="block h-2 w-2 rounded-full bg-neutral-200 animate-bounce" />
+        </div>
+        <p className="text-sm tracking-wide text-neutral-200 font-medium">
+          Please wait…
+        </p>
       </div>
     </div>
-  )
+  );
 }
