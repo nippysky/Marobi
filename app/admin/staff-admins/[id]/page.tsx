@@ -1,24 +1,60 @@
+import { prisma } from "@/lib/db";
+import BackButton from "@/components/BackButton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import StaffDetail from "../StaffDetail";
 
-import React from 'react';
-import { generateDummyStaffs } from '@/lib/staff';
-import StaffDetail from '@/components/admin/StaffDetail';
+export const dynamic = "force-dynamic";
 
+async function fetchStaff(id: string) {
+  return prisma.staff.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      email: true,
+      emailPersonal: true,
+      phone: true,
+      address: true,
+      jobRoles: true,
+      access: true,
+      dateOfBirth: true,
+      dateOfEmployment: true,
+      dateOfResignation: true,
+      guarantorName: true,
+      guarantorAddress: true,
+      guarantorPhone: true,
+      createdAt: true,
+    },
+  });
+}
 
 export default async function StaffDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-  const all = generateDummyStaffs(8);
-  let staff = all.find((s) => s.id === id);
+  const { id } = await params;
+  const staff = await fetchStaff(id);
   if (!staff) {
-    // fall back to the first dummy
-    staff = all[0];
+    return (
+      <div className="p-6">
+        <BackButton />
+        <p className="mt-6 text-gray-600">Staff not found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <BackButton />
+        <Button asChild variant="outline">
+          <Link href={`/admin/staff-admins/${staff.id}/edit`}>Edit Staff</Link>
+        </Button>
+      </div>
       <StaffDetail staff={staff} />
     </div>
   );

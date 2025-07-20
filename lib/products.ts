@@ -1,4 +1,4 @@
-import { AdminProduct } from "@/components/admin/ProductTable";
+import { AdminProduct } from "@/app/admin/product-management/ProductsTable";
 
 // lib/products.ts
 export type ProductPayload = {

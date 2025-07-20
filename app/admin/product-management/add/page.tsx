@@ -1,4 +1,4 @@
-import AddProductSection from "@/components/admin/AddProductSection";
+import AddProductSection from "@/app/admin/product-management/AddProductSection";
 import BackButton from "@/components/BackButton";
 
 export default function AddProductPage() {

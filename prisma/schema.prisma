@@ -8,7 +8,12 @@ generator client {
   output   = "../lib/generated/prisma-client"
 }
 
-/// Order‐related enums
+enum ProductStatus {
+  Draft
+  Published
+  Archived
+}
+
 enum OrderStatus {
   Processing
   Shipped
@@ -65,38 +70,52 @@ model Customer {
 
 
 model Staff {
-  id           String        @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String        @unique
-  phone        String
-  passwordHash String
-  jobRoles     JobRole[]     @default([]) 
-  access       UserRole
-  orders       Order[]       // created orders
-  offlineSales OfflineSale[] // offline sale logs
-  createdAt    DateTime      @default(now())
-  emailVerified    Boolean   @default(true) // assume internal staff already verified
+  id                String     @id @default(cuid())
+  firstName         String
+  middleName        String?    @default("")
+  lastName          String
+  email             String     @unique
+  phone             String
+  passwordHash      String
+  jobRoles          JobRole[]  @default([])
+  access            UserRole
+  orders            Order[]
+  offlineSales      OfflineSale[]
+  createdAt         DateTime   @default(now())
+  emailVerified     Boolean    @default(true)
+  dateOfBirth       DateTime?
+  dateOfEmployment  DateTime?  @default(now())
+  dateOfResignation DateTime?
+  address           String?
+  emailPersonal     String?
+  guarantorName     String?
+  guarantorAddress  String?
+  guarantorPhone    String?
   resetToken        String?
   resetTokenExpiry  DateTime?
 }
 
+
 model Product {
-  id         String    @id @default(cuid())
-  name       String
-  image      String
-  category   String
-  priceNGN   Float?
-  priceUSD   Float?
-  priceEUR   Float?
-  priceGBP   Float?
-  variants   Variant[]
-  reviews      Review[] 
-   averageRating Float     @default(0)  
-  ratingCount   Int       @default(0) 
-  wishlistItems          WishlistItem[]
-  createdAt  DateTime  @default(now())
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  images        String[]       @default([])
+  category      String
+  priceNGN      Float?
+  priceUSD      Float?
+  priceEUR      Float?
+  priceGBP      Float?
+  sizeMods      Boolean        @default(false)  
+  status        ProductStatus  @default(Draft)      
+  variants      Variant[]
+  reviews       Review[]
+  averageRating Float          @default(0)
+  ratingCount   Int            @default(0)
+  wishlistItems WishlistItem[]
+  createdAt     DateTime       @default(now())
 }
+
 
 model Variant {
   id         String   @id @default(cuid())

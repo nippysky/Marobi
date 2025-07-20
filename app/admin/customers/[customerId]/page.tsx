@@ -1,72 +1,131 @@
-import React from 'react'
-import { generateDummyOrders, AdminOrder, OrderItem } from '@/lib/orders'
-import CustomerSummary from '@/components/admin/CustomerSummary'
-import CustomerOrdersTable from '@/components/admin/CustomerOrdersTable'
-import BackButton from '@/components/BackButton'
+import { prisma } from "@/lib/db";
+import BackButton from "@/components/BackButton";
+import { notFound } from "next/navigation";
+import {
+  AdminCustomerOrder,
+  AdminCustomerOrderProduct,
+} from "@/types/admin";
+import CustomerSummary from "../CustomerSummary";
+import CustomerOrdersTable from "../CustomerOrdersTable";
+
+export const dynamic = "force-dynamic";
+
+async function fetchCustomer(customerId: string) {
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      deliveryAddress: true,
+      billingAddress: true,
+      registeredAt: true,
+      lastLogin: true,
+      orders: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          status: true,
+          currency: true,
+          totalAmount: true,
+          totalNGN: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              category: true,
+              quantity: true,
+              color: true,
+              size: true,
+              lineTotal: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return customer;
+}
 
 export default async function CustomerDetailPage({
   params,
 }: {
-  params: Promise<{ customerId: string }>
+  params: Promise<{ customerId: string }>;
 }) {
-  const { customerId } = await params
+  const { customerId } = await params;
+  const c = await fetchCustomer(customerId);
+  if (!c) return notFound();
 
-  // 1) Generate 10 dummy orders and force each order.customer to our single Test Customer
-  const orders: AdminOrder[] = generateDummyOrders(10).map(order => ({
-    ...order,
-    customer: {
-      id:      customerId,
-      name:    'Test Customer',            // still required by AdminOrder type, unused in our summary
-      email:   'test@example.com',
-      phone:   '+2348000000000',
-      address: order.customer.address,
-    }
-  }))
-
-  // 2) Build per‐category breakdown
-  const breakdown: Record<string, number> = {}
-  orders.forEach(o =>
-    o.products.forEach((p: OrderItem) => {
-      breakdown[p.category] = (breakdown[p.category] || 0) + 1
+  // Aggregate breakdown by category:
+  const breakdown: Record<string, number> = {};
+  c.orders.forEach(o =>
+    o.items.forEach(it => {
+      breakdown[it.category] = (breakdown[it.category] || 0) + it.quantity;
     })
-  )
+  );
 
-  // 3) Compute totals
-  const totalOrders = orders.length
-  const totalSpent  = orders.reduce((sum, o) => sum + o.totalNGN, 0)
+  // Totals
+  const totalOrders = c.orders.length;
+  const totalSpent = c.orders.reduce((sum, o) => sum + o.totalNGN, 0);
 
-  // 4) Pick billing & shipping (using first order’s address as dummy)
-  const billingAddress  = orders[0]?.customer.address ?? 'N/A'
-  const shippingAddress = orders[0]?.customer.address ?? 'N/A'
+  // Addresses (fallback)
+  const billingAddress = c.billingAddress || c.deliveryAddress || "N/A";
+  const shippingAddress = c.deliveryAddress || c.billingAddress || "N/A";
 
-  // 5) Build a “real” customer object for our summary
-  const dummyCustomer = {
-    id:           customerId,
-    firstName:    'Test',
-    lastName:     'Customer',
-    email:        'test@example.com',
-    phone:        '+2348000000000',
+  // Pack into summary customer object expected by your existing <CustomerSummary />
+  const summaryCustomer = {
+    id: c.id,
+    firstName: c.firstName,
+    lastName: c.lastName,
+    email: c.email,
+    phone: c.phone,
     totalOrders,
     totalSpent,
-    registeredAt: new Date().toISOString(),
-    lastLogin:    new Date().toISOString(),
-  }
+    registeredAt: c.registeredAt.toISOString(),
+    lastLogin: c.lastLogin ? c.lastLogin.toISOString() : null,
+  };
+
+  // Convert orders to AdminCustomerOrder[]
+  const orders: AdminCustomerOrder[] = c.orders.map(o => ({
+    id: o.id,
+    status: o.status,
+    currency: o.currency,
+    totalAmount: o.totalAmount,
+    totalNGN: o.totalNGN,
+    createdAt: o.createdAt.toISOString(),
+    customer: {
+      id: c.id,
+      name: `${c.firstName} ${c.lastName}`.trim(),
+      email: c.email,
+      phone: c.phone,
+      address: shippingAddress,
+    },
+    products: o.items.map<AdminCustomerOrderProduct>(it => ({
+      id: it.id,
+      name: it.name,
+      image: it.image || "",
+      category: it.category,
+      color: it.color,
+      size: it.size,
+      quantity: it.quantity,
+      lineTotal: it.lineTotal,
+    })),
+  }));
 
   return (
     <div className="space-y-6 p-6">
-      {/* ← Back button at top */}
       <BackButton />
-
-      {/* Summary: now uses firstName / lastName + totalSpent */}
       <CustomerSummary
-        customer={dummyCustomer}
+        customer={summaryCustomer}
         breakdown={breakdown}
         billingAddress={billingAddress}
         shippingAddress={shippingAddress}
       />
-
-      {/* Orders table (client) */}
       <CustomerOrdersTable initialData={orders} />
     </div>
-  )
+  );
 }
