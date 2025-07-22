@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 /* ------------------------------------------------------------------
@@ -79,10 +79,11 @@ function jsonError(message: string, status = 400) {
    PUT /api/products/[id]
 ------------------------------------------------------------------- */
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const productId = params.id;
+  const { id } = await context.params
+  const productId = id;
 
   // (Auth placeholder) — add NextAuth or custom guard here.
   // const session = await getServerSession(authOptions); etc.

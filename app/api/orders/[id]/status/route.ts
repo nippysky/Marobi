@@ -1,5 +1,4 @@
-// app/api/orders/[id]/status/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sendStatusEmail } from "@/lib/mailer";
 import type { AdminOrder } from "@/lib/orders";
 
@@ -7,10 +6,10 @@ import type { AdminOrder } from "@/lib/orders";
 let _orders: Record<string, AdminOrder> = {};
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await context.params
   const { status }: { status: string } =
     await req.json();
 

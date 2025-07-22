@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import BackButton from "@/components/BackButton";
-import StaffForm from "../../new/StaffForm"; // reuse form with mode prop
+import StaffForm from "../../new/StaffForm";
 
 export const dynamic = "force-dynamic";
 

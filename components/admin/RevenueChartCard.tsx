@@ -1,4 +1,3 @@
-// components/admin/RevenueChartCard.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -18,43 +17,29 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import type { RevenueSeries } from "./AdminDashboardClient";
 
 type Filter = "Day" | "Month" | "6 Months" | "Year";
 
-// generate some dummy data
-const allData: Record<Filter, { label: string; value: number }[]> = {
-  Day: Array.from({ length: 7 }).map((_, i) => ({
-    label: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i],
-    value: 1000 + Math.random() * 4000,
-  })),
-  Month: Array.from({ length: 12 }).map((_, i) => ({
-    label: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][i],
-    value: 15000 + i * 2000 + Math.random() * 2000,
-  })),
-  "6 Months": Array.from({ length: 6 }).map((_, i) => ({
-    label: ["Mar","Apr","May","Jun","Jul","Aug"][i],
-    value: 20000 + i * 3000 + Math.random() * 3000,
-  })),
-  Year: Array.from({ length: 5 }).map((_, i) => ({
-    label: `${2021 + i}`,
-    value: 120000 + i * 20000 + Math.random() * 10000,
-  })),
-};
+interface Props {
+  serverSeries: RevenueSeries;
+}
 
-export default function RevenueChartCard() {
+export default function RevenueChartCard({ serverSeries }: Props) {
   const [filter, setFilter] = useState<Filter>("Month");
-  const data = useMemo(() => allData[filter], [filter]);
+  const data = useMemo(() => serverSeries[filter] || [], [filter, serverSeries]);
+
+  const hasData = data.some(d => d.value > 0);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <Select value={filter} onValueChange={v => setFilter(v as Filter)}>
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Month" />
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Range" />
           </SelectTrigger>
-          <SelectContent>
-            {Object.keys(allData).map(k => (
+            <SelectContent>
+            {(Object.keys(serverSeries) as Filter[]).map(k => (
               <SelectItem key={k} value={k}>
                 {k}
               </SelectItem>
@@ -63,17 +48,29 @@ export default function RevenueChartCard() {
         </Select>
       </div>
 
-      <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={data}>
-          <CartesianGrid stroke="#f0f0f0" />
-          <XAxis dataKey="label" />
-          <YAxis />
-          <Tooltip
-            formatter={val => `₦${(val as number).toLocaleString()}`}
-          />
-          <Line type="monotone" dataKey="value" stroke="#16a34a" dot />
-        </LineChart>
-      </ResponsiveContainer>
+      {data.length === 0 || !hasData ? (
+        <div className="h-[250px] flex items-center justify-center text-sm text-gray-500 border rounded">
+          No revenue data yet.
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={data}>
+            <CartesianGrid stroke="#f0f0f0" />
+            <XAxis dataKey="label" />
+            <YAxis />
+            <Tooltip
+              formatter={val => `₦${Number(val).toLocaleString()}`}
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#043927"
+              dot
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

@@ -7,11 +7,9 @@ import {
   ChevronRight,
   Package,
   Users,
-  ShoppingCart,
   DollarSign,
   Printer,
 } from "lucide-react";
-import type { AdminOrder } from "@/lib/orders";
 import {
   Card,
   CardHeader,
@@ -28,28 +26,55 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { BsBag } from "react-icons/bs";
+
+type RecentOrderProduct = {
+  id: string;
+  name: string;
+  image: string;
+  color: string;
+  size: string;
+  quantity: number;
+  lineTotal: number;
+  category?: string;
+};
+
+type RecentOrder = {
+  id: string;
+  status: string;
+  currency: string;
+  totalAmount: number;
+  totalNGN: number;
+  createdAt: string; // preformatted yyyy-mm-dd
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  products: RecentOrderProduct[];
+};
+
+// Revenue series shape passed from server
+export type RevenueSeries = Record<
+  "Day" | "Month" | "6 Months" | "Year",
+  { label: string; value: number }[]
+>;
 
 const RevenueChartCard = dynamic(
   () => import("@/components/admin/RevenueChartCard"),
   { ssr: false }
 );
 
-interface RecentOrderWithDate extends AdminOrder {
-  createdAt: string;
-}
-
 interface Props {
   totalProducts: number;
   totalCustomers: number;
   totalOrders: number;
   totalRevenue: number;
-  top3: {
-    name: string;
-    sold: number;
-    revenue: number;
-    image: string;
-  }[];
-  recentOrders: RecentOrderWithDate[];
+  top3: { name: string; sold: number; revenue: number; image: string }[];
+  recentOrders: RecentOrder[];
+  revenueSeries: RevenueSeries;
 }
 
 export default function AdminDashboardClient({
@@ -59,9 +84,9 @@ export default function AdminDashboardClient({
   totalRevenue,
   top3,
   recentOrders,
+  revenueSeries,
 }: Props) {
-  // ───────────────────────────────────────────────── Receipt Modal State
-  const [receiptOrder, setReceiptOrder] = useState<RecentOrderWithDate | null>(null);
+  const [receiptOrder, setReceiptOrder] = useState<RecentOrder | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
   const receiptCSS = `
@@ -73,7 +98,7 @@ export default function AdminDashboardClient({
     .small { font-size:0.8em; }
   `;
 
-  function generateReceiptHtml(order: RecentOrderWithDate) {
+  function generateReceiptHtml(order: RecentOrder) {
     const now = new Date().toLocaleString();
     const vatRate = 0.075;
     const subtotal = +order.totalAmount.toFixed(2);
@@ -99,7 +124,9 @@ export default function AdminDashboardClient({
       <div class="line">
         <div>
           ${p.name}<br>
-          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${p.quantity}</span>
+          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${
+          p.quantity
+        }</span>
         </div>
         <div>${sym}${p.lineTotal.toLocaleString()}</div>
       </div>
@@ -117,7 +144,9 @@ export default function AdminDashboardClient({
         </div>
         ${itemsHtml}
         <div class="total"><span>Subtotal</span><span>${sym}${subtotal.toLocaleString()}</span></div>
-        <div class="line"><span>VAT (${(vatRate * 100).toFixed(1)}%)</span><span>${sym}${vat.toLocaleString()}</span></div>
+        <div class="line"><span>VAT ${(vatRate * 100).toFixed(
+          1
+        )}%</span><span>${sym}${vat.toLocaleString()}</span></div>
         <div class="line"><span>Delivery</span><span>${sym}${deliveryCharge.toLocaleString()}</span></div>
         <div class="line"><span>Weight</span><span>${totalWeight}kg</span></div>
         <div class="line"><span>Courier</span><span>${courier}</span></div>
@@ -132,7 +161,7 @@ export default function AdminDashboardClient({
     `;
   }
 
-  async function handlePrint(order: RecentOrderWithDate) {
+  async function handlePrint(order: RecentOrder) {
     const html = generateReceiptHtml(order);
     if (typeof window === "undefined") return;
     const { default: printJS } = await import("print-js");
@@ -144,17 +173,16 @@ export default function AdminDashboardClient({
     });
   }
 
-  function openReceiptModal(order: RecentOrderWithDate) {
+  function openReceiptModal(order: RecentOrder) {
     setReceiptOrder(order);
     setReceiptOpen(true);
   }
 
-  // ─────────────────────────────────────────────────── Top‐line Stats
   const stats = [
     {
       label: "Total Products",
       value: totalProducts,
-      href: "/admin/products",
+      href: "/admin/product-management",
       icon: Package,
       iconBg: "bg-indigo-100 text-indigo-700",
     },
@@ -168,8 +196,8 @@ export default function AdminDashboardClient({
     {
       label: "Total Orders",
       value: totalOrders,
-      href: "/admin/orders",
-      icon: ShoppingCart,
+      href: "/admin/order-inventory",
+      icon: BsBag,
       iconBg: "bg-yellow-100 text-yellow-700",
     },
     {
@@ -215,7 +243,7 @@ export default function AdminDashboardClient({
         })}
       </div>
 
-      {/* Revenue Chart + Top-3 Products */}
+      {/* Revenue Chart + Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex justify-between items-center px-4 py-3">
@@ -226,19 +254,24 @@ export default function AdminDashboardClient({
             />
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-4">
-            <RevenueChartCard />
+            <RevenueChartCard serverSeries={revenueSeries} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex justify-between items-center px-4 py-3">
-            <CardTitle>Top 3 Products</CardTitle>
+            <CardTitle>Top Products</CardTitle>
             <ChevronRight
               className="h-4 w-4 text-gray-400 cursor-pointer"
-              onClick={() => (location.href = "/admin/products")}
+              onClick={() => (location.href = "/admin/product-management")}
             />
           </CardHeader>
           <CardContent className="space-y-4 px-4 pb-4">
+            {top3.length === 0 && (
+              <p className="text-sm text-gray-500 py-6 text-center">
+                No sales yet.
+              </p>
+            )}
             {top3.map((p) => (
               <div key={p.name} className="flex items-center space-x-4">
                 <img
@@ -261,13 +294,13 @@ export default function AdminDashboardClient({
         </Card>
       </div>
 
-      {/* Recent Orders (with View + Print) */}
+      {/* Recent Orders */}
       <Card>
         <CardHeader className="flex justify-between items-center px-4 py-3">
           <CardTitle>Recent Orders</CardTitle>
           <ChevronRight
             className="h-4 w-4 text-gray-400 cursor-pointer"
-            onClick={() => (location.href = "/admin/orders")}
+            onClick={() => (location.href = "/admin/order-inventory")}
           />
         </CardHeader>
         <CardContent className="pt-0 space-y-2 px-4 pb-4">
@@ -287,6 +320,11 @@ export default function AdminDashboardClient({
                         className="h-8 w-8 rounded-lg border-2 border-white object-cover"
                       />
                     ))}
+                    {o.products.length === 0 && (
+                      <div className="h-8 w-8 rounded-lg border-2 border-white bg-gray-200 flex items-center justify-center text-[10px]">
+                        No
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="font-medium">{o.id}</div>
@@ -321,20 +359,20 @@ export default function AdminDashboardClient({
         </CardContent>
       </Card>
 
-      {/* ─── Receipt Preview Modal ─────────────────────────── */}
+      {/* Receipt Modal */}
       {receiptOrder && (
         <Dialog open={receiptOpen} onOpenChange={setReceiptOpen}>
           <DialogContent className="max-w-lg print:hidden">
             <DialogHeader>
               <DialogTitle>Receipt — {receiptOrder.id}</DialogTitle>
               <DialogDescription>
-                Payment: Credit Card — {receiptOrder.createdAt}
+                Created: {receiptOrder.createdAt}
               </DialogDescription>
             </DialogHeader>
 
             <ScrollArea className="mt-6 max-h-[60vh] space-y-4">
               {(() => {
-                const o = receiptOrder!;
+                const o = receiptOrder;
                 const subtotal = o.totalAmount;
                 const vatRate = 0.075;
                 const vat = +(subtotal * vatRate).toFixed(2);
@@ -360,15 +398,11 @@ export default function AdminDashboardClient({
                 return (
                   <div className="px-2">
                     {o.products.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex justify-between mb-2"
-                      >
+                      <div key={p.id} className="flex justify-between mb-2">
                         <div>
                           <div className="font-medium">{p.name}</div>
                           <div className="text-sm text-gray-600">
-                            Color: {p.color} • Size: {p.size} • Qty:{" "}
-                            {p.quantity}
+                            Color: {p.color} • Size: {p.size} • Qty: {p.quantity}
                           </div>
                         </div>
                         <div className="font-medium">
@@ -377,6 +411,11 @@ export default function AdminDashboardClient({
                         </div>
                       </div>
                     ))}
+                    {o.products.length === 0 && (
+                      <div className="text-sm text-gray-500 mb-4">
+                        No line items for this order.
+                      </div>
+                    )}
 
                     <div className="flex justify-between font-medium">
                       <span>Subtotal</span>
@@ -434,10 +473,7 @@ export default function AdminDashboardClient({
             </ScrollArea>
 
             <DialogFooter className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setReceiptOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setReceiptOpen(false)}>
                 Close
               </Button>
               <Button
