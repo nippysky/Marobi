@@ -132,7 +132,7 @@ export const authOptions: NextAuthOptions = {
 
   pages: {
     signIn: "/auth/login",
-    error:  "/",  // you can customize to a dedicated error page later
+    error:  "/",
   },
 }
 

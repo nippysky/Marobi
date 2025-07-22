@@ -2,51 +2,45 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const AUTH_PATH_SET = new Set([
+const PUBLIC_PATHS = [
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
-]);
+  "/admin-login",
+];
 
 export async function middleware(req: NextRequest) {
-    
-  // Normalize pathname (strip trailing slash except root)
-  let pathname = req.nextUrl.pathname;
-  if (pathname.length > 1 && pathname.endsWith("/")) {
-    pathname = pathname.slice(0, -1);
+  const { pathname } = req.nextUrl;
+
+  // allow public paths & static assets
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    PUBLIC_PATHS.includes(pathname)
+  ) {
+    return NextResponse.next();
   }
 
-  if (AUTH_PATH_SET.has(pathname)) {
+  // protect /admin/**
+  if (pathname.startsWith("/admin")) {
     const token = await getToken({
       req,
-      secret: process.env.NEXTAUTH_SECRET,
-      cookieName: "marobi_session", // IMPORTANT: custom cookie
+      secret: process.env.NEXTAUTH_SECRET!,
+      cookieName: "marobi_session",
     });
 
-    if (token) {
+    if (!token || token.role === "customer") {
+      // redirect to new admin-login route
       const url = req.nextUrl.clone();
-      url.pathname = "/account";
+      url.pathname = "/admin-login";
       return NextResponse.redirect(url);
     }
-
-    console.log("Cookies seen:", req.cookies.getAll().map(c => c.name));
-    console.log("Token:", token);
-
   }
-
-  
 
   return NextResponse.next();
 }
 
-
-
 export const config = {
-  matcher: [
-    "/auth/login",
-    "/auth/register",
-    "/auth/forgot-password",
-    "/auth/reset-password",
-  ],
+  matcher: ["/admin/:path*", "/auth/:path*"], 
 };

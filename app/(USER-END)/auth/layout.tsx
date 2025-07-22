@@ -2,10 +2,6 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AdCarousel from "@/components/AdCarousel";
 
-export const metadata = {
-  title: "Auth",
-};
-
 export default function AuthLayout({
   children,
 }: {
