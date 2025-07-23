@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { prisma } from "@/lib/db"
+import { NextResponse }    from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions }      from "@/app/api/auth/[...nextauth]/route";
+import { prisma }           from "@/lib/db";
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   try {
@@ -16,28 +16,29 @@ export async function GET() {
       },
       orderBy: { addedAt: "desc" },
       select: {
-        id: true,
+        id:      true,
         addedAt: true,
         product: {
           select: {
-            id: true,
-            name: true,
-            image: true,
-            category: true,
-            priceNGN: true,
-            priceUSD: true,
-            priceEUR: true,
-            priceGBP: true,
+            id:         true,
+            name:       true,
+            images:     true, 
+            category:   true,
+            priceNGN:   true,
+            priceUSD:   true,
+            priceEUR:   true,
+            priceGBP:   true,
           },
         },
       },
-    })
-    return NextResponse.json(items)
+    });
+
+    return NextResponse.json(items);
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return NextResponse.json(
       { error: "Failed to load wishlist items" },
       { status: 500 }
-    )
+    );
   }
 }

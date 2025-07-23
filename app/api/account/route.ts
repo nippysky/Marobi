@@ -6,15 +6,25 @@ import { NextResponse }     from "next/server";
 export async function PUT(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
   }
 
-  const { name, email, phone, deliveryAddress, billingAddress } =
-    await request.json();
+  // pull exactly what your client sends:
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    address,        // this is your deliveryAddress
+    billingAddress,
+    country,
+    state,
+  } = await request.json();
 
-  const [firstName, ...rest] = name.trim().split(" ");
-  const lastName = rest.join(" ") || "";
-
+  // update the customer row
   await prisma.customer.update({
     where: { email: session.user.email },
     data: {
@@ -22,8 +32,10 @@ export async function PUT(request: Request) {
       lastName,
       email,
       phone,
-      deliveryAddress,
+      deliveryAddress: address,
       billingAddress,
+      country,
+      state,
     },
   });
 

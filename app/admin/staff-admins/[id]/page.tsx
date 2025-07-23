@@ -40,7 +40,7 @@ export default async function StaffDetailPage({
   const staff = await fetchStaff(id);
   if (!staff) {
     return (
-      <div className="p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <BackButton />
         <p className="mt-6 text-gray-600">Staff not found.</p>
       </div>
@@ -48,11 +48,13 @@ export default async function StaffDetailPage({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <BackButton />
         <Button asChild variant="outline">
-          <Link href={`/admin/staff-admins/${staff.id}/edit`}>Edit Staff</Link>
+          <Link href={`/admin/staff-admins/${staff.id}/edit`}>
+            Edit Staff
+          </Link>
         </Button>
       </div>
       <StaffDetail staff={staff} />

@@ -3457,6 +3457,7 @@ export namespace Prisma {
     guarantorPhone: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    lastLogin: Date | null
   }
 
   export type StaffMaxAggregateOutputType = {
@@ -3480,6 +3481,7 @@ export namespace Prisma {
     guarantorPhone: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    lastLogin: Date | null
   }
 
   export type StaffCountAggregateOutputType = {
@@ -3504,6 +3506,7 @@ export namespace Prisma {
     guarantorPhone: number
     resetToken: number
     resetTokenExpiry: number
+    lastLogin: number
     _all: number
   }
 
@@ -3529,6 +3532,7 @@ export namespace Prisma {
     guarantorPhone?: true
     resetToken?: true
     resetTokenExpiry?: true
+    lastLogin?: true
   }
 
   export type StaffMaxAggregateInputType = {
@@ -3552,6 +3556,7 @@ export namespace Prisma {
     guarantorPhone?: true
     resetToken?: true
     resetTokenExpiry?: true
+    lastLogin?: true
   }
 
   export type StaffCountAggregateInputType = {
@@ -3576,6 +3581,7 @@ export namespace Prisma {
     guarantorPhone?: true
     resetToken?: true
     resetTokenExpiry?: true
+    lastLogin?: true
     _all?: true
   }
 
@@ -3673,6 +3679,7 @@ export namespace Prisma {
     guarantorPhone: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    lastLogin: Date | null
     _count: StaffCountAggregateOutputType | null
     _min: StaffMinAggregateOutputType | null
     _max: StaffMaxAggregateOutputType | null
@@ -3714,6 +3721,7 @@ export namespace Prisma {
     guarantorPhone?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    lastLogin?: boolean
     orders?: boolean | Staff$ordersArgs<ExtArgs>
     offlineSales?: boolean | Staff$offlineSalesArgs<ExtArgs>
     _count?: boolean | StaffCountOutputTypeDefaultArgs<ExtArgs>
@@ -3741,6 +3749,7 @@ export namespace Prisma {
     guarantorPhone?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    lastLogin?: boolean
   }, ExtArgs["result"]["staff"]>
 
   export type StaffSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3765,6 +3774,7 @@ export namespace Prisma {
     guarantorPhone?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    lastLogin?: boolean
   }, ExtArgs["result"]["staff"]>
 
   export type StaffSelectScalar = {
@@ -3789,9 +3799,10 @@ export namespace Prisma {
     guarantorPhone?: boolean
     resetToken?: boolean
     resetTokenExpiry?: boolean
+    lastLogin?: boolean
   }
 
-  export type StaffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "middleName" | "lastName" | "email" | "phone" | "passwordHash" | "jobRoles" | "access" | "createdAt" | "emailVerified" | "dateOfBirth" | "dateOfEmployment" | "dateOfResignation" | "address" | "emailPersonal" | "guarantorName" | "guarantorAddress" | "guarantorPhone" | "resetToken" | "resetTokenExpiry", ExtArgs["result"]["staff"]>
+  export type StaffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "middleName" | "lastName" | "email" | "phone" | "passwordHash" | "jobRoles" | "access" | "createdAt" | "emailVerified" | "dateOfBirth" | "dateOfEmployment" | "dateOfResignation" | "address" | "emailPersonal" | "guarantorName" | "guarantorAddress" | "guarantorPhone" | "resetToken" | "resetTokenExpiry" | "lastLogin", ExtArgs["result"]["staff"]>
   export type StaffInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     orders?: boolean | Staff$ordersArgs<ExtArgs>
     offlineSales?: boolean | Staff$offlineSalesArgs<ExtArgs>
@@ -3828,6 +3839,7 @@ export namespace Prisma {
       guarantorPhone: string | null
       resetToken: string | null
       resetTokenExpiry: Date | null
+      lastLogin: Date | null
     }, ExtArgs["result"]["staff"]>
     composites: {}
   }
@@ -4274,6 +4286,7 @@ export namespace Prisma {
     readonly guarantorPhone: FieldRef<"Staff", 'String'>
     readonly resetToken: FieldRef<"Staff", 'String'>
     readonly resetTokenExpiry: FieldRef<"Staff", 'DateTime'>
+    readonly lastLogin: FieldRef<"Staff", 'DateTime'>
   }
     
 
@@ -16051,7 +16064,8 @@ export namespace Prisma {
     guarantorAddress: 'guarantorAddress',
     guarantorPhone: 'guarantorPhone',
     resetToken: 'resetToken',
-    resetTokenExpiry: 'resetTokenExpiry'
+    resetTokenExpiry: 'resetTokenExpiry',
+    lastLogin: 'lastLogin'
   };
 
   export type StaffScalarFieldEnum = (typeof StaffScalarFieldEnum)[keyof typeof StaffScalarFieldEnum]
@@ -16500,6 +16514,7 @@ export namespace Prisma {
     guarantorPhone?: StringNullableFilter<"Staff"> | string | null
     resetToken?: StringNullableFilter<"Staff"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    lastLogin?: DateTimeNullableFilter<"Staff"> | Date | string | null
     orders?: OrderListRelationFilter
     offlineSales?: OfflineSaleListRelationFilter
   }
@@ -16526,6 +16541,7 @@ export namespace Prisma {
     guarantorPhone?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
+    lastLogin?: SortOrderInput | SortOrder
     orders?: OrderOrderByRelationAggregateInput
     offlineSales?: OfflineSaleOrderByRelationAggregateInput
   }
@@ -16555,6 +16571,7 @@ export namespace Prisma {
     guarantorPhone?: StringNullableFilter<"Staff"> | string | null
     resetToken?: StringNullableFilter<"Staff"> | string | null
     resetTokenExpiry?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    lastLogin?: DateTimeNullableFilter<"Staff"> | Date | string | null
     orders?: OrderListRelationFilter
     offlineSales?: OfflineSaleListRelationFilter
   }, "id" | "email">
@@ -16581,6 +16598,7 @@ export namespace Prisma {
     guarantorPhone?: SortOrderInput | SortOrder
     resetToken?: SortOrderInput | SortOrder
     resetTokenExpiry?: SortOrderInput | SortOrder
+    lastLogin?: SortOrderInput | SortOrder
     _count?: StaffCountOrderByAggregateInput
     _max?: StaffMaxOrderByAggregateInput
     _min?: StaffMinOrderByAggregateInput
@@ -16611,6 +16629,7 @@ export namespace Prisma {
     guarantorPhone?: StringNullableWithAggregatesFilter<"Staff"> | string | null
     resetToken?: StringNullableWithAggregatesFilter<"Staff"> | string | null
     resetTokenExpiry?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    lastLogin?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
   }
 
   export type ProductWhereInput = {
@@ -17485,6 +17504,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     orders?: OrderCreateNestedManyWithoutStaffInput
     offlineSales?: OfflineSaleCreateNestedManyWithoutStaffInput
   }
@@ -17511,6 +17531,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     orders?: OrderUncheckedCreateNestedManyWithoutStaffInput
     offlineSales?: OfflineSaleUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -17537,6 +17558,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     orders?: OrderUpdateManyWithoutStaffNestedInput
     offlineSales?: OfflineSaleUpdateManyWithoutStaffNestedInput
   }
@@ -17563,6 +17585,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     orders?: OrderUncheckedUpdateManyWithoutStaffNestedInput
     offlineSales?: OfflineSaleUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -17589,6 +17612,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
   }
 
   export type StaffUpdateManyMutationInput = {
@@ -17613,6 +17637,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type StaffUncheckedUpdateManyInput = {
@@ -17637,6 +17662,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProductCreateInput = {
@@ -18637,6 +18663,7 @@ export namespace Prisma {
     guarantorPhone?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    lastLogin?: SortOrder
   }
 
   export type StaffMaxOrderByAggregateInput = {
@@ -18660,6 +18687,7 @@ export namespace Prisma {
     guarantorPhone?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    lastLogin?: SortOrder
   }
 
   export type StaffMinOrderByAggregateInput = {
@@ -18683,6 +18711,7 @@ export namespace Prisma {
     guarantorPhone?: SortOrder
     resetToken?: SortOrder
     resetTokenExpiry?: SortOrder
+    lastLogin?: SortOrder
   }
 
   export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -21039,6 +21068,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     offlineSales?: OfflineSaleCreateNestedManyWithoutStaffInput
   }
 
@@ -21064,6 +21094,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     offlineSales?: OfflineSaleUncheckedCreateNestedManyWithoutStaffInput
   }
 
@@ -21211,6 +21242,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     offlineSales?: OfflineSaleUpdateManyWithoutStaffNestedInput
   }
 
@@ -21236,6 +21268,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     offlineSales?: OfflineSaleUncheckedUpdateManyWithoutStaffNestedInput
   }
 
@@ -21415,6 +21448,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     orders?: OrderCreateNestedManyWithoutStaffInput
   }
 
@@ -21440,6 +21474,7 @@ export namespace Prisma {
     guarantorPhone?: string | null
     resetToken?: string | null
     resetTokenExpiry?: Date | string | null
+    lastLogin?: Date | string | null
     orders?: OrderUncheckedCreateNestedManyWithoutStaffInput
   }
 
@@ -21518,6 +21553,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     orders?: OrderUpdateManyWithoutStaffNestedInput
   }
 
@@ -21543,6 +21579,7 @@ export namespace Prisma {
     guarantorPhone?: NullableStringFieldUpdateOperationsInput | string | null
     resetToken?: NullableStringFieldUpdateOperationsInput | string | null
     resetTokenExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     orders?: OrderUncheckedUpdateManyWithoutStaffNestedInput
   }
 

@@ -7,10 +7,10 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Label }    from "@/components/ui/label";
+import { Input }    from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Button }   from "@/components/ui/button";
 
 interface ProfileSectionProps {
   user: {
@@ -46,13 +46,13 @@ const FormField = ({
 );
 
 export default function ProfileSection({ user }: ProfileSectionProps) {
-  const [firstName, setFirstName] = useState(user.firstName);
-  const [lastName, setLastName] = useState(user.lastName);
-  const [email, setEmail] = useState(user.email);
-  const [phone, setPhone] = useState(user.phone);
-  const [address, setAddress] = useState(user.address);
-  const [billingAddress, setBillingAddress] = useState(user.billingAddress);
-  const [country, setCountry] = useState(user.country);
+  const [firstName, setFirst]   = useState(user.firstName);
+  const [lastName, setLast]     = useState(user.lastName);
+  const [email, setEmail]       = useState(user.email);
+  const [phone, setPhone]       = useState(user.phone);
+  const [address, setAddress]   = useState(user.address);
+  const [billing, setBilling]   = useState(user.billingAddress);
+  const [country, setCountry]   = useState(user.country);
   const [stateVal, setStateVal] = useState(user.state);
 
   const [editing, setEditing] = useState(false);
@@ -69,8 +69,8 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
           lastName,
           email,
           phone,
-          address,
-          billingAddress,
+          address,         // your deliveryAddress
+          billingAddress: billing,
           country,
           state: stateVal,
         }),
@@ -92,27 +92,13 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
       <CardContent>
         {!editing ? (
           <div className="space-y-4">
-            <p>
-              <strong>Name:</strong> {firstName} {lastName}
-            </p>
-            <p>
-              <strong>Email:</strong> {email}
-            </p>
-            <p>
-              <strong>Phone:</strong> {phone}
-            </p>
-            <p>
-              <strong>Country:</strong> {country}
-            </p>
-            <p>
-              <strong>State/Region:</strong> {stateVal}
-            </p>
-            <p>
-              <strong>Delivery Address:</strong> {address}
-            </p>
-            <p>
-              <strong>Billing Address:</strong> {billingAddress}
-            </p>
+            <p><strong>Name:</strong> {firstName} {lastName}</p>
+            <p><strong>Email:</strong> {email}</p>
+            <p><strong>Phone:</strong> {phone}</p>
+            <p><strong>Country:</strong> {country}</p>
+            <p><strong>State/Region:</strong> {stateVal}</p>
+            <p><strong>Delivery Address:</strong> {address}</p>
+            <p><strong>Billing Address:</strong> {billing}</p>
             <Button onClick={() => setEditing(true)}>Edit Profile</Button>
           </div>
         ) : (
@@ -121,7 +107,7 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e) => setFirst(e.target.value)}
                 disabled={loading}
               />
             </FormField>
@@ -129,7 +115,7 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e) => setLast(e.target.value)}
                 disabled={loading}
               />
             </FormField>
@@ -182,8 +168,8 @@ export default function ProfileSection({ user }: ProfileSectionProps) {
             >
               <Textarea
                 id="billingAddress"
-                value={billingAddress}
-                onChange={(e) => setBillingAddress(e.target.value)}
+                value={billing}
+                onChange={(e) => setBilling(e.target.value)}
                 disabled={loading}
                 rows={3}
               />

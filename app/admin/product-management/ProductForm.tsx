@@ -2,7 +2,13 @@
 
 import { useState, useEffect, ChangeEvent } from "react";
 import { ProductPayload } from "@/types/product";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-const CONVENTIONAL_SIZES = ["S","M","L","XL","XXL","XXXL"] as const;
+const CONVENTIONAL_SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"] as const;
 
 interface Props {
   initialProduct?: ProductPayload;
@@ -43,7 +49,9 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
   const [status, setStatus] = useState<ProductPayload["status"]>(
     initialProduct?.status ?? "Draft"
   );
-  const [sizeMods, setSizeMods] = useState(initialProduct?.sizeMods ?? false);
+  const [sizeMods, setSizeMods] = useState(
+    initialProduct?.sizeMods ?? false
+  );
 
   /* ---------- Colors ---------- */
   const initialHasColors = (initialProduct?.colors?.length ?? 0) > 0;
@@ -53,33 +61,34 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
   );
 
   /* ---------- Sizes ---------- */
-  const [sizeStocks, setSizeStocks] = useState<Record<string,string>>(
+  const [sizeStocks, setSizeStocks] = useState<Record<string, string>>(
     { ...(initialProduct?.sizeStocks || {}) }
   );
-
-  const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(() => {
-    const base: Record<string, boolean> = {};
-    for (const s of CONVENTIONAL_SIZES) {
-      base[s] = sizeStocks[s] !== undefined;
+  const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(
+    () => {
+      const base: Record<string, boolean> = {};
+      for (const s of CONVENTIONAL_SIZES) {
+        base[s] = initialProduct?.sizeStocks?.[s] !== undefined;
+      }
+      return base;
     }
-    return base;
-  });
+  );
 
+  /* ---------- Custom Sizes ---------- */
   const [customSizes, setCustomSizes] = useState<string[]>(
     initialProduct?.customSizes ?? []
   );
 
   /* ---------- Images ---------- */
-  const [images, setImages] = useState<string[]>(initialProduct?.images ?? []);
+  const [images, setImages] = useState<string[]>(
+    initialProduct?.images ?? []
+  );
 
   /* ---------- Effects ---------- */
   useEffect(() => {
-    if (!hasColors) {
-      if (colors.length > 0) setColors([]); // remove colors
-    } else {
-      if (colors.length === 0) setColors([""]); // seed one blank input
-    }
-  }, [hasColors, colors.length]);
+    if (hasColors && colors.length === 0) setColors([""]);
+    if (!hasColors) setColors([]);
+  }, [hasColors]);
 
   /* ---------- Upload ---------- */
   async function uploadFile(file: File): Promise<string> {
@@ -91,11 +100,15 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     return json.data.secure_url;
   }
 
-  async function handleImageChange(e: ChangeEvent<HTMLInputElement>, idx: number) {
-    if (!e.target.files?.[0]) return;
+  async function handleImageChange(
+    e: ChangeEvent<HTMLInputElement>,
+    idx: number
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     try {
-      const url = await uploadFile(e.target.files[0]);
-      setImages(imgs => {
+      const url = await uploadFile(file);
+      setImages((imgs) => {
         const copy = [...imgs];
         copy[idx] = url;
         return copy;
@@ -105,89 +118,39 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     }
   }
 
-  function removeImage(idx: number) {
-    setImages(imgs => imgs.filter((_, i) => i !== idx));
-  }
-
-  /* ---------- Color Helpers ---------- */
-  const addColor = () => setColors(c => [...c, ""]);
-  const updateColor = (i: number, v: string) =>
-    setColors(c => c.map((x, j) => (j === i ? v : x)));
-  const removeColor = (i: number) =>
-    setColors(c => c.filter((_, j) => j !== i));
-
-  /* ---------- Conventional Sizes ---------- */
-  function toggleConventionalSize(size: string, on: boolean) {
-    setSizeEnabled(se => ({ ...se, [size]: on }));
-    setSizeStocks(st => {
-      const copy = { ...st };
-      if (!on) delete copy[size];
-      else if (copy[size] === undefined) copy[size] = "";
-      return copy;
-    });
-  }
-
-  function updateSizeStock(size: string, stock: string) {
-    setSizeStocks(st => ({ ...st, [size]: stock }));
-  }
-
-  /* ---------- Custom Sizes ---------- */
-  function addCustomSize() {
-    setCustomSizes(cs => [...cs, ""]);
-  }
-  function updateCustomSize(i: number, label: string) {
-    setCustomSizes(cs => cs.map((c, j) => (j === i ? label : c)));
-  }
-  function updateCustomSizeStock(label: string, stock: string) {
-    if (!label) return;
-    setSizeStocks(st => ({ ...st, [label]: stock }));
-  }
-  function removeCustomSize(i: number) {
-    const label = customSizes[i];
-    setCustomSizes(cs => cs.filter((_, j) => j !== i));
-    setSizeStocks(st => {
-      const copy = { ...st };
-      delete copy[label];
-      return copy;
-    });
-  }
-
-  /* ---------- Validation ---------- */
+  /* ---------- Validation & Save ---------- */
   function validate(): string | null {
     if (!name.trim()) return "Name is required.";
     if (!category.trim()) return "Category is required.";
     return null;
   }
 
-  /* ---------- Save ---------- */
   async function handleSave() {
     const err = validate();
     if (err) {
       toast.error(err);
       return;
     }
-
-    const cleanedSizeStocks: Record<string,string> = {};
-    for (const [k, v] of Object.entries(sizeStocks)) {
-      if (k.trim() && v !== "") cleanedSizeStocks[k.trim()] = v;
-    }
-
     const payload: ProductPayload = {
       id: initialProduct?.id,
       name: name.trim(),
       category: category.trim(),
       description: description.trim(),
-      images,
-      price,
+      price: {
+        NGN: parseFloat(price.NGN as string) || 0,
+        USD: parseFloat(price.USD as string) || 0,
+        EUR: parseFloat(price.EUR as string) || 0,
+        GBP: parseFloat(price.GBP as string) || 0,
+      },
       status,
       sizeMods,
       colors: hasColors
-        ? colors.map(c => c.trim()).filter(c => c.length > 0)
+        ? colors.map((c) => c.trim()).filter((c) => c)
         : [],
-      sizeStocks: cleanedSizeStocks,
-      customSizes: customSizes.filter(c => c.trim().length > 0),
+      sizeStocks,
+      customSizes: customSizes.filter((c) => c.trim()),
+      images,
     };
-
     try {
       await onSave(payload);
     } catch (e: any) {
@@ -195,20 +158,26 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     }
   }
 
-  /* ---------- Render ---------- */
   return (
-    <Card>
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Product Details</CardTitle>
+      </CardHeader>
+
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name */}
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1">
           <Label>Product Name</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} />
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
 
         {/* Category */}
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1">
           <Label>Category</Label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select
+            value={category}
+            onValueChange={(v) => setCategory(v as string)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -218,7 +187,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                 "African Print",
                 "Casual Looks",
                 "I Have an Event",
-              ].map(c => (
+              ].map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
                 </SelectItem>
@@ -228,68 +197,95 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
         </div>
 
         {/* Status */}
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1">
           <Label>Status</Label>
-          <Select value={status} onValueChange={v => setStatus(v as any)}>
+          <Select
+            value={status}
+            onValueChange={(v) => setStatus(v as ProductPayload["status"])}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Published">Published</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
+              {["Draft", "Published", "Archived"].map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* sizeMods */}
+        {/* Enable Custom Size Mods */}
         <div className="flex items-center space-x-2">
           <Switch checked={sizeMods} onCheckedChange={setSizeMods} />
           <Label>Enable Custom Size Mods?</Label>
         </div>
 
+        {/* Prices */}
+        {(["NGN", "USD", "EUR", "GBP"] as const).map((cur) => (
+          <div key={cur} className="flex flex-col space-y-1">
+            <Label>{cur} Price</Label>
+            <Input
+              type="number"
+              placeholder="0.00"
+              value={price[cur]}
+              onChange={(e) =>
+                setPrice((p) => ({ ...p, [cur]: e.target.value }))
+              }
+            />
+          </div>
+        ))}
+
         {/* Description */}
-        <div className="md:col-span-2 flex flex-col space-y-2">
+        <div className="md:col-span-2 flex flex-col space-y-1">
           <Label>Description</Label>
           <Textarea
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             className="h-32"
           />
         </div>
 
-        {/* Colors toggle */}
+        {/* Has Colors */}
         <div className="flex items-center space-x-2">
           <Switch checked={hasColors} onCheckedChange={setHasColors} />
           <Label>Has Colors?</Label>
         </div>
+
+        {/* Colors List */}
         {hasColors && (
-          <div className="md:col-span-2">
-            <Label>Colors</Label>
+          <div className="md:col-span-2 grid grid-cols-1 gap-2">
             {colors.map((c, i) => (
-              <div key={i} className="flex items-center space-x-2 mt-2">
+              <div key={i} className="flex items-center space-x-2">
                 <Input
                   placeholder={`Color ${i + 1}`}
                   value={c}
-                  onChange={e => updateColor(i, e.target.value)}
+                  onChange={(e) =>
+                    setColors((cs) =>
+                      cs.map((x, j) => (j === i ? e.target.value : x))
+                    )
+                  }
                 />
                 {colors.length > 1 && (
-                  <button
-                    className="text-red-500"
-                    onClick={() => removeColor(i)}
-                    type="button"
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() =>
+                      setColors((cs) => cs.filter((_, j) => j !== i))
+                    }
                   >
-                    <X />
-                  </button>
+                    <X className="h-4 w-4 text-red-600" />
+                  </Button>
                 )}
                 {i === colors.length - 1 && (
-                  <button
-                    className="text-green-500"
-                    onClick={addColor}
-                    type="button"
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setColors((cs) => [...cs, ""])}
                   >
-                    <Plus />
-                  </button>
+                    <Plus className="h-4 w-4 text-green-600" />
+                  </Button>
                 )}
               </div>
             ))}
@@ -297,22 +293,35 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
         )}
 
         {/* Sizes & Stock */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-2">
           <Label>Sizes & Stock</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-            {CONVENTIONAL_SIZES.map(sz => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {CONVENTIONAL_SIZES.map((sz) => (
               <div key={sz} className="flex items-center space-x-2">
                 <Switch
                   checked={sizeEnabled[sz]}
-                  onCheckedChange={on => toggleConventionalSize(sz, on)}
+                  onCheckedChange={(on) => {
+                    setSizeEnabled((s) => ({ ...s, [sz]: on }));
+                    setSizeStocks((st) => {
+                      const copy = { ...st };
+                      if (!on) delete copy[sz];
+                      else if (copy[sz] === undefined) copy[sz] = "";
+                      return copy;
+                    });
+                  }}
                 />
-                <Label>{sz}</Label>
+                <Label className="w-8">{sz}</Label>
                 {sizeEnabled[sz] && (
                   <Input
                     type="number"
-                    value={sizeStocks[sz] ?? ""}
-                    onChange={e => updateSizeStock(sz, e.target.value)}
                     placeholder="Qty"
+                    value={sizeStocks[sz] ?? ""}
+                    onChange={(e) =>
+                      setSizeStocks((st) => ({
+                        ...st,
+                        [sz]: e.target.value,
+                      }))
+                    }
                     className="w-20"
                   />
                 )}
@@ -322,40 +331,56 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
         </div>
 
         {/* Custom Sizes */}
-        <div className="md:col-span-2">
-          <div className="flex justify-between items-center">
-            <Label>Custom Sizes</Label>
-            <Button size="sm" variant="ghost" onClick={addCustomSize} type="button">
-              <Plus />
+        <div className="md:col-span-2 flex justify-between items-center">
+          <Label>Custom Sizes</Label>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setCustomSizes((cs) => [...cs, ""])}
+          >
+            <Plus className="h-5 w-5 text-indigo-600" />
+          </Button>
+        </div>
+        {customSizes.map((label, i) => (
+          <div key={i} className="flex items-center space-x-2">
+            <Input
+              placeholder="Label"
+              value={label}
+              onChange={(e) =>
+                setCustomSizes((cs) =>
+                  cs.map((c, j) => (j === i ? e.target.value : c))
+                )
+              }
+              className="w-28"
+            />
+            <Input
+              type="number"
+              placeholder="Qty"
+              value={sizeStocks[label] ?? ""}
+              onChange={(e) =>
+                setSizeStocks((st) => ({
+                  ...st,
+                  [label]: e.target.value,
+                }))
+              }
+              className="w-20"
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                setCustomSizes((cs) => cs.filter((_, j) => j !== i));
+                setSizeStocks((st) => {
+                  const copy = { ...st };
+                  delete copy[label];
+                  return copy;
+                });
+              }}
+            >
+              <X className="h-4 w-4 text-red-600" />
             </Button>
           </div>
-          <div className="space-y-2 mt-2">
-            {customSizes.map((label, i) => (
-              <div key={i} className="flex items-center space-x-2">
-                <Input
-                  placeholder="Label"
-                  value={label}
-                  onChange={e => updateCustomSize(i, e.target.value)}
-                  className="w-28"
-                />
-                <Input
-                  type="number"
-                  placeholder="Qty"
-                  value={sizeStocks[label] ?? ""}
-                  onChange={e => updateCustomSizeStock(label, e.target.value)}
-                  className="w-20"
-                />
-                <button
-                  className="text-red-500"
-                  onClick={() => removeCustomSize(i)}
-                  type="button"
-                >
-                  <X />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
 
         {/* Images */}
         <div className="md:col-span-2">
@@ -366,7 +391,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
               return (
                 <div
                   key={idx}
-                  className="relative aspect-[4/3] w-full border rounded overflow-hidden"
+                  className="relative aspect-[4/3] border rounded overflow-hidden"
                 >
                   {url ? (
                     <>
@@ -376,18 +401,16 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         alt={`img-${idx}`}
                         className="object-cover w-full h-full"
                       />
-                      {idx === 0 && (
-                        <span className="absolute top-1 left-1 bg-indigo-600 text-white text-[10px] px-1 py-0.5 rounded">
-                          PRIMARY
-                        </span>
-                      )}
-                      <button
-                        onClick={() => removeImage(idx)}
-                        className="absolute top-1 right-1 p-1 bg-white rounded-full text-red-500 shadow"
-                        type="button"
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-1 right-1"
+                        onClick={() =>
+                          setImages((imgs) => imgs.filter((_, i) => i !== idx))
+                        }
                       >
-                        ✕
-                      </button>
+                        <X className="h-4 w-4 text-red-600" />
+                      </Button>
                     </>
                   ) : (
                     <>
@@ -395,17 +418,17 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         onClick={() =>
                           document.getElementById(`file-${idx}`)?.click()
                         }
-                        className="h-full w-full flex flex-col items-center justify-center text-gray-500 cursor-pointer text-xs"
+                        className="h-full w-full flex flex-col items-center justify-center text-gray-400 cursor-pointer"
                       >
-                        <Plus className="mb-1" />
-                        <span>Upload</span>
+                        <Plus className="h-6 w-6" />
+                        <span className="text-xs">Upload</span>
                       </div>
                       <input
                         id={`file-${idx}`}
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={e => handleImageChange(e, idx)}
+                        onChange={(e) => handleImageChange(e, idx)}
                       />
                     </>
                   )}
@@ -413,25 +436,17 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
               );
             })}
           </div>
-          {images.length > 0 && (
-            <p className="text-xs text-gray-500 mt-2">
-              First image is treated as the primary.
-            </p>
-          )}
+          <p className="text-xs text-gray-500 mt-2">
+            (First image will be used as the primary thumbnail.)
+          </p>
         </div>
       </CardContent>
 
       <CardFooter className="flex justify-end space-x-4">
-        <Button
-          variant="destructive"
-          type="button"
-          onClick={() => history.back()}
-        >
+        <Button variant="destructive" onClick={() => history.back()}>
           Cancel
         </Button>
-        <Button type="button" onClick={handleSave}>
-          Save
-        </Button>
+        <Button onClick={handleSave}>Save</Button>
       </CardFooter>
     </Card>
   );

@@ -13,7 +13,7 @@ const PUBLIC_PATHS = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // allow public paths & static assets
+  // 1) Always let _next, favicons, and your public auth pages through
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // protect /admin/**
+  // 2) Protect anything under /admin
   if (pathname.startsWith("/admin")) {
     const token = await getToken({
       req,
@@ -31,9 +31,8 @@ export async function middleware(req: NextRequest) {
     });
 
     if (!token || token.role === "customer") {
-      // redirect to new admin-login route
       const url = req.nextUrl.clone();
-      url.pathname = "/admin-login";
+      url.pathname = "/admin-login";  // ASCII hyphen-minus here too
       return NextResponse.redirect(url);
     }
   }
@@ -42,5 +41,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/auth/:path*"], 
+  matcher: ["/admin/:path*", "/auth/:path*"],
 };
+

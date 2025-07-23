@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -10,112 +10,111 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
+import Link from "next/link";
 
 import {
-  Table, TableHeader, TableHead, TableBody, TableRow, TableCell,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import {
-  Select, SelectTrigger, SelectContent, SelectItem, SelectValue,
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, ChevronUp, ChevronDown, MoreVertical } from "lucide-react";
 
-/* ---------- Types ---------- */
 export type AdminProduct = {
   id: string;
   name: string;
   image: string;
-  category:
-    | "Corporate Wears"
-    | "African Print"
-    | "Casual Looks"
-    | "I Have an Event"
-    | string;
+  category: string;
   price: { NGN: number; USD: number; EUR: number; GBP: number };
   stockCount: number;
   stockTotal: number;
   status: "Draft" | "Published" | "Archived";
-  averageRating?: number;
-  ratingCount?: number;
-  createdAt?: Date;
+  createdAt: Date;
 };
 
 interface Props {
-  initialData: AdminProduct[]; // never undefined
+  initialData: AdminProduct[];
 }
 
-/* ---------- Component ---------- */
 export default function ProductsTable({ initialData }: Props) {
-  // Defensive: ensure array
-  const safeInitial: AdminProduct[] = Array.isArray(initialData) ? initialData : [];
-
-  const [data, setData] = useState<AdminProduct[]>(safeInitial);
+  const [data, setData] = useState<AdminProduct[]>(initialData || []);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] =
-    useState<"All" | AdminProduct["category"]>("All");
-  const [statusFilter, setStatusFilter] =
-    useState<"All" | AdminProduct["status"]>("All");
-  const [stockFilter, setStockFilter] =
-    useState<"All" | "InStock" | "OutOfStock">("All");
-
+  const [category, setCategory] = useState<"All" | string>("All");
+  const [status, setStatus] = useState<"All" | AdminProduct["status"]>("All");
+  const [stock, setStock] = useState<"All" | "InStock" | "OutOfStock">("All");
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
-  // Delete modal
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
-
-  function openDeleteModal(ids: string[]) {
-    setPendingDeleteIds(ids);
-    setDeleteModalOpen(true);
+  // Bulk‐delete modal
+  const [pendingDelete, setPendingDelete] = useState<string[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const selectedIds = useMemo(
+    () => table?.getSelectedRowModel().flatRows.map(r => r.original.id) || [],
+    [data]
+  );
+  function openDelete(ids: string[]) {
+    setPendingDelete(ids);
+    setDeleteOpen(true);
   }
-  function handleConfirmDelete() {
-    setData(d => d.filter(p => !pendingDeleteIds.includes(p.id)));
+  function confirmDelete() {
+    setData(d => d.filter(p => !pendingDelete.includes(p.id)));
     table.resetRowSelection();
-    setPendingDeleteIds([]);
-    setDeleteModalOpen(false);
-  }
-  function handleCancelDelete() {
-    setPendingDeleteIds([]);
-    setDeleteModalOpen(false);
+    setPendingDelete([]);
+    setDeleteOpen(false);
   }
 
-  /* ---------- Filtering ---------- */
-  const filteredData = useMemo(() => {
+  // Filtering
+  const filtered = useMemo(() => {
     return data.filter(p => {
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (categoryFilter !== "All" && p.category !== categoryFilter) return false;
-      if (statusFilter !== "All" && p.status !== statusFilter) return false;
-      if (stockFilter === "InStock" && p.stockCount === 0) return false;
-      if (stockFilter === "OutOfStock" && p.stockCount > 0) return false;
+      if (category !== "All" && p.category !== category) return false;
+      if (status !== "All" && p.status !== status) return false;
+      if (stock === "InStock" && p.stockCount === 0) return false;
+      if (stock === "OutOfStock" && p.stockCount > 0) return false;
       return true;
     });
-  }, [data, search, categoryFilter, statusFilter, stockFilter]);
+  }, [data, search, category, status, stock]);
 
-  /* ---------- Columns ---------- */
+  // Table columns
   const columns = useMemo<ColumnDef<AdminProduct>[]>(() => [
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={val => table.toggleAllPageRowsSelected(!!val)}
-          aria-label="Select all"
+          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-            onCheckedChange={val => row.toggleSelected(!!val)}
-          aria-label={`Select row ${row.index + 1}`}
+          onCheckedChange={v => row.toggleSelected(!!v)}
         />
       ),
     },
@@ -128,14 +127,14 @@ export default function ProductsTable({ initialData }: Props) {
             <img
               src={row.original.image}
               alt={row.original.name}
-              className="h-10 w-10 rounded object-cover border"
+              className="h-10 w-10 rounded-md object-cover border"
             />
           ) : (
-            <div className="h-10 w-10 rounded border bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">
-              NO IMG
+            <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+              No Img
             </div>
           )}
-          <span>{row.original.name}</span>
+          <span className="font-medium">{row.original.name}</span>
         </div>
       ),
     },
@@ -145,45 +144,26 @@ export default function ProductsTable({ initialData }: Props) {
       header: "Status",
       cell: ({ row }) => {
         const s = row.original.status;
-        const style =
+        const badge =
           s === "Published"
             ? "bg-green-100 text-green-800"
             : s === "Draft"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-gray-200 text-gray-700";
         return (
-          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${style}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>
             {s}
           </span>
         );
       },
     },
     {
-      id: "priceNGN",
-      header: "₦",
+      id: "price",
+      header: "₦ Price",
       accessorFn: r => r.price.NGN,
-      cell: ({ getValue }) => `₦${getValue<number>().toLocaleString()}`,
-      enableSorting: true,
-    },
-    {
-      id: "priceUSD",
-      header: "$",
-      accessorFn: r => r.price.USD,
-      cell: ({ getValue }) => `$${getValue<number>().toLocaleString()}`,
-      enableSorting: true,
-    },
-    {
-      id: "priceEUR",
-      header: "€",
-      accessorFn: r => r.price.EUR,
-      cell: ({ getValue }) => `€${getValue<number>().toLocaleString()}`,
-      enableSorting: true,
-    },
-    {
-      id: "priceGBP",
-      header: "£",
-      accessorFn: r => r.price.GBP,
-      cell: ({ getValue }) => `£${getValue<number>().toLocaleString()}`,
+      cell: ({ getValue }) => (
+        <span className="font-mono">₦{getValue<number>().toLocaleString()}</span>
+      ),
       enableSorting: true,
     },
     {
@@ -193,15 +173,13 @@ export default function ProductsTable({ initialData }: Props) {
         const { stockCount, stockTotal } = row.original;
         const inStock = stockCount > 0;
         return (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <span
-              className={`h-2 w-2 rounded-full ${
+              className={`inline-block h-2 w-2 rounded-full ${
                 inStock ? "bg-green-500" : "bg-red-500"
               }`}
             />
-            <span>
-              {stockCount}/{stockTotal}
-            </span>
+            <span className="text-sm">{stockCount}/{stockTotal}</span>
           </div>
         );
       },
@@ -210,42 +188,35 @@ export default function ProductsTable({ initialData }: Props) {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              (window.location.href = `/admin/product-management/${row.original.id}`)
-            }
-          >
-            View
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              (window.location.href = `/admin/product-management/${row.original.id}/edit`)
-            }
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => openDeleteModal([row.original.id])}
-            aria-label="Delete product"
-          >
-            <Trash2 className="h-5 w-5 text-red-500" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="ghost" aria-label="Actions">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/product-management/${row.original.id}`}>
+                View
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/product-management/${row.original.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => openDelete([row.original.id])}>
+              <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ], []);
 
-  /* ---------- Table Instance ---------- */
+  // Table instance
   const table = useReactTable({
-    data: filteredData,
+    data: filtered,
     columns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
@@ -255,44 +226,25 @@ export default function ProductsTable({ initialData }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const selectedIds = table.getSelectedRowModel().flatRows.map(r => r.original.id);
-
-  function handleBulkPublish() {
-    setData(d =>
-      d.map(p => (selectedIds.includes(p.id) ? { ...p, status: "Published" } : p))
-    );
-    table.resetRowSelection();
-  }
-  function handleBulkUnpublish() {
-    setData(d =>
-      d.map(p => (selectedIds.includes(p.id) ? { ...p, status: "Draft" } : p))
-    );
-    table.resetRowSelection();
-  }
+  const anySelected = table.getSelectedRowModel().flatRows.length > 0;
 
   return (
-    <div>
+    <>
       {/* Bulk toolbar */}
-      {selectedIds.length > 0 && (
+      {anySelected && (
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded mb-4">
-          <div>
-            <strong>{selectedIds.length}</strong> selected
-          </div>
+          <span>
+            <strong>{table.getSelectedRowModel().flatRows.length}</strong> selected
+          </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" aria-label="Bulk actions">
-                <MoreVertical className="h-5 w-5" />
+              <Button size="sm" variant="outline">
+                Bulk Actions
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => openDeleteModal(selectedIds)}>
+              <DropdownMenuItem onSelect={() => openDelete(selectedIds)}>
                 Delete Selected
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleBulkPublish}>
-                Publish Selected
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleBulkUnpublish}>
-                Unpublish Selected
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -300,24 +252,24 @@ export default function ProductsTable({ initialData }: Props) {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <Input
           placeholder="Search products..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full md:w-auto">
-          {/* Category filter */}
+        <div className="flex space-x-2">
           <Select
-            value={categoryFilter}
-            onValueChange={val => setCategoryFilter(val as any)}
+            value={category}
+            onValueChange={v => setCategory(v as any)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Categories</SelectItem>
+              {/* insert your real categories here */}
               <SelectItem value="Corporate Wears">Corporate Wears</SelectItem>
               <SelectItem value="African Print">African Print</SelectItem>
               <SelectItem value="Casual Looks">Casual Looks</SelectItem>
@@ -325,12 +277,11 @@ export default function ProductsTable({ initialData }: Props) {
             </SelectContent>
           </Select>
 
-          {/* Status filter */}
           <Select
-            value={statusFilter}
-            onValueChange={val => setStatusFilter(val as any)}
+            value={status}
+            onValueChange={v => setStatus(v as any)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -341,13 +292,12 @@ export default function ProductsTable({ initialData }: Props) {
             </SelectContent>
           </Select>
 
-          {/* Stock filter */}
           <Select
-            value={stockFilter}
-            onValueChange={val => setStockFilter(val as any)}
+            value={stock}
+            onValueChange={v => setStock(v as any)}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Stock" />
+            <SelectTrigger className="w-[152px]">
+              <SelectValue placeholder="Stock Filter" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Stock</SelectItem>
@@ -358,79 +308,83 @@ export default function ProductsTable({ initialData }: Props) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="w-full overflow-x-auto">
+      {/* Table “card” */}
+      <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map(hg => (
-              <TableRow key={hg.id}>
-                {hg.headers.map(header => {
-                  if (header.isPlaceholder) return <TableHead key={header.id} />;
-                  const canSort = header.column.getCanSort();
-                  const content = flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  );
-                  return (
-                    <TableHead key={header.id} className="p-2">
-                      {canSort ? (
-                        <div
-                          role="button"
-                          tabIndex={0}
-                          onClick={header.column.getToggleSortingHandler()}
-                          onKeyDown={e => {
-                            if (e.key === "Enter" || e.key === " ")
-                              header.column.getToggleSortingHandler()?.(e as any);
-                          }}
-                          className="flex items-center space-x-1 cursor-pointer select-none"
-                        >
-                          {content}
-                          {({
-                            asc: <ChevronUp className="h-4 w-4" />,
-                            desc: <ChevronDown className="h-4 w-4" />,
-                          } as any)[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      ) : (
-                        content
-                      )}
-                    </TableHead>
-                  );
-                })}
+              <TableRow key={hg.id} className="bg-gray-50">
+                {hg.headers.map(header => (
+                  <TableHead
+                    key={header.id}
+                    className={`px-4 py-2 text-left ${
+                      header.column.getCanSort() ? "cursor-pointer select-none" : ""
+                    }`}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {!header.isPlaceholder && (
+                      <div className="flex items-center space-x-1">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {{
+                          asc: <ChevronUp className="h-4 w-4" />,
+                          desc: <ChevronDown className="h-4 w-4" />,
+                        }[header.column.getIsSorted() as string] ?? null}
+                      </div>
+                    )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map(row => (
-              <TableRow key={row.id} className="even:bg-gray-50">
+              <TableRow
+                key={row.id}
+                className="even:bg-white odd:bg-gray-50 hover:bg-gray-100"
+              >
                 {row.getVisibleCells().map(cell => (
-                  <TableCell key={cell.id} className="p-2">
+                  <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center py-6 text-gray-500">
+                  No products found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between py-4">
-        <div className="space-x-2">
-          <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-            ← Prev
-          </button>
-          <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-            Next →
-          </button>
-        </div>
-        <span>
+        <Button
+          variant="link"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          ← Prev
+        </Button>
+        <span className="text-sm text-gray-700">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
+        <Button
+          variant="link"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next →
+        </Button>
         <select
+          className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
           onChange={e => table.setPageSize(Number(e.target.value))}
         >
-          {[10, 20, 30, 40, 50].map(s => (
+          {[10, 20, 30, 50].map(s => (
             <option key={s} value={s}>
               {s} / page
             </option>
@@ -438,27 +392,27 @@ export default function ProductsTable({ initialData }: Props) {
         </select>
       </div>
 
-      {/* Delete Modal */}
-      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+      {/* Delete Confirmation */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {pendingDeleteIds.length > 1
-                ? `Delete ${pendingDeleteIds.length} products?`
-                : `Delete “${data.find(p => p.id === pendingDeleteIds[0])?.name ?? ""}”?`}
+              {pendingDelete.length > 1
+                ? `Delete ${pendingDelete.length} products?`
+                : `Delete product?`}
             </DialogTitle>
-            <DialogDescription>This action cannot be undone.</DialogDescription>
+            <DialogDescription>This cannot be undone.</DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancelDelete}>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

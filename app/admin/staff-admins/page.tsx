@@ -1,11 +1,13 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import EmptyState from "@/components/admin/EmptyState";
 import AddNewStaffButton from "@/components/admin/AddNewStaffButton";
-import StaffsTable from "./StaffsTable";
+import StaffsTable, { StaffRow } from "./StaffsTable";
 
-export const dynamic = "force-dynamic";
 
-async function fetchStaff() {
+
+async function fetchStaff(): Promise<StaffRow[]> {
   const staff = await prisma.staff.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -20,15 +22,15 @@ async function fetchStaff() {
     },
   });
 
-  return staff.map(s => ({
-    id: s.id,
-    firstName: s.firstName,
-    lastName: s.lastName,
+  return staff.map((s) => ({
+    id:            s.id,
+    firstName:     s.firstName,
+    lastName:      s.lastName,
     emailOfficial: s.email,
-    phone: s.phone,
-    jobRole: s.jobRoles.length ? s.jobRoles.join(", ") : "—",
-    userRole: s.access,
-    createdAt: s.createdAt.toISOString(),
+    phone:         s.phone,
+    jobRoles:      s.jobRoles,                    // <–– now an array
+    userRole:      s.access,
+    createdAt:     s.createdAt.toISOString(),
   }));
 }
 

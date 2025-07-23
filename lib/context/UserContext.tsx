@@ -5,10 +5,12 @@ import React, {
   useContext,
   ReactNode,
   useEffect,
+  useMemo,
 } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 
+// ——— Types —————————————————————————————————————
 export interface OrderItem {
   id: string;
   name: string;
@@ -32,6 +34,7 @@ export interface Order {
 }
 
 export interface UserProfile {
+  // for customers
   id: string;
   firstName: string;
   lastName: string;
@@ -42,6 +45,13 @@ export interface UserProfile {
   registeredAt: string;
   lastLogin: string | null;
   orders: Order[];
+  // **and** for staff we’ll select in the endpoint above:
+  address?: string;
+  emailPersonal?: string;
+  jobRoles?: string[];
+  access?: string;
+  dateOfBirth?: string;
+  dateOfEmployment?: string;
 }
 
 export interface UserContextValue {
@@ -51,31 +61,55 @@ export interface UserContextValue {
   refresh: () => void;
 }
 
+// ——— Context setup —————————————————————————————————
+
 const UserContext = createContext<UserContextValue>({
   isLoading: true,
   refresh: () => {},
 });
 
+// ——— fetcher with debug logging —————————————————————
+
 const fetcher = async (url: string) => {
-  const res = await fetch(url);
+  console.log("↗️  fetcher GET", url);
+  const res = await fetch(url, { credentials: "include" });
   if (!res.ok) {
     const { error } = await res.json().catch(() => ({}));
+    console.error("🚨 fetcher error", res.status, error);
     throw new Error(error || res.statusText);
   }
-  return res.json();
+  const json = await res.json();
+  console.log("✅ fetcher response:", json);
+  return json;
 };
+
+// ——— Provider component ——————————————————————————
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const shouldFetch = status === "authenticated";
+
+  // only once we’re fully signed in
+  const isAuth = status === "authenticated" && !!session?.user?.email;
+  const role   = session?.user?.role;
+
+  // build the absolute URL once
+  const meApiUrl = useMemo(() => {
+    if (typeof window === "undefined" || !isAuth) return null;
+    const origin = window.location.origin;
+    return role === "customer"
+      ? `${origin}/api/auth/me`
+      : `${origin}/api/admin/me`;
+  }, [role, isAuth]);
+
   const { data, error, mutate, isValidating } = useSWR<UserProfile>(
-    shouldFetch ? "/api/auth/me" : null,
+    meApiUrl,
     fetcher
   );
 
-  // clear SWR cache on sign out
+  // clear on sign out
   useEffect(() => {
     if (status === "unauthenticated") {
+      console.log("🔄 clearing user context on sign out");
       mutate(undefined, false);
     }
   }, [status, mutate]);

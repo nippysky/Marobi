@@ -118,6 +118,7 @@ export default function VerifyEmailClient() {
 
             {/* resend */}
             <Button
+            variant={"link"}
               onClick={handleResend}
               disabled={timer > 0 || resending}
               className="w-full"

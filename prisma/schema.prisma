@@ -93,6 +93,8 @@ model Staff {
   guarantorPhone    String?
   resetToken        String?
   resetTokenExpiry  DateTime?
+  lastLogin            DateTime?
+
 }
 
 

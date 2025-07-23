@@ -34,75 +34,55 @@ export const authOptions: NextAuthOptions = {
         role:     { label: "Role",     type: "text" },
       },
       async authorize(credentials, req) {
-        // --- Rate limit by IP ---
+        // Rate‐limit by IP
         const ip = typeof req.headers?.get === "function"
-          ? (req.headers.get("x-forwarded-for") ?? "unknown")
+          ? req.headers.get("x-forwarded-for") ?? "unknown"
           : "unknown"
         const { ok, reset } = rateLimit(ip)
         if (!ok) {
-          const wait = Math.ceil((reset - Date.now()) / 1000)
-            .toString()
+          const wait = Math.ceil((reset - Date.now()) / 1000).toString()
           throw new Error(`Too many login attempts. Try again in ${wait}s.`)
         }
 
-        // --- Validate input shape ---
+        // Validate shape
         const parsed = CredsSchema.safeParse(credentials)
         if (!parsed.success) {
-            const msg = parsed.error.issues.map(i => i.message).join("; ")
-            throw new Error(msg || "Invalid credentials format.")
+          const msg = parsed.error.issues.map(i => i.message).join("; ")
+          throw new Error(msg || "Invalid credentials format.")
         }
 
         let { email, password, role } = parsed.data
         email = email.trim().toLowerCase()
 
-        // --- Customer login flow ---
+        // Customer flow
         if (role === "customer") {
           const user = await prisma.customer.findUnique({ where: { email } })
-
-          if (!user) {
-            throw new Error("No account found with that email.")
-          }
-          if (!user.emailVerified) {
-            throw new Error("Please verify your email before logging in.")
-          }
-          if (!user.passwordHash) {
-            throw new Error("Password not set. Please reset your password.")
-          }
+          if (!user) throw new Error("No account found with that email.")
+          if (!user.emailVerified) throw new Error("Please verify your email first.")
+          if (!user.passwordHash)  throw new Error("Password not set. Reset first.")
           const valid = await bcrypt.compare(password, user.passwordHash)
-          if (!valid) {
-            throw new Error("Incorrect password.")
+          if (!valid) throw new Error("Incorrect password.")
+          return {
+            id:       user.id,
+            name:     `${user.firstName} ${user.lastName}`,
+            email:    user.email,
+            role,
+            jobRoles: [] as string[],
           }
-
-            return {
-              id:       user.id,
-              name:     `${user.firstName} ${user.lastName}`,
-              email:    user.email,
-              role,
-              jobRoles: [] as string[],
-            }
         }
 
-        // --- Staff login flow ---
+        // Staff flow
         const staff = await prisma.staff.findUnique({ where: { email } })
-        if (!staff) {
-          throw new Error("Staff account not found.")
-        }
-        if (!staff.emailVerified) {
-          throw new Error("Staff email not verified.")
-        }
-        if (!staff.passwordHash) {
-          throw new Error("Password not set. Contact administrator.")
-        }
+        if (!staff)             throw new Error("Staff account not found.")
+        if (!staff.emailVerified) throw new Error("Staff email not verified.")
+        if (!staff.passwordHash)  throw new Error("Password not set. Contact admin.")
         const staffValid = await bcrypt.compare(password, staff.passwordHash)
-        if (!staffValid) {
-          throw new Error("Incorrect password.")
-        }
-
+        if (!staffValid) throw new Error("Incorrect password.")
         return {
           id:       staff.id,
           name:     `${staff.firstName} ${staff.lastName}`,
           email:    staff.email,
-          role:     staff.access,   // preserving existing design
+          role:     staff.access,
           jobRoles: staff.jobRoles,
         }
       },
@@ -112,21 +92,43 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id       = (user as any).id
         token.role     = (user as any).role
         token.jobRoles = (user as any).jobRoles
       }
       return token
     },
     async session({ session, token }) {
-      session.user = session.user || {}
-      session.user.role     = token.role as string
-      session.user.jobRoles = token.jobRoles as string[]
+      session.user = {
+        ...session.user!,
+        id:       token.id  as string,
+        role:     token.role as string,
+        jobRoles: token.jobRoles as string[],
+      }
       return session
     },
     async redirect({ url, baseUrl }) {
       if (url.startsWith("/"))     return `${baseUrl}${url}`
       if (url.startsWith(baseUrl)) return url
       return baseUrl
+    },
+  },
+
+  // 👇 stamp lastLogin on every successful sign‐in
+  events: {
+    async signIn({ user }) {
+      if (!user.email) return
+      if ((user as any).role === "customer") {
+        await prisma.customer.update({
+          where: { email: user.email },
+          data:  { lastLogin: new Date() },
+        })
+      } else {
+        await prisma.staff.update({
+          where: { email: user.email },
+          data:  { lastLogin: new Date() },
+        })
+      }
     },
   },
 

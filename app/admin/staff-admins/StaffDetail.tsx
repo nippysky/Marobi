@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardHeader,
@@ -5,7 +7,6 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { JobRole, UserRole } from "@/lib/generated/prisma-client";
-
 
 interface StaffDetailProps {
   staff: {
@@ -37,35 +38,112 @@ export default function StaffDetail({ staff }: StaffDetailProps) {
   const fullName = [staff.firstName, staff.middleName, staff.lastName]
     .filter(Boolean)
     .join(" ");
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Staff Details</CardTitle>
+    <Card className="rounded-2xl shadow-xl">
+      <CardHeader className="pb-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Avatar circle */}
+            <div className="h-12 w-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+              {staff.firstName[0]}
+              {staff.lastName[0]}
+            </div>
+            <div>
+              <CardTitle className="text-2xl">{fullName}</CardTitle>
+              <span className="mt-1 inline-block px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                {staff.access}
+              </span>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500">
+            Joined {fmt(staff.createdAt)}
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-        <div className="space-y-2">
-          <p><strong>First Name:</strong> {staff.firstName}</p>
-          <p><strong>Middle Name:</strong> {staff.middleName || "—"}</p>
-          <p><strong>Last Name:</strong> {staff.lastName}</p>
-          <p><strong>Full Name:</strong> {fullName}</p>
-          <p><strong>Date of Birth:</strong> {fmt(staff.dateOfBirth)}</p>
-          <p><strong>Address:</strong> {staff.address || "—"}</p>
-          <p><strong>Phone Number:</strong> {staff.phone}</p>
-          <p><strong>Personal Email:</strong> {staff.emailPersonal || "—"}</p>
-          <p><strong>Official Email:</strong> {staff.email}</p>
-        </div>
-        <div className="space-y-2">
-          <p>
-            <strong>Job Role(s):</strong>{" "}
-            {staff.jobRoles.length ? staff.jobRoles.join(", ") : "—"}
-          </p>
-            <p><strong>User Role:</strong> {staff.access}</p>
-          <p><strong>Date of Employment:</strong> {fmt(staff.dateOfEmployment)}</p>
-          <p><strong>Date of Resignation:</strong> {fmt(staff.dateOfResignation)}</p>
-          <p><strong>Guarantor Name:</strong> {staff.guarantorName || "—"}</p>
-          <p><strong>Guarantor Address:</strong> {staff.guarantorAddress || "—"}</p>
-          <p><strong>Guarantor Phone:</strong> {staff.guarantorPhone || "—"}</p>
-        </div>
+
+      <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Left column */}
+        <dl className="space-y-4">
+          {[
+            { label: "First Name", value: staff.firstName },
+            { label: "Middle Name", value: staff.middleName || "—" },
+            { label: "Last Name", value: staff.lastName },
+            { label: "Official Email", value: staff.email },
+            { label: "Personal Email", value: staff.emailPersonal || "—" },
+            { label: "Phone", value: staff.phone },
+            { label: "Address", value: staff.address || "—" },
+            {
+              label: "Date of Birth",
+              value: fmt(staff.dateOfBirth),
+            },
+          ].map((item) => (
+            <div key={item.label}>
+              <dt className="text-xs uppercase text-gray-400">
+                {item.label}
+              </dt>
+              <dd className="text-base font-semibold text-gray-900">
+                {item.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* Right column */}
+        <dl className="space-y-4">
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Job Role(s)
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {staff.jobRoles.length
+                ? staff.jobRoles.join(", ")
+                : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Date of Employment
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {fmt(staff.dateOfEmployment)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Date of Resignation
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {staff.dateOfResignation
+                ? fmt(staff.dateOfResignation)
+                : "Active"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Guarantor Name
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {staff.guarantorName || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Guarantor Address
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {staff.guarantorAddress || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-gray-400">
+              Guarantor Phone
+            </dt>
+            <dd className="text-base font-semibold text-gray-900">
+              {staff.guarantorPhone || "—"}
+            </dd>
+          </div>
+        </dl>
       </CardContent>
     </Card>
   );

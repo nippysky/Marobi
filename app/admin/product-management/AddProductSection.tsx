@@ -26,5 +26,5 @@ export default function AddProductSection() {
     }
   }
 
-  return <ProductForm onSave={handleSave} />;
+  return <ProductForm onSave={handleSave} />
 }

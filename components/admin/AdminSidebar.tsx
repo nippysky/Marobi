@@ -2,7 +2,7 @@
 
 import { ReactNode, useState } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -12,10 +12,12 @@ import {
   Settings,
   LogOut,
   NotebookPen,
+  User,
 } from "lucide-react";
 import { BsBag } from "react-icons/bs";
 import { RiAdminLine } from "react-icons/ri";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { signOut } from "next-auth/react";
 
 const navItems = [
   { name: "Dashboard",           href: "/admin",                   icon: <LayoutDashboard size={20} /> },
@@ -29,13 +31,11 @@ const navItems = [
 
 export default function AdminSidebar({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
-  // treat child paths as active too
   function isActive(href: string) {
     if (href === "/admin") {
-      return pathname === href;            // only exact match for Dashboard
+      return pathname === href;
     }
     return pathname === href || pathname.startsWith(href + "/");
   }
@@ -50,16 +50,15 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
-      {/** Mobile header **/}
+      {/* Mobile header */}
       <header className="md:hidden bg-brand text-white flex items-center justify-between px-4 py-3">
         <button onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu size={24} />
         </button>
         <span className="font-bold text-lg">Marobi Admin</span>
-        <div style={{ width: 24 }} />
       </header>
 
-      {/** Desktop sidebar **/}
+      {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-80 bg-brand text-white">
         <ScrollArea className="h-full flex flex-col">
           <div className="px-6 py-4 font-bold text-xl tracking-wide">
@@ -73,10 +72,19 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="px-6 py-4 border-t border-white/20 mt-10">
-            <button
-              onClick={() => router.push("/")}
+          <div className="px-6 py-4 border-t border-white/20 mt-10 space-y-2">
+            {/* Profile Link */}
+            <Link
+              href="/admin/profile"
               className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
+            >
+              <User size={20} />
+              <span>Profile</span>
+            </Link>
+            {/* Log Out */}
+            <button
+              onClick={() => signOut({ callbackUrl: "/admin-login" })}
+              className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left mt-5"
             >
               <LogOut size={20} />
               <span>Log out</span>
@@ -85,18 +93,15 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
         </ScrollArea>
       </aside>
 
-      {/** Main content **/}
+      {/* Main content */}
       <main className="flex-1 overflow-auto bg-white p-4 md:p-5">
         {children}
       </main>
 
-      {/** Mobile overlay **/}
+      {/* Mobile overlay */}
       {open && (
         <>
-          <div
-            className="fixed inset-0 bg-black/50 z-30"
-            onClick={() => setOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setOpen(false)} />
           <aside className="fixed inset-y-0 left-0 w-80 bg-brand text-white z-40 flex flex-col">
             <div className="flex items-center justify-between px-6 py-4">
               <span className="font-bold text-xl">Marobi Admin</span>
@@ -119,9 +124,17 @@ export default function AdminSidebar({ children }: { children: ReactNode }) {
                 ))}
               </nav>
             </ScrollArea>
-            <div className="px-6 py-4 border-t border-white/20">
+            <div className="px-6 py-4 border-t border-white/20 space-y-2">
+              <Link
+                href="/admin/profile"
+                onClick={() => setOpen(false)}
+                className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
+              >
+                <User size={20} />
+                <span>My Profile</span>
+              </Link>
               <button
-                onClick={() => { router.push("/"); setOpen(false); }}
+                onClick={() => { signOut({ callbackUrl: "/admin-login" }); setOpen(false); }}
                 className="flex items-center space-x-3 px-4 py-2 rounded-md hover:bg-white hover:text-brand w-full text-left"
               >
                 <LogOut size={20} />

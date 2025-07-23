@@ -19,7 +19,7 @@ interface WishlistItem {
   product: {
     id: string;
     name: string;
-    image: string;
+    images: string[]; 
     category: string;
     priceNGN: number | null;
     priceUSD: number | null;
@@ -68,6 +68,9 @@ export default function WishlistSection() {
                 }[currency] ?? 0;
               const priceStr = formatAmount(priceNum, currency);
 
+              // take the first image, or fallback to a gray box
+              const imgSrc = p.images[0] ?? "";
+
               return (
                 <div
                   key={item.id}
@@ -85,11 +88,15 @@ export default function WishlistSection() {
                   <Link href={`/product/${p.id}`} className="block">
                     {/* Image */}
                     <div className="h-48 bg-gray-100 flex items-center justify-center">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="max-h-full"
-                      />
+                      {imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt={p.name}
+                          className="max-h-full"
+                        />
+                      ) : (
+                        <div className="text-gray-400">No image</div>
+                      )}
                     </div>
                     {/* Details */}
                     <div className="p-4 space-y-1">
