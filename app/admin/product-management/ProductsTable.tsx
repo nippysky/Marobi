@@ -44,7 +44,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ChevronUp, ChevronDown, MoreVertical } from "lucide-react";
+import { Edit, Trash2, ChevronUp, ChevronDown, MoreVertical, Eye } from "lucide-react";
 
 export type AdminProduct = {
   id: string;
@@ -63,7 +63,7 @@ interface Props {
 }
 
 export default function ProductsTable({ initialData }: Props) {
-  const [data, setData] = useState<AdminProduct[]>(initialData || []);
+  const [data, setData] = useState<AdminProduct[]>(initialData);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"All" | string>("All");
   const [status, setStatus] = useState<"All" | AdminProduct["status"]>("All");
@@ -71,50 +71,24 @@ export default function ProductsTable({ initialData }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
-  // Bulk‐delete modal
+  // Bulk‐delete dialog
   const [pendingDelete, setPendingDelete] = useState<string[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const selectedIds = useMemo(
-    () => table?.getSelectedRowModel().flatRows.map(r => r.original.id) || [],
-    [data]
-  );
-  function openDelete(ids: string[]) {
-    setPendingDelete(ids);
-    setDeleteOpen(true);
-  }
-  function confirmDelete() {
-    setData(d => d.filter(p => !pendingDelete.includes(p.id)));
-    table.resetRowSelection();
-    setPendingDelete([]);
-    setDeleteOpen(false);
-  }
 
-  // Filtering
-  const filtered = useMemo(() => {
-    return data.filter(p => {
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (category !== "All" && p.category !== category) return false;
-      if (status !== "All" && p.status !== status) return false;
-      if (stock === "InStock" && p.stockCount === 0) return false;
-      if (stock === "OutOfStock" && p.stockCount > 0) return false;
-      return true;
-    });
-  }, [data, search, category, status, stock]);
-
-  // Table columns
+  // Columns definition
   const columns = useMemo<ColumnDef<AdminProduct>[]>(() => [
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
+          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={v => row.toggleSelected(!!v)}
+          onCheckedChange={(v) => row.toggleSelected(!!v)}
         />
       ),
     },
@@ -131,7 +105,7 @@ export default function ProductsTable({ initialData }: Props) {
             />
           ) : (
             <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500">
-              No Img
+              No Img
             </div>
           )}
           <span className="font-medium">{row.original.name}</span>
@@ -150,19 +124,15 @@ export default function ProductsTable({ initialData }: Props) {
             : s === "Draft"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-gray-200 text-gray-700";
-        return (
-          <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>
-            {s}
-          </span>
-        );
+        return <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>{s}</span>;
       },
     },
     {
       id: "price",
       header: "₦ Price",
-      accessorFn: r => r.price.NGN,
+      accessorFn: (r) => r.price.NGN,
       cell: ({ getValue }) => (
-        <span className="font-mono">₦{getValue<number>().toLocaleString()}</span>
+        <code className="font-mono">₦{getValue<number>().toLocaleString()}</code>
       ),
       enableSorting: true,
     },
@@ -179,7 +149,9 @@ export default function ProductsTable({ initialData }: Props) {
                 inStock ? "bg-green-500" : "bg-red-500"
               }`}
             />
-            <span className="text-sm">{stockCount}/{stockTotal}</span>
+            <span className="text-sm">
+              {stockCount}/{stockTotal}
+            </span>
           </div>
         );
       },
@@ -196,9 +168,7 @@ export default function ProductsTable({ initialData }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href={`/admin/product-management/${row.original.id}`}>
-                View
-              </Link>
+              <Link href={`/admin/product-management/${row.original.id}`}>  <Eye className="mr-2 h-4 w-4" />View</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/admin/product-management/${row.original.id}/edit`}>
@@ -214,7 +184,19 @@ export default function ProductsTable({ initialData }: Props) {
     },
   ], []);
 
-  // Table instance
+  // Filter data
+  const filtered = useMemo(() => {
+    return data.filter((p) => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (category !== "All" && p.category !== category) return false;
+      if (status !== "All" && p.status !== status) return false;
+      if (stock === "InStock" && p.stockCount === 0) return false;
+      if (stock === "OutOfStock" && p.stockCount > 0) return false;
+      return true;
+    });
+  }, [data, search, category, status, stock]);
+
+  // ─── Now that `columns`, `filtered`, `sorting`, and `pagination` are ready ───
   const table = useReactTable({
     data: filtered,
     columns,
@@ -226,7 +208,24 @@ export default function ProductsTable({ initialData }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const anySelected = table.getSelectedRowModel().flatRows.length > 0;
+  // ─── Only *after* `table` is defined do we read from it ───
+  const selectedIds = useMemo(
+    () => table.getSelectedRowModel().flatRows.map(r => r.original.id),
+    [table.getSelectedRowModel().flatRows]
+  );
+
+  function openDelete(ids: string[]) {
+    setPendingDelete(ids);
+    setDeleteOpen(true);
+  }
+  function confirmDelete() {
+    setData((d) => d.filter((p) => !pendingDelete.includes(p.id)));
+    table.resetRowSelection();
+    setPendingDelete([]);
+    setDeleteOpen(false);
+  }
+
+  const anySelected = selectedIds.length > 0;
 
   return (
     <>
@@ -234,7 +233,7 @@ export default function ProductsTable({ initialData }: Props) {
       {anySelected && (
         <div className="flex items-center justify-between bg-gray-100 p-2 rounded mb-4">
           <span>
-            <strong>{table.getSelectedRowModel().flatRows.length}</strong> selected
+            <strong>{selectedIds.length}</strong> selected
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -256,20 +255,16 @@ export default function ProductsTable({ initialData }: Props) {
         <Input
           placeholder="Search products..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select
-            value={category}
-            onValueChange={v => setCategory(v as any)}
-          >
+          <Select value={category} onValueChange={(v) => setCategory(v)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Categories</SelectItem>
-              {/* insert your real categories here */}
               <SelectItem value="Corporate Wears">Corporate Wears</SelectItem>
               <SelectItem value="African Print">African Print</SelectItem>
               <SelectItem value="Casual Looks">Casual Looks</SelectItem>
@@ -277,10 +272,7 @@ export default function ProductsTable({ initialData }: Props) {
             </SelectContent>
           </Select>
 
-          <Select
-            value={status}
-            onValueChange={v => setStatus(v as any)}
-          >
+          <Select value={status} onValueChange={(v) => setStatus(v as any)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
@@ -292,10 +284,7 @@ export default function ProductsTable({ initialData }: Props) {
             </SelectContent>
           </Select>
 
-          <Select
-            value={stock}
-            onValueChange={v => setStock(v as any)}
-          >
+          <Select value={stock} onValueChange={(v) => setStock(v as any)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="Stock Filter" />
             </SelectTrigger>
@@ -308,13 +297,13 @@ export default function ProductsTable({ initialData }: Props) {
         </div>
       </div>
 
-      {/* Table “card” */}
+      {/* Table container */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="bg-gray-50">
-                {hg.headers.map(header => (
+                {hg.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     className={`px-4 py-2 text-left ${
@@ -324,7 +313,10 @@ export default function ProductsTable({ initialData }: Props) {
                   >
                     {!header.isPlaceholder && (
                       <div className="flex items-center space-x-1">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                         {{
                           asc: <ChevronUp className="h-4 w-4" />,
                           desc: <ChevronDown className="h-4 w-4" />,
@@ -336,19 +328,21 @@ export default function ProductsTable({ initialData }: Props) {
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
                 className="even:bg-white odd:bg-gray-50 hover:bg-gray-100"
               >
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
+
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center py-6 text-gray-500">
@@ -382,9 +376,9 @@ export default function ProductsTable({ initialData }: Props) {
         <select
           className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
-          onChange={e => table.setPageSize(Number(e.target.value))}
+          onChange={(e) => table.setPageSize(Number(e.target.value))}
         >
-          {[10, 20, 30, 50].map(s => (
+          {[10, 20, 30, 50].map((s) => (
             <option key={s} value={s}>
               {s} / page
             </option>
