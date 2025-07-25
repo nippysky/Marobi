@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import AdminSignInClient from "@/components/admin/AdminSignInClient";
-// point at the same file that exports your NextAuth options
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function AdminLoginPage() {

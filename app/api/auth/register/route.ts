@@ -20,6 +20,15 @@ function normalizeEmail(e: string) {
   return e.trim().toLowerCase();
 }
 
+function generateCustomerId(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let suffix = "";
+  for (let i = 0; i < 7; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `M-CUS${suffix}`;
+}
+
 export async function POST(request: Request) {
   // Rate limit
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
@@ -42,7 +51,7 @@ export async function POST(request: Request) {
   const { name, email, phone, country, state, address, password } = parsed.data;
   const emailNorm = normalizeEmail(email);
 
-  // Check for existing (case-insensitive safety upgrade)
+  // Check for existing (case-insensitive)
   const existing = await prisma.customer.findFirst({
     where: { email: { equals: emailNorm, mode: "insensitive" } },
   });
@@ -58,20 +67,25 @@ export async function POST(request: Request) {
   const firstName = nameParts.shift()!;
   const lastName  = nameParts.join(" ");
 
+  // Hash password & generate verification token
   const passwordHash            = await bcrypt.hash(password, 12);
   const verificationToken       = randomUUID();
   const verificationTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+  // Generate branded customer ID
+  const id = generateCustomerId();
+
   await prisma.customer.create({
     data: {
+      id,
       firstName,
       lastName,
-      email: emailNorm,          // stored normalized
+      email: emailNorm,
       phone,
       country: country ?? null,
       state: state ?? null,
-      deliveryAddress: address,  // correct column
-      billingAddress: null,      // optional; user can fill later
+      deliveryAddress: address,
+      billingAddress: null,
       passwordHash,
       emailVerified: false,
       verificationToken,
@@ -79,13 +93,13 @@ export async function POST(request: Request) {
     },
   });
 
-  // Send verification (fire & forget)
-  await sendVerificationEmail(emailNorm, verificationToken).catch(err =>
+  // Send verification email (fire & forget)
+  sendVerificationEmail(emailNorm, verificationToken).catch(err =>
     console.error("sendVerificationEmail error:", err)
   );
 
   return NextResponse.json(
-    { message: "Registration successful. Check your email to verify." },
+    { message: "Registration successful. Check your email to verify.", id },
     { status: 201 }
   );
 }

@@ -1,6 +1,7 @@
+// app/admin/products/ProductForm.tsx
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { ProductPayload } from "@/types/product";
 import {
   Card,
@@ -41,10 +42,10 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     initialProduct?.description ?? ""
   );
   const [price, setPrice] = useState({
-    NGN: initialProduct?.price.NGN ?? "",
-    USD: initialProduct?.price.USD ?? "",
-    EUR: initialProduct?.price.EUR ?? "",
-    GBP: initialProduct?.price.GBP ?? "",
+    NGN: initialProduct?.price.NGN.toString() ?? "",
+    USD: initialProduct?.price.USD.toString() ?? "",
+    EUR: initialProduct?.price.EUR.toString() ?? "",
+    GBP: initialProduct?.price.GBP.toString() ?? "",
   });
   const [status, setStatus] = useState<ProductPayload["status"]>(
     initialProduct?.status ?? "Draft"
@@ -59,10 +60,14 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
   const [colors, setColors] = useState<string[]>(
     initialHasColors ? [...(initialProduct?.colors || [])] : []
   );
+  useEffect(() => {
+    if (hasColors && colors.length === 0) setColors([""]);
+    if (!hasColors) setColors([]);
+  }, [hasColors]);
 
   /* ---------- Sizes ---------- */
   const [sizeStocks, setSizeStocks] = useState<Record<string, string>>(
-    { ...(initialProduct?.sizeStocks || {}) }
+    { ...(initialProduct?.sizeStocks ?? {}) }
   );
   const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(
     () => {
@@ -84,13 +89,51 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     initialProduct?.images ?? []
   );
 
-  /* ---------- Effects ---------- */
-  useEffect(() => {
-    if (hasColors && colors.length === 0) setColors([""]);
-    if (!hasColors) setColors([]);
-  }, [hasColors]);
+  /* ---------- Loading State ---------- */
+  const [saving, setSaving] = useState(false);
 
-  /* ---------- Upload ---------- */
+  /* ---------- Form Validation ---------- */
+  const isFormValid = useMemo(() => {
+    if (!name.trim() || !category.trim() || !description.trim()) return false;
+
+    for (const cur of ["NGN", "USD", "EUR", "GBP"] as const) {
+      const num = Number(price[cur]);
+      if (!price[cur] || isNaN(num) || num < 1) return false;
+    }
+
+    if (hasColors && colors.filter((c) => c.trim()).length === 0) return false;
+
+    for (const sz of CONVENTIONAL_SIZES) {
+      if (
+        sizeEnabled[sz] &&
+        (!sizeStocks[sz] || isNaN(Number(sizeStocks[sz])))
+      ) {
+        return false;
+      }
+    }
+
+    for (const label of customSizes) {
+      if (!label.trim()) return false;
+      if (!sizeStocks[label] || isNaN(Number(sizeStocks[label]))) return false;
+    }
+
+    if (images.length === 0 || !images[0]) return false;
+
+    return true;
+  }, [
+    name,
+    category,
+    description,
+    price,
+    hasColors,
+    colors,
+    sizeEnabled,
+    sizeStocks,
+    customSizes,
+    images,
+  ]);
+
+  /* ---------- Image Upload ---------- */
   async function uploadFile(file: File): Promise<string> {
     const form = new FormData();
     form.append("file", file);
@@ -118,29 +161,23 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     }
   }
 
-  /* ---------- Validation & Save ---------- */
-  function validate(): string | null {
-    if (!name.trim()) return "Name is required.";
-    if (!category.trim()) return "Category is required.";
-    return null;
-  }
-
+  /* ---------- Save Handler ---------- */
   async function handleSave() {
-    const err = validate();
-    if (err) {
-      toast.error(err);
+    if (!isFormValid) {
+      toast.error("Please fill all required fields and ensure prices ≥ 1.");
       return;
     }
+    setSaving(true);
     const payload: ProductPayload = {
       id: initialProduct?.id,
       name: name.trim(),
       category: category.trim(),
       description: description.trim(),
       price: {
-        NGN: parseFloat(price.NGN as string) || 0,
-        USD: parseFloat(price.USD as string) || 0,
-        EUR: parseFloat(price.EUR as string) || 0,
-        GBP: parseFloat(price.GBP as string) || 0,
+        NGN: parseFloat(price.NGN),
+        USD: parseFloat(price.USD),
+        EUR: parseFloat(price.EUR),
+        GBP: parseFloat(price.GBP),
       },
       status,
       sizeMods,
@@ -153,8 +190,10 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     };
     try {
       await onSave(payload);
-    } catch (e: any) {
-      toast.error(e.message || "Save failed");
+    } catch {
+      // onSave will display its own toast
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -163,20 +202,24 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
       <CardHeader>
         <CardTitle>Product Details</CardTitle>
       </CardHeader>
-
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name */}
         <div className="flex flex-col space-y-1">
-          <Label>Product Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <Label>Product Name *</Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+          />
         </div>
 
         {/* Category */}
         <div className="flex flex-col space-y-1">
-          <Label>Category</Label>
+          <Label>Category *</Label>
           <Select
             value={category}
-            onValueChange={(v) => setCategory(v as string)}
+            onValueChange={setCategory}
+            disabled={saving}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select category" />
@@ -198,10 +241,11 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
 
         {/* Status */}
         <div className="flex flex-col space-y-1">
-          <Label>Status</Label>
+          <Label>Status *</Label>
           <Select
             value={status}
-            onValueChange={(v) => setStatus(v as ProductPayload["status"])}
+            onValueChange={(v) => setStatus(v as any)}
+            disabled={saving}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
@@ -218,42 +262,25 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
 
         {/* Enable Custom Size Mods */}
         <div className="flex items-center space-x-2">
-          <Switch checked={sizeMods} onCheckedChange={setSizeMods} />
-          <Label>Enable Custom Size Mods?</Label>
-        </div>
-
-        {/* Prices */}
-        {(["NGN", "USD", "EUR", "GBP"] as const).map((cur) => (
-          <div key={cur} className="flex flex-col space-y-1">
-            <Label>{cur} Price</Label>
-            <Input
-              type="number"
-              placeholder="0.00"
-              value={price[cur]}
-              onChange={(e) =>
-                setPrice((p) => ({ ...p, [cur]: e.target.value }))
-              }
-            />
-          </div>
-        ))}
-
-        {/* Description */}
-        <div className="md:col-span-2 flex flex-col space-y-1">
-          <Label>Description</Label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="h-32"
+          <Switch
+            checked={sizeMods}
+            onCheckedChange={setSizeMods}
+            disabled={saving}
           />
+          <Label>Enable Custom Size Mods?</Label>
         </div>
 
         {/* Has Colors */}
         <div className="flex items-center space-x-2">
-          <Switch checked={hasColors} onCheckedChange={setHasColors} />
+          <Switch
+            checked={hasColors}
+            onCheckedChange={setHasColors}
+            disabled={saving}
+          />
           <Label>Has Colors?</Label>
         </div>
 
-        {/* Colors List */}
+        {/* Color Inputs */}
         {hasColors && (
           <div className="md:col-span-2 grid grid-cols-1 gap-2">
             {colors.map((c, i) => (
@@ -266,11 +293,13 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                       cs.map((x, j) => (j === i ? e.target.value : x))
                     )
                   }
+                  disabled={saving}
                 />
                 {colors.length > 1 && (
                   <Button
                     size="icon"
                     variant="ghost"
+                    disabled={saving}
                     onClick={() =>
                       setColors((cs) => cs.filter((_, j) => j !== i))
                     }
@@ -282,6 +311,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                   <Button
                     size="icon"
                     variant="ghost"
+                    disabled={saving}
                     onClick={() => setColors((cs) => [...cs, ""])}
                   >
                     <Plus className="h-4 w-4 text-green-600" />
@@ -291,6 +321,34 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             ))}
           </div>
         )}
+
+        {/* Prices (min=1) */}
+        {(["NGN", "USD", "EUR", "GBP"] as const).map((cur) => (
+          <div key={cur} className="flex flex-col space-y-1">
+            <Label>{cur} Price * (≥ 1)</Label>
+            <Input
+              type="number"
+              placeholder="0.00"
+              min={1}
+              value={price[cur]}
+              onChange={(e) =>
+                setPrice((p) => ({ ...p, [cur]: e.target.value }))
+              }
+              disabled={saving}
+            />
+          </div>
+        ))}
+
+        {/* Description */}
+        <div className="md:col-span-2 flex flex-col space-y-1">
+          <Label>Description *</Label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={saving}
+            className="h-32"
+          />
+        </div>
 
         {/* Sizes & Stock */}
         <div className="md:col-span-2 space-y-2">
@@ -309,6 +367,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                       return copy;
                     });
                   }}
+                  disabled={saving}
                 />
                 <Label className="w-8">{sz}</Label>
                 {sizeEnabled[sz] && (
@@ -322,6 +381,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         [sz]: e.target.value,
                       }))
                     }
+                    disabled={saving}
                     className="w-20"
                   />
                 )}
@@ -336,6 +396,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
           <Button
             size="icon"
             variant="ghost"
+            disabled={saving}
             onClick={() => setCustomSizes((cs) => [...cs, ""])}
           >
             <Plus className="h-5 w-5 text-indigo-600" />
@@ -351,6 +412,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                   cs.map((c, j) => (j === i ? e.target.value : c))
                 )
               }
+              disabled={saving}
               className="w-28"
             />
             <Input
@@ -363,11 +425,13 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                   [label]: e.target.value,
                 }))
               }
+              disabled={saving}
               className="w-20"
             />
             <Button
               size="icon"
               variant="ghost"
+              disabled={saving}
               onClick={() => {
                 setCustomSizes((cs) => cs.filter((_, j) => j !== i));
                 setSizeStocks((st) => {
@@ -384,7 +448,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
 
         {/* Images */}
         <div className="md:col-span-2">
-          <Label>Images</Label>
+          <Label>Images *</Label>
           <div className="grid grid-cols-4 gap-4 mt-2">
             {Array.from({ length: images.length + 1 }).map((_, idx) => {
               const url = images[idx];
@@ -395,7 +459,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                 >
                   {url ? (
                     <>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}
                         alt={`img-${idx}`}
@@ -405,6 +468,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         size="icon"
                         variant="ghost"
                         className="absolute top-1 right-1"
+                        disabled={saving}
                         onClick={() =>
                           setImages((imgs) => imgs.filter((_, i) => i !== idx))
                         }
@@ -428,6 +492,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         type="file"
                         accept="image/*"
                         className="hidden"
+                        disabled={saving}
                         onChange={(e) => handleImageChange(e, idx)}
                       />
                     </>
@@ -443,10 +508,16 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
       </CardContent>
 
       <CardFooter className="flex justify-end space-x-4">
-        <Button variant="destructive" onClick={() => history.back()}>
+        <Button
+          variant="destructive"
+          disabled={saving}
+          onClick={() => history.back()}
+        >
           Cancel
         </Button>
-        <Button onClick={handleSave}>Save</Button>
+        <Button onClick={handleSave} disabled={!isFormValid || saving}>
+          {saving ? "Saving…" : "Save"}
+        </Button>
       </CardFooter>
     </Card>
   );

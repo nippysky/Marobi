@@ -1,8 +1,9 @@
 "use client";
+
 import { useRouter } from "next/navigation";
-import ProductForm from "@/app/admin/product-management/ProductForm";
-import { ProductPayload } from "@/types/product";
+import type { ProductPayload } from "@/types/product";
 import toast from "react-hot-toast";
+import ProductForm from "../../ProductForm";
 
 interface Props {
   initialProduct: ProductPayload;
@@ -26,5 +27,10 @@ export default function EditProductSection({ initialProduct }: Props) {
     router.push("/admin/product-management");
   }
 
-  return <ProductForm initialProduct={initialProduct} onSave={handleSave} />;
+  return (
+    <ProductForm
+      initialProduct={initialProduct}
+      onSave={handleSave}
+    />
+  );
 }

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { items, customer, paymentMethod, currency, staffId, timestamp } = body;
 
-    if (!items?.length) {
+    if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
 
@@ -28,19 +28,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Staff not found" }, { status: 400 });
     }
 
-    // 2) Existing customer vs one‑off guest
+    // 2) Determine existing customer vs guest
     let customerId: string | null = null;
+    let existingCustomer:
+      | { firstName: string; lastName: string; email: string }
+      | undefined;
     let guestInfo: Record<string, string> | undefined;
 
     if (customer.id) {
-      const existing = await prisma.customer.findUnique({
-        where: { id: customer.id },
-      });
-      if (!existing) {
+      const foundCust = await prisma.customer.findUnique({ where: { id: customer.id } });
+      if (!foundCust) {
         return NextResponse.json({ error: "Customer not found" }, { status: 404 });
       }
-      customerId = existing.id;
+      customerId = foundCust.id;
+      existingCustomer = {
+        firstName: foundCust.firstName,
+        lastName:  foundCust.lastName,
+        email:     foundCust.email,
+      };
     } else {
+      // treat as guest
       guestInfo = {
         firstName: customer.firstName,
         lastName:  customer.lastName,
@@ -52,10 +59,11 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 3) Validate stock & build line‑item payloads
+    // 3) Validate stock, build line‑items
     let totalAmount = 0;
     let totalNGN    = 0;
-    const orderItemsData: {
+    const itemsCreateData: {
+      variantId: string;
       name: string;
       image: string | null;
       category: string;
@@ -67,6 +75,7 @@ export async function POST(req: NextRequest) {
     }[] = [];
 
     for (const i of items) {
+      // locate the exact variant
       const where: any = { productId: i.productId };
       if (i.color !== "N/A") where.color = i.color;
       if (i.size  !== "N/A") where.size  = i.size;
@@ -81,6 +90,8 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
+      // server‐side stock guard
       if (variant.stock < i.quantity) {
         return NextResponse.json(
           { error: `Insufficient stock for ${variant.product.name}` },
@@ -94,7 +105,7 @@ export async function POST(req: NextRequest) {
         data: { stock: { decrement: i.quantity } },
       });
 
-      // pick price field by currency
+      // pick unit price by currency
       let unitPrice = 0;
       switch (currency as Currency) {
         case Currency.USD:
@@ -118,9 +129,10 @@ export async function POST(req: NextRequest) {
         totalNGN += Math.round(lineTotal);
       }
 
-      orderItemsData.push({
+      itemsCreateData.push({
+        variantId: variant.id,
         name:      variant.product.name,
-        image:     variant.product.images[0] || null,
+        image:     variant.product.images[0] ?? null,
         category:  variant.product.category,
         quantity:  i.quantity,
         currency:  currency as Currency,
@@ -130,27 +142,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4) Create the Order (status = Delivered for offline sale)
+    // 4) Create the Order
     const newOrderId = generateOrderId();
     const order = await prisma.order.create({
       data: {
         id:           newOrderId,
-        status:       "Delivered",          // << change here
+        status:       "Delivered",
         currency:     currency as Currency,
         totalAmount,
         totalNGN,
         paymentMethod,
         createdAt:    timestamp ? new Date(timestamp) : new Date(),
-        customerId,                            // null for guests
+        customerId,
         staffId,
-        items:        { create: orderItemsData },
-        ...(guestInfo && { guestInfo }),       // embed guest info if needed
-      },
-      include: {
-        items: true,
-        customer: {
-          select: { firstName: true, lastName: true, email: true },
-        },
+        items:        { create: itemsCreateData },
+        ...(guestInfo && { guestInfo }),
       },
     });
 
@@ -163,31 +169,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6) Send “Thank you” email with receipt
+     // 6) Send “Thank you” email
     let to: string | undefined;
     let name: string | undefined;
-
-    if (order.customer) {
-      to   = order.customer.email;
-      name = `${order.customer.firstName} ${order.customer.lastName}`.trim();
-    } else if (
-      order.guestInfo &&
-      typeof order.guestInfo === "object"
-    ) {
-      const gi = order.guestInfo as {
-        firstName: string;
-        lastName:  string;
-        email:     string;
-      };
-      to   = gi.email;
-      name = `${gi.firstName} ${gi.lastName}`.trim();
+    if (existingCustomer) {
+      to = existingCustomer.email;
+      name = `${existingCustomer.firstName} ${existingCustomer.lastName}`;
+    } else if (guestInfo) {
+      to   = guestInfo.email;
+      name = `${guestInfo.firstName} ${guestInfo.lastName}`;
     }
 
-    if (to) {
+    if (to && name) {
       const vatRate       = 0.075;
-      const subtotal      = +order.totalAmount.toFixed(2);
+      const subtotal      = +totalAmount.toFixed(2);
       const vat           = +(subtotal * vatRate).toFixed(2);
-      const deliveryCharge= 0;      // in‑store pickup
+      const deliveryCharge= 0;
       const grandTotal    = +(subtotal + vat + deliveryCharge).toFixed(2);
       const sym = currency === Currency.NGN
         ? "₦"
@@ -197,15 +194,16 @@ export async function POST(req: NextRequest) {
         ? "€"
         : "£";
 
-      // Build a simple HTML receipt
-      let bodyHtml = `<p>Here’s what you purchased in order <strong>${order.id}</strong>:</p>
+      const bodyHtml = `
+        <p>Here’s what you purchased in order <strong>${order.id}</strong>:</p>
         <table width="100%" cellpadding="4" cellspacing="0" style="border-collapse:collapse">
-          ${order.items
+          ${itemsCreateData
             .map(
-              p => `
+              (p) => `
             <tr style="border-bottom:1px solid #ddd">
               <td>
-                <img src="${p.image || ""}" width="40" alt="" style="vertical-align:middle;border-radius:4px;margin-right:8px"/>
+                <img src="${p.image ?? ""}" width="40" alt="" 
+                     style="vertical-align:middle;border-radius:4px;margin-right:8px"/>
                 ${p.name}<br/>
                 <small>Color: ${p.color} &bull; Size: ${p.size}</small>
               </td>
@@ -220,38 +218,32 @@ export async function POST(req: NextRequest) {
           Subtotal: <strong>${sym}${subtotal.toLocaleString()}</strong><br/>
           VAT (${(vatRate * 100).toFixed(1)}%): <strong>${sym}${vat.toLocaleString()}</strong><br/>
           Grand Total: <strong>${sym}${grandTotal.toLocaleString()}</strong>
-        </p>`;
+        </p>
+      `;
 
       const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
       try {
         await sendGenericEmail({
           to,
-          subject: `Thank you for shopping with us! Order ${order.id}`,
-          title: `Your Receipt — ${order.id}`,
-          intro: `Hi ${name},<br/>Thank you for your purchase!`,
+          subject: `Thanks for shopping! Order ${order.id}`,
+          title:   `Your Receipt — ${order.id}`,
+          intro:   `Hi ${name},<br/>Thank you for your purchase!`,
           bodyHtml,
           button: {
             label: "View Your Orders",
-            url: `${baseUrl}/account`,
+            url:   `${baseUrl}/account`,
           },
-          preheader: `Your order ${order.id} is now delivered.`,
-          footerNote: "If you have any questions, just reply to this email."
+          preheader:  `Your order ${order.id} is now delivered.`,
+          footerNote: "If you have questions, just reply to this email.",
         });
-      } catch (emailErr) {
-        console.error("⚠️ Failed to send offline‑sale email:", emailErr);
+      } catch (err) {
+        console.error("Failed to send offline‑sale email:", err);
       }
     }
 
-    // 7) Done
-    return NextResponse.json(
-      { success: true, orderId: order.id },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, orderId: order.id }, { status: 201 });
   } catch (error: any) {
     console.error("Error logging offline sale:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

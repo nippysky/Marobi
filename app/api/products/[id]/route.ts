@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-/* ------------------------------------------------------------------
-   ENUM (local fallback). Replace when @prisma/client enum import OK:
-   import { ProductStatus } from "@prisma/client";
-------------------------------------------------------------------- */
 const PRODUCT_STATUSES = ["Draft", "Published", "Archived"] as const;
 type ProductStatus = typeof PRODUCT_STATUSES[number];
 const isProductStatus = (v: unknown): v is ProductStatus =>
