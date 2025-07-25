@@ -87,7 +87,9 @@ export default function OrderTable({ initialData }: Props) {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-      setData(d => d.map(o => (o.id === id ? { ...o, status: newStatus } : o)));
+      setData((d) =>
+        d.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
+      );
       toast.success("Status updated");
     } catch (err: any) {
       toast.error("❌ " + err.message);
@@ -103,7 +105,9 @@ export default function OrderTable({ initialData }: Props) {
     const subtotal = +order.totalAmount.toFixed(2);
     const vat = +(subtotal * vatRate).toFixed(2);
     const deliveryCharge = 500;
-    const totalWeight = order.products.reduce((w, p) => w + p.quantity * 0.2, 0).toFixed(2);
+    const totalWeight = order.products
+      .reduce((w, p) => w + p.quantity * 0.2, 0)
+      .toFixed(2);
     const courier = "DHL Express";
     const sym =
       order.currency === "NGN"
@@ -117,7 +121,7 @@ export default function OrderTable({ initialData }: Props) {
 
     const lines = order.products
       .map(
-        p => `
+        (p) => `
       <div class="line">
         <div>
           ${p.name}<br/>
@@ -140,7 +144,7 @@ export default function OrderTable({ initialData }: Props) {
           <div>Payment: ${order.paymentMethod}</div>
           ${lines}
           <div class="total"><span>Subtotal</span><span>${sym}${subtotal.toLocaleString()}</span></div>
-          <div class="line"><span>VAT ${(vatRate*100).toFixed(1)}%</span><span>${sym}${vat.toLocaleString()}</span></div>
+          <div class="line"><span>VAT ${(vatRate * 100).toFixed(1)}%</span><span>${sym}${vat.toLocaleString()}</span></div>
           <div class="line"><span>Delivery</span><span>${sym}${deliveryCharge.toLocaleString()}</span></div>
           <div class="line"><span>Weight</span><span>${totalWeight}kg</span></div>
           <div class="line"><span>Courier</span><span>${courier}</span></div>
@@ -166,7 +170,7 @@ export default function OrderTable({ initialData }: Props) {
 
   // ─── Filtering & searching ────────────────────────────────────────────
   const filtered = useMemo(() => {
-    return data.filter(o => {
+    return data.filter((o) => {
       if (search) {
         const s = search.toLowerCase();
         if (
@@ -177,7 +181,8 @@ export default function OrderTable({ initialData }: Props) {
         }
       }
       if (statusFilter !== "All" && o.status !== statusFilter) return false;
-      if (currencyFilter !== "All" && o.currency !== currencyFilter) return false;
+      if (currencyFilter !== "All" && o.currency !== currencyFilter)
+        return false;
       return true;
     });
   }, [data, search, statusFilter, currencyFilter]);
@@ -189,13 +194,13 @@ export default function OrderTable({ initialData }: Props) {
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
+          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={v => row.toggleSelected(!!v)}
+          onCheckedChange={(v) => row.toggleSelected(!!v)}
         />
       ),
     },
@@ -262,7 +267,7 @@ export default function OrderTable({ initialData }: Props) {
     {
       id: "amount",
       header: "Amount",
-      accessorFn: r => r.totalAmount,
+      accessorFn: (r) => r.totalAmount,
       cell: ({ getValue, row }) => {
         const sym =
           row.original.currency === "NGN"
@@ -289,17 +294,19 @@ export default function OrderTable({ initialData }: Props) {
       id: "customer",
       header: "Customer",
       cell: ({ row }) => {
+        // only link if we have a real customer.id
         const cust = row.original.customer;
-        return cust ? (
-          <Link
-            href={`/admin/customers/${cust.id}`}
-            className="text-indigo-600 hover:underline"
-          >
-            {cust.name}
-          </Link>
-        ) : (
-          <span className="text-gray-500">Guest</span>
-        );
+        if (cust.id) {
+          return (
+            <Link
+              href={`/admin/customers/${cust.id}`}
+              className="text-indigo-600 hover:underline"
+            >
+              {cust.name}
+            </Link>
+          );
+        }
+        return <span className="text-gray-500">Guest</span>;
       },
     },
     {
@@ -317,13 +324,15 @@ export default function OrderTable({ initialData }: Props) {
           </Button>
           <Select
             value={row.original.status}
-            onValueChange={v => handleStatusChange(row.original.id, v as OrderStatus)}
+            onValueChange={(v) =>
+              handleStatusChange(row.original.id, v as OrderStatus)
+            }
           >
             <SelectTrigger className="h-8 px-2 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {STATUS_OPTIONS.map(s => (
+              {STATUS_OPTIONS.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
                 </SelectItem>
@@ -353,30 +362,36 @@ export default function OrderTable({ initialData }: Props) {
         <Input
           placeholder="Search orders…"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as any)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as any)}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
-              {STATUS_OPTIONS.map(st => (
+              {STATUS_OPTIONS.map((st) => (
                 <SelectItem key={st} value={st}>
                   {st}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={currencyFilter} onValueChange={v => setCurrencyFilter(v as any)}>
+          <Select
+            value={currencyFilter}
+            onValueChange={(v) => setCurrencyFilter(v as any)}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All Currencies" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Currencies</SelectItem>
-              {CURRENCY_OPTIONS.map(c => (
+              {CURRENCY_OPTIONS.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
                 </SelectItem>
@@ -390,9 +405,9 @@ export default function OrderTable({ initialData }: Props) {
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="bg-gray-50">
-                {hg.headers.map(header => {
+                {hg.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   return (
                     <TableHead
@@ -425,12 +440,12 @@ export default function OrderTable({ initialData }: Props) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
                 className="even:bg-white odd:bg-gray-50 hover:bg-gray-100"
               >
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
@@ -439,7 +454,10 @@ export default function OrderTable({ initialData }: Props) {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-6 text-gray-500">
+                <TableCell
+                  colSpan={table.getAllColumns().length}
+                  className="text-center py-6 text-gray-500"
+                >
                   No orders match your criteria.
                 </TableCell>
               </TableRow>
@@ -450,21 +468,30 @@ export default function OrderTable({ initialData }: Props) {
 
       {/* ── Pagination ── */}
       <div className="flex items-center justify-between py-4">
-        <Button variant="link" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+        <Button
+          variant="link"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
           ← Prev
         </Button>
         <span className="text-sm text-gray-700">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
         </span>
-        <Button variant="link" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+        <Button
+          variant="link"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
           Next →
         </Button>
         <select
           className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
-          onChange={e => table.setPageSize(Number(e.target.value))}
+          onChange={(e) => table.setPageSize(Number(e.target.value))}
         >
-          {[10, 20, 30, 50].map(s => (
+          {[10, 20, 30, 50].map((s) => (
             <option key={s} value={s}>
               {s} / page
             </option>
@@ -483,7 +510,6 @@ export default function OrderTable({ initialData }: Props) {
                 {new Date(receiptOrder.createdAt).toLocaleString()}
               </DialogDescription>
             </DialogHeader>
-
             <ScrollArea className="mt-6 max-h-[60vh] space-y-4">
               {(() => {
                 const o = receiptOrder!;
@@ -491,7 +517,9 @@ export default function OrderTable({ initialData }: Props) {
                 const subtotal = +o.totalAmount.toFixed(2);
                 const vat = +(subtotal * vatRate).toFixed(2);
                 const deliveryCharge = 500;
-                const totalWeight = o.products.reduce((w, p) => w + p.quantity * 0.2, 0).toFixed(2);
+                const totalWeight = o.products
+                  .reduce((w, p) => w + p.quantity * 0.2, 0)
+                  .toFixed(2);
                 const courier = "DHL Express";
                 const sym =
                   o.currency === "NGN"
@@ -505,7 +533,7 @@ export default function OrderTable({ initialData }: Props) {
 
                 return (
                   <div className="px-2">
-                    {o.products.map(p => (
+                    {o.products.map((p) => (
                       <div key={p.id} className="flex justify-between mb-2">
                         <div>
                           <div className="font-medium">{p.name}</div>
@@ -548,7 +576,7 @@ export default function OrderTable({ initialData }: Props) {
                       <span>Courier</span>
                       <span>{courier}</span>
                     </div>
-                    <div className="flex justify-between font-semibold	mt-2">
+                    <div className="flex justify-between font-semibold mt-2">
                       <span>Grand Total</span>
                       <span>
                         {sym}
@@ -573,12 +601,14 @@ export default function OrderTable({ initialData }: Props) {
                 );
               })()}
             </ScrollArea>
-
             <DialogFooter className="space-x-2">
               <Button variant="outline" onClick={() => setReceiptOpen(false)}>
                 Close
               </Button>
-              <Button variant="secondary" onClick={() => handlePrint(receiptOrder!)}>
+              <Button
+                variant="secondary"
+                onClick={() => handlePrint(receiptOrder!)}
+              >
                 <Printer className="mr-1 h-4 w-4" /> Print
               </Button>
             </DialogFooter>

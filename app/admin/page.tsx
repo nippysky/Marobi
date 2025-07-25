@@ -1,15 +1,14 @@
+// app/admin/page.tsx
+
 import AdminDashboardClient from "@/components/admin/AdminDashboardClient";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Build top 3 products by total quantity sold (across all orders).
- * We aggregate via OrderItem.
+ * Build top N products by total quantity sold.
  */
-async function fetchTopProducts(limit = 3) {
-  // Aggregate quantities & revenue per product name + image (if you store image in OrderItem)
-  // If you want to join back to Product for canonical image, do an extra lookup.
+async function fetchTopProducts(limit = 5) {
   const items = await prisma.orderItem.groupBy({
     by: ["name", "image", "category"],
     _sum: { quantity: true, lineTotal: true },
@@ -22,11 +21,12 @@ async function fetchTopProducts(limit = 3) {
     sold: i._sum.quantity ?? 0,
     revenue: Math.round(i._sum.lineTotal ?? 0),
     image: i.image || "/placeholder-product.png",
+    category: i.category,
   }));
 }
 
 /**
- * Fetch most recent orders with minimal fields for the recent list.
+ * Fetch most recent orders, with either customer or guest info.
  */
 async function fetchRecentOrders(limit = 5) {
   const orders = await prisma.order.findMany({
@@ -39,6 +39,7 @@ async function fetchRecentOrders(limit = 5) {
       totalAmount: true,
       totalNGN: true,
       createdAt: true,
+      paymentMethod: true,
       customer: {
         select: {
           id: true,
@@ -50,11 +51,13 @@ async function fetchRecentOrders(limit = 5) {
           billingAddress: true,
         },
       },
+      guestInfo: true,
       items: {
         select: {
           id: true,
           name: true,
           image: true,
+          category: true,
           color: true,
           size: true,
           quantity: true,
@@ -64,109 +67,128 @@ async function fetchRecentOrders(limit = 5) {
     },
   });
 
-  return orders.map(o => ({
-    id: o.id,
-    status: o.status,
-    currency: o.currency,
-    totalAmount: o.totalAmount,
-    totalNGN: o.totalNGN,
-    createdAt: o.createdAt.toISOString().split("T")[0],
-    customer: {
-      id: o.customer.id,
-      name: `${o.customer.firstName} ${o.customer.lastName}`.trim(),
-      email: o.customer.email,
-      phone: o.customer.phone,
-      address:
-        o.customer.deliveryAddress ||
-        o.customer.billingAddress ||
-        "No address on file",
-    },
-    products: o.items.map(it => ({
-      id: it.id,
-      name: it.name,
-      image: it.image || "/placeholder-product.png",
-      color: it.color,
-      size: it.size,
-      quantity: it.quantity,
-      lineTotal: it.lineTotal,
-      category: "", // not required in the dashboard UI
-    })),
-  }));
+  return orders.map(o => {
+    let customerData;
+    if (o.customer) {
+      customerData = {
+        id: o.customer.id,
+        name: `${o.customer.firstName} ${o.customer.lastName}`.trim(),
+        email: o.customer.email,
+        phone: o.customer.phone,
+        address:
+          o.customer.deliveryAddress ||
+          o.customer.billingAddress ||
+          "No address on file",
+      };
+    } else if (o.guestInfo && typeof o.guestInfo === "object") {
+      const gi = o.guestInfo as {
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        address: string;
+      };
+      customerData = {
+        id: "",
+        name: `${gi.firstName} ${gi.lastName}`.trim() || "Guest",
+        email: gi.email,
+        phone: gi.phone,
+        address: gi.address,
+      };
+    } else {
+      customerData = {
+        id: "",
+        name: "Guest",
+        email: "",
+        phone: "",
+        address: "—",
+      };
+    }
+
+    return {
+      id: o.id,
+      status: o.status,
+      currency: o.currency,
+      totalAmount: o.totalAmount,
+      totalNGN: o.totalNGN,
+      paymentMethod: o.paymentMethod,
+      createdAt: o.createdAt.toISOString(),
+      customer: customerData,
+      products: o.items.map(it => ({
+        id: it.id,
+        name: it.name,
+        image: it.image || "/placeholder-product.png",
+        category: it.category,
+        color: it.color,
+        size: it.size,
+        quantity: it.quantity,
+        lineTotal: it.lineTotal,
+      })),
+    };
+  });
 }
 
 /**
- * Revenue series builder.
- * mode = "day" | "month" | "6m" | "year"
- * We return consistent shape { label, value }.
+ * Build revenue time‑series (Day, Month, 6 Months, Year).
  */
 async function buildRevenueSeries() {
   const now = new Date();
 
-  // Helper: first day of period
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1); // inclusive
+  const sumRange = async (gte: Date, lte: Date) => {
+    const agg = await prisma.order.aggregate({
+      where: { createdAt: { gte, lte } },
+      _sum: { totalNGN: true },
+    });
+    return agg._sum.totalNGN ?? 0;
+  };
 
-  // 1. Day (last 7 days)
-  const daySeries: { label: string; value: number }[] = [];
+  // Last 7 days
+  const daySeries = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(now.getDate() - i);
-    const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
-    const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-    const sum = await prisma.order.aggregate({
-      _sum: { totalNGN: true },
-      where: { createdAt: { gte: dayStart, lte: dayEnd } },
-    });
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
     daySeries.push({
       label: d.toLocaleDateString(undefined, { weekday: "short" }),
-      value: sum._sum.totalNGN ?? 0,
+      value: await sumRange(start, end),
     });
   }
 
-  // 2. Month (each month of current year)
-  const monthSeries: { label: string; value: number }[] = [];
+  // Each month of current year
+  const monthSeries = [];
   for (let m = 0; m < 12; m++) {
-    const mStart = new Date(now.getFullYear(), m, 1);
-    const mEnd = new Date(now.getFullYear(), m + 1, 0, 23, 59, 59, 999);
-    if (mStart > now) break; // future months
-    const sum = await prisma.order.aggregate({
-      _sum: { totalNGN: true },
-      where: { createdAt: { gte: mStart, lte: mEnd } },
-    });
+    const start = new Date(now.getFullYear(), m, 1);
+    if (start > now) break;
+    const end = new Date(now.getFullYear(), m + 1, 0, 23, 59, 59, 999);
     monthSeries.push({
-      label: mStart.toLocaleString(undefined, { month: "short" }),
-      value: sum._sum.totalNGN ?? 0,
+      label: start.toLocaleDateString(undefined, { month: "short" }),
+      value: await sumRange(start, end),
     });
   }
 
-  // 3. 6 Months (rolling last 6 distinct months)
-  const sixSeries: { label: string; value: number }[] = [];
+  // Last 6 distinct months
+  const sixSeries = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
-    const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-    const sum = await prisma.order.aggregate({
-      _sum: { totalNGN: true },
-      where: { createdAt: { gte: mStart, lte: mEnd } },
-    });
+    const start = new Date(d.getFullYear(), d.getMonth(), 1);
+    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
     sixSeries.push({
-      label: d.toLocaleString(undefined, { month: "short" }),
-      value: sum._sum.totalNGN ?? 0,
+      label: d.toLocaleDateString(undefined, { month: "short" }),
+      value: await sumRange(start, end),
     });
   }
 
-  // 4. Year (last 5 years including current)
-  const yearSeries: { label: string; value: number }[] = [];
+  // Last 5 years
+  const yearSeries = [];
   for (let i = 4; i >= 0; i--) {
     const y = now.getFullYear() - i;
-    const yStart = new Date(y, 0, 1);
-    const yEnd = new Date(y, 11, 31, 23, 59, 59, 999);
-    const sum = await prisma.order.aggregate({
-      _sum: { totalNGN: true },
-      where: { createdAt: { gte: yStart, lte: yEnd } },
+    const start = new Date(y, 0, 1);
+    const end = new Date(y, 11, 31, 23, 59, 59, 999);
+    yearSeries.push({
+      label: String(y),
+      value: await sumRange(start, end),
     });
-    yearSeries.push({ label: String(y), value: sum._sum.totalNGN ?? 0 });
   }
 
   return {
@@ -178,22 +200,30 @@ async function buildRevenueSeries() {
 }
 
 export default async function AdminDashboardPage() {
-  // Parallelize
-  const [totalProducts, totalCustomers, orderAgg, top3, recentOrders, revenueSeries] =
-    await Promise.all([
-      prisma.product.count(),
-      prisma.customer.count(),
-      prisma.order.aggregate({
-        _count: { _all: true },
-        _sum: { totalNGN: true },
-      }),
-      fetchTopProducts(3),
-      fetchRecentOrders(5),
-      buildRevenueSeries(),
-    ]);
+  const [
+    totalProducts,
+    totalCustomers,
+    orderAgg,
+    top5,
+    recentOrders,
+    revenueSeries,
+    allOrdersForSum,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.customer.count(),
+    prisma.order.aggregate({ _count: { _all: true }, _sum: { totalNGN: true } }),
+    fetchTopProducts(5),
+    fetchRecentOrders(5),
+    buildRevenueSeries(),
+    prisma.order.findMany({ select: { totalNGN: true } }),
+  ]);
 
   const totalOrders = orderAgg._count._all;
-  const totalRevenue = orderAgg._sum.totalNGN ?? 0;
+
+  // parseFloat ensures proper numeric addition
+  const totalRevenue = allOrdersForSum
+    .map(o => parseFloat(String(o.totalNGN ?? 0)))
+    .reduce((sum, val) => sum + val, 0);
 
   return (
     <AdminDashboardClient
@@ -201,7 +231,7 @@ export default async function AdminDashboardPage() {
       totalCustomers={totalCustomers}
       totalOrders={totalOrders}
       totalRevenue={totalRevenue}
-      top3={top3}
+      top5={top5}
       recentOrders={recentOrders}
       revenueSeries={revenueSeries}
     />

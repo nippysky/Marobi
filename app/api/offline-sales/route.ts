@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { Currency } from "@/lib/generated/prisma-client";
+import { sendGenericEmail } from "@/lib/mail";
 
 function generateOrderId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return "M-ORD" + Array.from({ length: 7 }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length))
-  ).join("");
+  return (
+    "M-ORD" +
+    Array.from({ length: 7 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join("")
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -24,12 +28,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Staff not found" }, { status: 400 });
     }
 
-    // 2) Decide: existing customer vs guest
+    // 2) Existing customer vs one‑off guest
     let customerId: string | null = null;
     let guestInfo: Record<string, string> | undefined;
 
     if (customer.id) {
-      // link to a real registered customer
       const existing = await prisma.customer.findUnique({
         where: { id: customer.id },
       });
@@ -38,7 +41,6 @@ export async function POST(req: NextRequest) {
       }
       customerId = existing.id;
     } else {
-      // one‐off guest – do NOT persist in Customer table
       guestInfo = {
         firstName: customer.firstName,
         lastName:  customer.lastName,
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 3) Validate stock & build line items
+    // 3) Validate stock & build line‑item payloads
     let totalAmount = 0;
     let totalNGN    = 0;
     const orderItemsData: {
@@ -86,13 +88,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Deduct stock
+      // decrement stock
       await prisma.variant.update({
         where: { id: variant.id },
         data: { stock: { decrement: i.quantity } },
       });
 
-      // Pick correct price field
+      // pick price field by currency
       let unitPrice = 0;
       switch (currency as Currency) {
         case Currency.USD:
@@ -128,21 +130,27 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4) Create the Order, embedding guestInfo if needed
+    // 4) Create the Order (status = Delivered for offline sale)
     const newOrderId = generateOrderId();
     const order = await prisma.order.create({
       data: {
         id:           newOrderId,
-        status:       "Processing",
+        status:       "Delivered",          // << change here
         currency:     currency as Currency,
         totalAmount,
         totalNGN,
         paymentMethod,
         createdAt:    timestamp ? new Date(timestamp) : new Date(),
-        customerId,           // null for guests
+        customerId,                            // null for guests
         staffId,
         items:        { create: orderItemsData },
-        ...guestInfo && { guestInfo }, // only include for guests
+        ...(guestInfo && { guestInfo }),       // embed guest info if needed
+      },
+      include: {
+        items: true,
+        customer: {
+          select: { firstName: true, lastName: true, email: true },
+        },
       },
     });
 
@@ -155,9 +163,95 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, orderId: order.id }, { status: 201 });
+    // 6) Send “Thank you” email with receipt
+    let to: string | undefined;
+    let name: string | undefined;
+
+    if (order.customer) {
+      to   = order.customer.email;
+      name = `${order.customer.firstName} ${order.customer.lastName}`.trim();
+    } else if (
+      order.guestInfo &&
+      typeof order.guestInfo === "object"
+    ) {
+      const gi = order.guestInfo as {
+        firstName: string;
+        lastName:  string;
+        email:     string;
+      };
+      to   = gi.email;
+      name = `${gi.firstName} ${gi.lastName}`.trim();
+    }
+
+    if (to) {
+      const vatRate       = 0.075;
+      const subtotal      = +order.totalAmount.toFixed(2);
+      const vat           = +(subtotal * vatRate).toFixed(2);
+      const deliveryCharge= 0;      // in‑store pickup
+      const grandTotal    = +(subtotal + vat + deliveryCharge).toFixed(2);
+      const sym = currency === Currency.NGN
+        ? "₦"
+        : currency === Currency.USD
+        ? "$"
+        : currency === Currency.EUR
+        ? "€"
+        : "£";
+
+      // Build a simple HTML receipt
+      let bodyHtml = `<p>Here’s what you purchased in order <strong>${order.id}</strong>:</p>
+        <table width="100%" cellpadding="4" cellspacing="0" style="border-collapse:collapse">
+          ${order.items
+            .map(
+              p => `
+            <tr style="border-bottom:1px solid #ddd">
+              <td>
+                <img src="${p.image || ""}" width="40" alt="" style="vertical-align:middle;border-radius:4px;margin-right:8px"/>
+                ${p.name}<br/>
+                <small>Color: ${p.color} &bull; Size: ${p.size}</small>
+              </td>
+              <td align="right">
+                ${sym}${p.lineTotal.toLocaleString()}
+              </td>
+            </tr>`
+            )
+            .join("")}
+        </table>
+        <p>
+          Subtotal: <strong>${sym}${subtotal.toLocaleString()}</strong><br/>
+          VAT (${(vatRate * 100).toFixed(1)}%): <strong>${sym}${vat.toLocaleString()}</strong><br/>
+          Grand Total: <strong>${sym}${grandTotal.toLocaleString()}</strong>
+        </p>`;
+
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      try {
+        await sendGenericEmail({
+          to,
+          subject: `Thank you for shopping with us! Order ${order.id}`,
+          title: `Your Receipt — ${order.id}`,
+          intro: `Hi ${name},<br/>Thank you for your purchase!`,
+          bodyHtml,
+          button: {
+            label: "View Your Orders",
+            url: `${baseUrl}/account`,
+          },
+          preheader: `Your order ${order.id} is now delivered.`,
+          footerNote: "If you have any questions, just reply to this email."
+        });
+      } catch (emailErr) {
+        console.error("⚠️ Failed to send offline‑sale email:", emailErr);
+      }
+    }
+
+    // 7) Done
+    return NextResponse.json(
+      { success: true, orderId: order.id },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Error logging offline sale:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
