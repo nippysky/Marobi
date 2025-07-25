@@ -2,8 +2,8 @@
 
 import React from "react";
 import LogOfflineSaleButton from "@/components/admin/LogOfflineSaleButton";
-import OrderTable from "./OrderTable";
 import type { OrderRow } from "@/types/orders";
+import OrderTable from "./OrderTable";
 
 interface Props {
   initialData: OrderRow[];
@@ -12,7 +12,8 @@ interface Props {
 export default function OrderInventoryClient({ initialData }: Props) {
   return (
     <div className="py-6 px-3">
-      <div className="flex justify-end mb-10">
+      <div className="flex justify-end mb-10 space-x-2">
+        {/* CSV Export button will live inside OrderTable's filter bar */}
         <LogOfflineSaleButton />
       </div>
       <OrderTable initialData={initialData} />

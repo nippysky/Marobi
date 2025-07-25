@@ -39,9 +39,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Printer } from "lucide-react";
+import { ChevronUp, ChevronDown, Printer, Download } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
+
+import Papa from "papaparse";
 
 import type { OrderRow } from "@/types/orders";
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
@@ -125,7 +127,9 @@ export default function OrderTable({ initialData }: Props) {
       <div class="line">
         <div>
           ${p.name}<br/>
-          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${p.quantity}</span>
+          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${
+          p.quantity
+        }</span>
         </div>
         <div>${sym}${p.lineTotal.toLocaleString()}</div>
       </div>`
@@ -186,6 +190,33 @@ export default function OrderTable({ initialData }: Props) {
       return true;
     });
   }, [data, search, statusFilter, currencyFilter]);
+
+  // ─── CSV Export ───────────────────────────────────────────────────────
+  function handleExportCSV() {
+    const rows = filtered.map((o) => ({
+      "Order ID": o.id,
+      Status: o.status,
+      "Amount (NGN)": o.totalNGN,
+      Amount: o.totalAmount,
+      Currency: o.currency,
+      "Payment Method": o.paymentMethod,
+      "Customer Name": o.customer.name,
+      "Customer Email": o.customer.email,
+      "Customer Phone": o.customer.phone,
+      "Customer Address": o.customer.address,
+      "Created At": o.createdAt,
+    }));
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   // ─── Columns & table instance ────────────────────────────────────────
   const columns = useMemo<ColumnDef<OrderRow>[]>(() => [
@@ -258,11 +289,24 @@ export default function OrderTable({ initialData }: Props) {
             ? "bg-yellow-100 text-yellow-800"
             : "bg-green-100 text-green-800";
         return (
-          <span className={`px-2 py-0.5 rounded-full text-sm font-medium ${color}`}>
+          <span
+            className={`px-2 py-0.5 rounded-full text-sm font-medium ${color}`}
+          >
             {s}
           </span>
         );
       },
+    },
+    {
+      id: "amountNGN",
+      header: "Amount (NGN)",
+      accessorFn: (r) => r.totalNGN,
+      cell: ({ getValue }) => (
+        <span className="font-medium">
+          ₦{getValue<number>().toLocaleString()}
+        </span>
+      ),
+      enableSorting: true,
     },
     {
       id: "amount",
@@ -294,7 +338,6 @@ export default function OrderTable({ initialData }: Props) {
       id: "customer",
       header: "Customer",
       cell: ({ row }) => {
-        // only link if we have a real customer.id
         const cust = row.original.customer;
         if (cust.id) {
           return (
@@ -357,47 +400,57 @@ export default function OrderTable({ initialData }: Props) {
 
   return (
     <>
-      {/* ── Filters Bar ── */}
+      {/* ── Export + Filters Bar ── */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-        <Input
-          placeholder="Search orders…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-sm"
-        />
-        <div className="flex space-x-2">
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as any)}
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
-              {STATUS_OPTIONS.map((st) => (
-                <SelectItem key={st} value={st}>
-                  {st}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={currencyFilter}
-            onValueChange={(v) => setCurrencyFilter(v as any)}
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All Currencies" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Currencies</SelectItem>
-              {CURRENCY_OPTIONS.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Button
+          variant="outline"
+          onClick={handleExportCSV}
+          className="mb-2 md:mb-0"
+        >
+          <Download className="mr-1 h-4 w-4" /> Export CSV
+        </Button>
+
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <Input
+            placeholder="Search orders…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full max-w-sm"
+          />
+          <div className="flex space-x-2">
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as any)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Statuses</SelectItem>
+                {STATUS_OPTIONS.map((st) => (
+                  <SelectItem key={st} value={st}>
+                    {st}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={currencyFilter}
+              onValueChange={(v) => setCurrencyFilter(v as any)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All Currencies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Currencies</SelectItem>
+                {CURRENCY_OPTIONS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,9 @@
-// app/admin/order-inventory/page.tsx
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import OrderInventoryClient from "./OrderInventoryClient";
 import EmptyState from "@/components/admin/EmptyState";
 import type { OrderRow } from "@/types/orders";
-
-export const dynamic = "force-dynamic";
 
 async function fetchOrders(): Promise<OrderRow[]> {
   const orders = await prisma.order.findMany({
@@ -31,14 +30,23 @@ async function fetchOrders(): Promise<OrderRow[]> {
           size: true,
           quantity: true,
           lineTotal: true,
+          variant: {
+            select: {
+              product: {
+                select: {
+                  priceNGN: true,
+                },
+              },
+            },
+          },
         },
       },
-      // note: guestInfo is a scalar JSON, it will come back automatically
+      // guestInfo is a scalar JSON field — it's returned automatically
     },
   });
 
   return orders.map((o) => {
-    // Build a unified customer object:
+    // 1) Build unified customer object
     let customerObj: OrderRow["customer"];
     if (o.customer) {
       customerObj = {
@@ -49,7 +57,6 @@ async function fetchOrders(): Promise<OrderRow[]> {
         address: o.customer.deliveryAddress ?? o.customer.billingAddress ?? "—",
       };
     } else if (o.guestInfo && typeof o.guestInfo === "object" && !Array.isArray(o.guestInfo)) {
-      // guestInfo comes back as a JsonValue
       const gi = o.guestInfo as Record<string, string>;
       customerObj = {
         id:      null,
@@ -68,25 +75,35 @@ async function fetchOrders(): Promise<OrderRow[]> {
       };
     }
 
+    // 2) Recompute totalNGN from each item’s quantity × priceNGN
+    const totalNGN: number = o.items.reduce(
+      (sum: number, it) => sum + (it.variant?.product.priceNGN ?? 0) * it.quantity,
+      0
+    );
+
+    // 3) Map products array (including passing priceNGN down if needed)
+    const products = o.items.map((it) => ({
+      id:        it.id,
+      name:      it.name,
+      image:     it.image ?? "",
+      category:  it.category,
+      color:     it.color,
+      size:      it.size,
+      quantity:  it.quantity,
+      lineTotal: it.lineTotal,
+      priceNGN:  it.variant.product.priceNGN ?? 0,
+    }));
+
     return {
       id:            o.id,
       status:        o.status,
       currency:      o.currency,
       totalAmount:   o.totalAmount,
-      totalNGN:      o.totalNGN,
+      totalNGN,                               // ◀ freshly computed
       paymentMethod: o.paymentMethod,
       createdAt:     o.createdAt.toISOString(),
-      products: o.items.map((it) => ({
-        id:        it.id,
-        name:      it.name,
-        image:     it.image ?? "",
-        category:  it.category,
-        color:     it.color,
-        size:      it.size,
-        quantity:  it.quantity,
-        lineTotal: it.lineTotal,
-      })),
-      customer: customerObj,
+      products,
+      customer:      customerObj,
     };
   });
 }
