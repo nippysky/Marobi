@@ -8,14 +8,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  // Compare expiry as ISO‑string, not Date object
   const staff = await prisma.staff.findFirst({
     where: {
       resetToken: token,
-      resetTokenExpiry: { gt: new Date() },
+      resetTokenExpiry: { gt: new Date().toISOString() },
     },
   });
   if (!staff) {
-    return NextResponse.json({ error: "Link expired or invalid" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Link expired or invalid" },
+      { status: 400 }
+    );
   }
 
   if (password.length < 6) {
@@ -29,9 +33,9 @@ export async function POST(req: Request) {
   await prisma.staff.update({
     where: { id: staff.id },
     data: {
-      passwordHash:      hash,
-      resetToken:        null,
-      resetTokenExpiry:  null,
+      passwordHash:     hash,
+      resetToken:       null,
+      resetTokenExpiry: null,  // OK to clear to null
     },
   });
 

@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db"
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
@@ -15,7 +16,7 @@ export async function DELETE(
   try {
     await prisma.wishlistItem.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         customer: { email: session.user.email },
       },
     })
