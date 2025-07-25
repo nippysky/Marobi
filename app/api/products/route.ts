@@ -27,7 +27,7 @@ const ProductPayload = z.object({
 });
 
 // ─── 2) Branded ID generator ─────────────────────────────
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 function generateBrandedId(length = 10): string {
   let res = "";
   for (let i = 0; i < length; i++) {

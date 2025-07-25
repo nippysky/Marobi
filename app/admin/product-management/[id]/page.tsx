@@ -34,7 +34,6 @@ export default async function ProductViewPage({
 }: {
   params: Promise<Params>;
 }) {
-  // Next.js 15: params is a promise
   const { id } = await params;
   const product = await getProductBasics(id);
   if (!product) return notFound();

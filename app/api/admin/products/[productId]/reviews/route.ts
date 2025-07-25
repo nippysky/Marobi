@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 // Utility: coerce positive int with bounds
@@ -10,7 +10,7 @@ function parsePositiveInt(value: string | null, fallback: number, max: number) {
 }
 
 export async function GET(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { productId: string } }
 ) {
   // TODO: enforce admin auth (NextAuth session + role check)

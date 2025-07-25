@@ -11,6 +11,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 import {
   Table,
@@ -44,7 +45,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ChevronUp, ChevronDown, MoreVertical, Eye } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  MoreVertical,
+  Eye,
+} from "lucide-react";
 
 export type AdminProduct = {
   id: string;
@@ -71,27 +79,37 @@ export default function ProductsTable({ initialData }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
-  // Bulk‐delete dialog
+  // dialog state
   const [pendingDelete, setPendingDelete] = useState<string[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // Columns definition
+  // 1) Columns ────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<AdminProduct>[]>(() => [
+    // 1. Select checkbox
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(v) => row.toggleSelected(!!v)}
+          onCheckedChange={v => row.toggleSelected(!!v)}
         />
       ),
     },
+    // 2. Product ID
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ getValue }) => (
+        <code className="font-mono text-xs break-all">{getValue<string>()}</code>
+      ),
+    },
+    // 3. Product Name + thumbnail
     {
       accessorKey: "name",
       header: "Product",
@@ -105,14 +123,16 @@ export default function ProductsTable({ initialData }: Props) {
             />
           ) : (
             <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500">
-              No Img
+              No Img
             </div>
           )}
           <span className="font-medium">{row.original.name}</span>
         </div>
       ),
     },
+    // 4. Category
     { accessorKey: "category", header: "Category" },
+    // 5. Status
     {
       id: "status",
       header: "Status",
@@ -124,18 +144,48 @@ export default function ProductsTable({ initialData }: Props) {
             : s === "Draft"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-gray-200 text-gray-700";
-        return <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>{s}</span>;
+        return (
+          <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>
+            {s}
+          </span>
+        );
       },
     },
+    // 6. ₦ Price
     {
-      id: "price",
-      header: "₦ Price",
-      accessorFn: (r) => r.price.NGN,
+      id: "priceNGN",
+      header: "₦",
+      accessorFn: r => r.price.NGN,
       cell: ({ getValue }) => (
         <code className="font-mono">₦{getValue<number>().toLocaleString()}</code>
       ),
       enableSorting: true,
     },
+    // 7. $ Price
+    {
+      id: "priceUSD",
+      header: "$",
+      accessorFn: r => r.price.USD,
+      cell: ({ getValue }) => `$${getValue<number>().toLocaleString()}`,
+      enableSorting: true,
+    },
+    // 8. € Price
+    {
+      id: "priceEUR",
+      header: "€",
+      accessorFn: r => r.price.EUR,
+      cell: ({ getValue }) => `€${getValue<number>().toLocaleString()}`,
+      enableSorting: true,
+    },
+    // 9. £ Price
+    {
+      id: "priceGBP",
+      header: "£",
+      accessorFn: r => r.price.GBP,
+      cell: ({ getValue }) => `£${getValue<number>().toLocaleString()}`,
+      enableSorting: true,
+    },
+    // 10. Stock
     {
       id: "stock",
       header: "Stock",
@@ -156,6 +206,7 @@ export default function ProductsTable({ initialData }: Props) {
         );
       },
     },
+    // 11. Actions (View/Edit/Delete)
     {
       id: "actions",
       header: "Actions",
@@ -168,14 +219,21 @@ export default function ProductsTable({ initialData }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href={`/admin/product-management/${row.original.id}`}>  <Eye className="mr-2 h-4 w-4" />View</Link>
+              <Link href={`/admin/product-management/${row.original.id}`}>
+                <Eye className="mr-2 h-4 w-4" /> View
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/admin/product-management/${row.original.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openDelete([row.original.id])}>
+            <DropdownMenuItem
+              onSelect={() => {
+                setPendingDelete([row.original.id]);
+                setDeleteOpen(true);
+              }}
+            >
               <Trash2 className="mr-2 h-4 w-4 text-red-600" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -184,10 +242,12 @@ export default function ProductsTable({ initialData }: Props) {
     },
   ], []);
 
-  // Filter data
+  // 2) Filter rows client‐side ───────────────────────────────────────
   const filtered = useMemo(() => {
-    return data.filter((p) => {
-      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return data.filter(p => {
+      const term = search.toLowerCase();
+      if (search && !p.name.toLowerCase().includes(term) && !p.id.toLowerCase().includes(term))
+        return false;
       if (category !== "All" && p.category !== category) return false;
       if (status !== "All" && p.status !== status) return false;
       if (stock === "InStock" && p.stockCount === 0) return false;
@@ -196,7 +256,7 @@ export default function ProductsTable({ initialData }: Props) {
     });
   }, [data, search, category, status, stock]);
 
-  // ─── Now that `columns`, `filtered`, `sorting`, and `pagination` are ready ───
+  // 3) Create the table instance ────────────────────────────────────
   const table = useReactTable({
     data: filtered,
     columns,
@@ -208,21 +268,35 @@ export default function ProductsTable({ initialData }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // ─── Only *after* `table` is defined do we read from it ───
+  // 4) Which rows are selected?
   const selectedIds = useMemo(
     () => table.getSelectedRowModel().flatRows.map(r => r.original.id),
     [table.getSelectedRowModel().flatRows]
   );
 
-  function openDelete(ids: string[]) {
-    setPendingDelete(ids);
-    setDeleteOpen(true);
-  }
-  function confirmDelete() {
-    setData((d) => d.filter((p) => !pendingDelete.includes(p.id)));
-    table.resetRowSelection();
-    setPendingDelete([]);
+  // 5) Perform actual DELETE calls & update UI
+  async function handleConfirmDelete() {
     setDeleteOpen(false);
+    const toDelete = [...pendingDelete];
+    setPendingDelete([]);
+
+    await toast.promise(
+      Promise.all(
+        toDelete.map(id =>
+          fetch(`/api/products/${id}`, { method: "DELETE" }).then(res => {
+            if (!res.ok) throw new Error("Delete failed");
+          })
+        )
+      ),
+      {
+        loading: "Deleting…",
+        success: `Deleted ${toDelete.length} product${toDelete.length > 1 ? "s" : ""}!`,
+        error: "Could not delete",
+      }
+    );
+
+    setData(d => d.filter(p => !toDelete.includes(p.id)));
+    table.resetRowSelection();
   }
 
   const anySelected = selectedIds.length > 0;
@@ -242,7 +316,12 @@ export default function ProductsTable({ initialData }: Props) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => openDelete(selectedIds)}>
+              <DropdownMenuItem
+                onSelect={() => {
+                  setPendingDelete(selectedIds);
+                  setDeleteOpen(true);
+                }}
+              >
                 Delete Selected
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -253,13 +332,13 @@ export default function ProductsTable({ initialData }: Props) {
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <Input
-          placeholder="Search products..."
+          placeholder="Search by ID or name…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select value={category} onValueChange={(v) => setCategory(v)}>
+          <Select value={category} onValueChange={v => setCategory(v)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
@@ -271,8 +350,7 @@ export default function ProductsTable({ initialData }: Props) {
               <SelectItem value="I Have an Event">I Have an Event</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+          <Select value={status} onValueChange={v => setStatus(v as any)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
@@ -283,8 +361,7 @@ export default function ProductsTable({ initialData }: Props) {
               <SelectItem value="Archived">Archived</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={stock} onValueChange={(v) => setStock(v as any)}>
+          <Select value={stock} onValueChange={v => setStock(v as any)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="Stock Filter" />
             </SelectTrigger>
@@ -297,13 +374,13 @@ export default function ProductsTable({ initialData }: Props) {
         </div>
       </div>
 
-      {/* Table container */}
+      {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
+            {table.getHeaderGroups().map(hg => (
               <TableRow key={hg.id} className="bg-gray-50">
-                {hg.headers.map((header) => (
+                {hg.headers.map(header => (
                   <TableHead
                     key={header.id}
                     className={`px-4 py-2 text-left ${
@@ -328,21 +405,19 @@ export default function ProductsTable({ initialData }: Props) {
               </TableRow>
             ))}
           </TableHeader>
-
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
+            {table.getRowModel().rows.map(row => (
               <TableRow
                 key={row.id}
                 className="even:bg-white odd:bg-gray-50 hover:bg-gray-100"
               >
-                {row.getVisibleCells().map((cell) => (
+                {row.getVisibleCells().map(cell => (
                   <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
-
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center py-6 text-gray-500">
@@ -376,9 +451,9 @@ export default function ProductsTable({ initialData }: Props) {
         <select
           className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
-          onChange={(e) => table.setPageSize(Number(e.target.value))}
+          onChange={e => table.setPageSize(Number(e.target.value))}
         >
-          {[10, 20, 30, 50].map((s) => (
+          {[10, 20, 30, 50].map(s => (
             <option key={s} value={s}>
               {s} / page
             </option>
@@ -401,7 +476,7 @@ export default function ProductsTable({ initialData }: Props) {
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
               Delete
             </Button>
           </DialogFooter>

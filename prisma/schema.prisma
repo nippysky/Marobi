@@ -30,7 +30,7 @@ enum Currency {
 /// Day‐to‐day role within the business
 enum JobRole {
   SystemAdministrator   // manage everything, system settings
-  DispatchCoordinator      // books courier pickups, prints labels
+  DispatchCoordinator   // books courier pickups, prints labels
   OrderProcessingSpecialist // updates statuses, handles refunds
   ProductCatalogManager     // creates/edits products, manages variants
   CustomerSupportRep        // answers tickets, follows up with customers
@@ -46,45 +46,44 @@ enum UserRole {
 }
 
 model Customer {
-  id                   String   @id @default(cuid())
+  id                   String      @id @default(cuid())
   firstName            String
   lastName             String
-  email                String   @unique
+  email                String      @unique
   phone                String
   passwordHash         String?
   deliveryAddress      String?
   billingAddress       String?
-  country              String? 
-  state                String?    
-  registeredAt         DateTime @default(now())
+  country              String?
+  state                String?
+  registeredAt         DateTime    @default(now())
   lastLogin            DateTime?
   orders               Order[]
   wishlistItems        WishlistItem[]
-  reviews      Review[]
-  emailVerified        Boolean  @default(false)
+  reviews              Review[]
+  emailVerified        Boolean     @default(false)
   verificationToken        String?
   verificationTokenExpiry DateTime?
   resetToken           String?
   resetTokenExpiry     DateTime?
 }
 
-
 model Staff {
-  id                String     @id @default(cuid())
+  id                String          @id @default(cuid())
   firstName         String
-  middleName        String?    @default("")
+  middleName        String?         @default("")
   lastName          String
-  email             String     @unique
+  email             String          @unique
   phone             String
   passwordHash      String
-  jobRoles          JobRole[]  @default([])
+  jobRoles          JobRole[]       @default([])
   access            UserRole
   orders            Order[]
   offlineSales      OfflineSale[]
-  createdAt         DateTime   @default(now())
-  emailVerified     Boolean    @default(true)
+  createdAt         DateTime        @default(now())
+  emailVerified     Boolean         @default(true)
   dateOfBirth       DateTime?
-  dateOfEmployment  DateTime?  @default(now())
+  dateOfEmployment  DateTime?       @default(now())
   dateOfResignation DateTime?
   address           String?
   emailPersonal     String?
@@ -93,10 +92,8 @@ model Staff {
   guarantorPhone    String?
   resetToken        String?
   resetTokenExpiry  DateTime?
-  lastLogin            DateTime?
-
+  lastLogin         DateTime?
 }
-
 
 model Product {
   id            String         @id @default(cuid())
@@ -108,8 +105,8 @@ model Product {
   priceUSD      Float?
   priceEUR      Float?
   priceGBP      Float?
-  sizeMods      Boolean        @default(false)  
-  status        ProductStatus  @default(Draft)      
+  sizeMods      Boolean        @default(false)
+  status        ProductStatus  @default(Draft)
   variants      Variant[]
   reviews       Review[]
   averageRating Float          @default(0)
@@ -117,7 +114,6 @@ model Product {
   wishlistItems WishlistItem[]
   createdAt     DateTime       @default(now())
 }
-
 
 model Variant {
   id         String   @id @default(cuid())
@@ -149,7 +145,6 @@ model Review {
   @@index([rating])
 }
 
-
 model Order {
   id            String       @id @default(uuid())
   status        OrderStatus  @default(Processing)
@@ -159,14 +154,18 @@ model Order {
   paymentMethod String
   createdAt     DateTime     @default(now())
 
-  customer     Customer     @relation(fields: [customerId], references: [id])
-  customerId   String
+  /// Either a real customer…
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+  customerId    String?
 
-  staff        Staff?       @relation(fields: [staffId], references: [id])
-  staffId      String?
+  /// …or one blob of JSON for a walk‑in guest
+  guestInfo     Json?
 
-  items        OrderItem[]
-  offlineSale  OfflineSale?
+  staff         Staff?       @relation(fields: [staffId], references: [id])
+  staffId       String?
+
+  items         OrderItem[]
+  offlineSale   OfflineSale?
 }
 
 model OrderItem {
@@ -183,8 +182,6 @@ model OrderItem {
   size       String
 }
 
-
-
 model OfflineSale {
   id         String   @id @default(uuid())
   order      Order    @relation(fields: [orderId], references: [id])
@@ -194,28 +191,26 @@ model OfflineSale {
   timestamp  DateTime @default(now())
 }
 
-/// Hero‐slider banners
 model HeroSlide {
   id          String   @id @default(cuid())
   imageUrl    String
-  headline    String?  // optional
-  subheadline String?  // optional
-  ctaText     String?  // optional
-  ctaUrl      String?  // optional, front‐end can default to “#”
+  headline    String?
+  subheadline String?
+  ctaText     String?
+  ctaUrl      String?
   order       Int      @default(0)
 }
 
-/// Size charts broken into rows
 model SizeChart {
   id        String             @id @default(cuid())
-  name      String             // e.g. "Men's T-Shirt Chart"
+  name      String
   entries   SizeChartEntry[]
   updatedAt DateTime           @updatedAt
 }
 
 model SizeChartEntry {
   id         String    @id @default(cuid())
-  sizeLabel  String    // "S", "M", "L", "XL", etc.
+  sizeLabel  String
   chestMin   Int
   chestMax   Int
   waistMin   Int

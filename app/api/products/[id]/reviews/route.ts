@@ -1,18 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const productId = params.id;
+  const productId = id;
   const bodyJson = await req.json();
   const rating = Number(bodyJson.rating);
   const reviewText = (bodyJson.body ?? "").trim();
@@ -98,10 +100,11 @@ export async function POST(
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const productId = params.id;
+  const { id } = await context.params
+  const productId = id;
 
   const reviews = await prisma.review.findMany({
     where: { productId },

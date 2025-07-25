@@ -275,3 +275,41 @@ export async function PUT(
     return jsonError("Update failed", 500);
   }
 }
+
+
+
+// ////////////////////////DELETE////////////////////////////
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
+  const productId = id;
+
+  try {
+    // 1) remove any variants
+    await prisma.variant.deleteMany({
+      where: { productId },
+    });
+
+    // 2) delete the product itself
+    await prisma.product.delete({
+      where: { id: productId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("DELETE /api/products/[id] error:", err);
+    // Prisma “record not found” error comes back as P2025
+    if (err.code === "P2025") {
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Could not delete product" },
+      { status: 500 }
+    );
+  }
+}

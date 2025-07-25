@@ -55,12 +55,12 @@ export type OrderItem = $Result.DefaultSelection<Prisma.$OrderItemPayload>
 export type OfflineSale = $Result.DefaultSelection<Prisma.$OfflineSalePayload>
 /**
  * Model HeroSlide
- * Hero‐slider banners
+ * 
  */
 export type HeroSlide = $Result.DefaultSelection<Prisma.$HeroSlidePayload>
 /**
  * Model SizeChart
- * Size charts broken into rows
+ * 
  */
 export type SizeChart = $Result.DefaultSelection<Prisma.$SizeChartPayload>
 /**
@@ -8337,6 +8337,7 @@ export namespace Prisma {
     paymentMethod: number
     createdAt: number
     customerId: number
+    guestInfo: number
     staffId: number
     _all: number
   }
@@ -8385,6 +8386,7 @@ export namespace Prisma {
     paymentMethod?: true
     createdAt?: true
     customerId?: true
+    guestInfo?: true
     staffId?: true
     _all?: true
   }
@@ -8483,7 +8485,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt: Date
-    customerId: string
+    customerId: string | null
+    guestInfo: JsonValue | null
     staffId: string | null
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
@@ -8515,8 +8518,9 @@ export namespace Prisma {
     paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
+    guestInfo?: boolean
     staffId?: boolean
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     offlineSale?: boolean | Order$offlineSaleArgs<ExtArgs>
@@ -8532,8 +8536,9 @@ export namespace Prisma {
     paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
+    guestInfo?: boolean
     staffId?: boolean
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -8546,8 +8551,9 @@ export namespace Prisma {
     paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
+    guestInfo?: boolean
     staffId?: boolean
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -8560,30 +8566,34 @@ export namespace Prisma {
     paymentMethod?: boolean
     createdAt?: boolean
     customerId?: boolean
+    guestInfo?: boolean
     staffId?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "staffId", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "guestInfo" | "staffId", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     offlineSale?: boolean | Order$offlineSaleArgs<ExtArgs>
     _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }
   export type OrderIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }
 
   export type $OrderPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Order"
     objects: {
-      customer: Prisma.$CustomerPayload<ExtArgs>
+      /**
+       * Either a real customer…
+       */
+      customer: Prisma.$CustomerPayload<ExtArgs> | null
       staff: Prisma.$StaffPayload<ExtArgs> | null
       items: Prisma.$OrderItemPayload<ExtArgs>[]
       offlineSale: Prisma.$OfflineSalePayload<ExtArgs> | null
@@ -8596,7 +8606,11 @@ export namespace Prisma {
       totalNGN: number
       paymentMethod: string
       createdAt: Date
-      customerId: string
+      customerId: string | null
+      /**
+       * …or one blob of JSON for a walk‑in guest
+       */
+      guestInfo: Prisma.JsonValue | null
       staffId: string | null
     }, ExtArgs["result"]["order"]>
     composites: {}
@@ -8992,7 +9006,7 @@ export namespace Prisma {
    */
   export interface Prisma__OrderClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    customer<T extends Order$customerArgs<ExtArgs> = {}>(args?: Subset<T, Order$customerArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     staff<T extends Order$staffArgs<ExtArgs> = {}>(args?: Subset<T, Order$staffArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     items<T extends Order$itemsArgs<ExtArgs> = {}>(args?: Subset<T, Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     offlineSale<T extends Order$offlineSaleArgs<ExtArgs> = {}>(args?: Subset<T, Order$offlineSaleArgs<ExtArgs>>): Prisma__OfflineSaleClient<$Result.GetResult<Prisma.$OfflineSalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -9033,6 +9047,7 @@ export namespace Prisma {
     readonly paymentMethod: FieldRef<"Order", 'String'>
     readonly createdAt: FieldRef<"Order", 'DateTime'>
     readonly customerId: FieldRef<"Order", 'String'>
+    readonly guestInfo: FieldRef<"Order", 'Json'>
     readonly staffId: FieldRef<"Order", 'String'>
   }
     
@@ -9427,6 +9442,25 @@ export namespace Prisma {
      * Limit how many Orders to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Order.customer
+   */
+  export type Order$customerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Customer
+     */
+    select?: CustomerSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Customer
+     */
+    omit?: CustomerOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerInclude<ExtArgs> | null
+    where?: CustomerWhereInput
   }
 
   /**
@@ -16126,6 +16160,7 @@ export namespace Prisma {
     paymentMethod: 'paymentMethod',
     createdAt: 'createdAt',
     customerId: 'customerId',
+    guestInfo: 'guestInfo',
     staffId: 'staffId'
   };
 
@@ -16211,6 +16246,14 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
   export const QueryMode: {
     default: 'default',
     insensitive: 'insensitive'
@@ -16225,6 +16268,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -16362,6 +16414,20 @@ export namespace Prisma {
    * Reference to a field of type 'Currency[]'
    */
   export type ListEnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
   /**
    * Deep Input Types
@@ -16890,9 +16956,10 @@ export namespace Prisma {
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
-    customerId?: StringFilter<"Order"> | string
+    customerId?: StringNullableFilter<"Order"> | string | null
+    guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
-    customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
+    customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
     offlineSale?: XOR<OfflineSaleNullableScalarRelationFilter, OfflineSaleWhereInput> | null
@@ -16906,7 +16973,8 @@ export namespace Prisma {
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
     createdAt?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    guestInfo?: SortOrderInput | SortOrder
     staffId?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
     staff?: StaffOrderByWithRelationInput
@@ -16925,9 +16993,10 @@ export namespace Prisma {
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
-    customerId?: StringFilter<"Order"> | string
+    customerId?: StringNullableFilter<"Order"> | string | null
+    guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
-    customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
+    customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
     offlineSale?: XOR<OfflineSaleNullableScalarRelationFilter, OfflineSaleWhereInput> | null
@@ -16941,7 +17010,8 @@ export namespace Prisma {
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
     createdAt?: SortOrder
-    customerId?: SortOrder
+    customerId?: SortOrderInput | SortOrder
+    guestInfo?: SortOrderInput | SortOrder
     staffId?: SortOrderInput | SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
@@ -16961,7 +17031,8 @@ export namespace Prisma {
     totalNGN?: IntWithAggregatesFilter<"Order"> | number
     paymentMethod?: StringWithAggregatesFilter<"Order"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
-    customerId?: StringWithAggregatesFilter<"Order"> | string
+    customerId?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    guestInfo?: JsonNullableWithAggregatesFilter<"Order">
     staffId?: StringNullableWithAggregatesFilter<"Order"> | string | null
   }
 
@@ -17941,7 +18012,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customer: CustomerCreateNestedOneWithoutOrdersInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -17955,7 +18027,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
@@ -17969,7 +18042,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -17983,7 +18057,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
@@ -17997,7 +18072,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
   }
 
@@ -18009,6 +18085,7 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -18019,7 +18096,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -19019,6 +19097,34 @@ export namespace Prisma {
     notIn?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel>
     not?: NestedEnumCurrencyFilter<$PrismaModel> | $Enums.Currency
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type CustomerNullableScalarRelationFilter = {
+    is?: CustomerWhereInput | null
+    isNot?: CustomerWhereInput | null
+  }
 
   export type StaffNullableScalarRelationFilter = {
     is?: StaffWhereInput | null
@@ -19049,6 +19155,7 @@ export namespace Prisma {
     paymentMethod?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
+    guestInfo?: SortOrder
     staffId?: SortOrder
   }
 
@@ -19104,6 +19211,32 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCurrencyFilter<$PrismaModel>
     _max?: NestedEnumCurrencyFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type OrderScalarRelationFilter = {
@@ -19821,10 +19954,12 @@ export namespace Prisma {
     set?: $Enums.Currency
   }
 
-  export type CustomerUpdateOneRequiredWithoutOrdersNestedInput = {
+  export type CustomerUpdateOneWithoutOrdersNestedInput = {
     create?: XOR<CustomerCreateWithoutOrdersInput, CustomerUncheckedCreateWithoutOrdersInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutOrdersInput
     upsert?: CustomerUpsertWithoutOrdersInput
+    disconnect?: CustomerWhereInput | boolean
+    delete?: CustomerWhereInput | boolean
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutOrdersInput, CustomerUpdateWithoutOrdersInput>, CustomerUncheckedUpdateWithoutOrdersInput>
   }
@@ -20297,6 +20432,29 @@ export namespace Prisma {
     _min?: NestedEnumCurrencyFilter<$PrismaModel>
     _max?: NestedEnumCurrencyFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type OrderCreateWithoutCustomerInput = {
     id?: string
@@ -20306,6 +20464,7 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -20319,6 +20478,7 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
@@ -20411,7 +20571,8 @@ export namespace Prisma {
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
     createdAt?: DateTimeFilter<"Order"> | Date | string
-    customerId?: StringFilter<"Order"> | string
+    customerId?: StringNullableFilter<"Order"> | string | null
+    guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
   }
 
@@ -20478,7 +20639,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customer: CustomerCreateNestedOneWithoutOrdersInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
   }
@@ -20491,7 +20653,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -21335,7 +21498,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customer: CustomerCreateNestedOneWithoutOrdersInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
   }
@@ -21348,7 +21512,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -21377,7 +21542,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
   }
@@ -21390,7 +21556,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -21403,7 +21570,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customer: CustomerCreateNestedOneWithoutOrdersInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
   }
@@ -21416,7 +21584,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
   }
@@ -21502,7 +21671,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
   }
@@ -21515,7 +21685,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   }
@@ -21884,6 +22055,7 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
   }
 
@@ -21910,6 +22082,7 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -21923,6 +22096,7 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
@@ -21936,6 +22110,7 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -21992,7 +22167,8 @@ export namespace Prisma {
     totalNGN: number
     paymentMethod: string
     createdAt?: Date | string
-    customerId: string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type OfflineSaleCreateManyStaffInput = {
@@ -22009,7 +22185,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customer?: CustomerUpdateOneRequiredWithoutOrdersNestedInput
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
   }
@@ -22022,7 +22199,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -22035,7 +22213,8 @@ export namespace Prisma {
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    customerId?: StringFieldUpdateOperationsInput | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type OfflineSaleUpdateWithoutStaffInput = {

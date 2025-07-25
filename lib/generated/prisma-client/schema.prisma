@@ -154,8 +154,12 @@ model Order {
   paymentMethod String
   createdAt     DateTime    @default(now())
 
-  customer   Customer @relation(fields: [customerId], references: [id])
-  customerId String
+  /// Either a real customer…
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  /// …or one blob of JSON for a walk‑in guest
+  guestInfo Json?
 
   staff   Staff?  @relation(fields: [staffId], references: [id])
   staffId String?
@@ -187,28 +191,26 @@ model OfflineSale {
   timestamp DateTime @default(now())
 }
 
-/// Hero‐slider banners
 model HeroSlide {
   id          String  @id @default(cuid())
   imageUrl    String
-  headline    String? // optional
-  subheadline String? // optional
-  ctaText     String? // optional
-  ctaUrl      String? // optional, front‐end can default to “#”
+  headline    String?
+  subheadline String?
+  ctaText     String?
+  ctaUrl      String?
   order       Int     @default(0)
 }
 
-/// Size charts broken into rows
 model SizeChart {
   id        String           @id @default(cuid())
-  name      String // e.g. "Men's T-Shirt Chart"
+  name      String
   entries   SizeChartEntry[]
   updatedAt DateTime         @updatedAt
 }
 
 model SizeChartEntry {
   id        String    @id @default(cuid())
-  sizeLabel String // "S", "M", "L", "XL", etc.
+  sizeLabel String
   chestMin  Int
   chestMax  Int
   waistMin  Int

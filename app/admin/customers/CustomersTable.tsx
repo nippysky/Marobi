@@ -30,13 +30,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Trash2,
-  Eye,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { Trash2, Eye, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
+
 import { AdminCustomerRow } from "@/types/admin";
 
 type Props = { initialData: AdminCustomerRow[] };
@@ -45,13 +42,12 @@ function formatDateTime(iso: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ` +
+         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 export default function CustomersTable({ initialData }: Props) {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState<AdminCustomerRow[]>(initialData);
   const [search, setSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
@@ -98,17 +94,14 @@ export default function CustomersTable({ initialData }: Props) {
     { accessorKey: "name", header: "Name" },
     { accessorKey: "email", header: "Email" },
     { accessorKey: "phone", header: "Phone" },
-{
-  accessorKey: "totalOrders",
-  header: "Orders",
-  enableSorting: true,
-  cell: ({ getValue }) => (
-    <span className="font-medium">
-      {getValue<number>()}
-    </span>
-  ),
-},
-
+    {
+      accessorKey: "totalOrders",
+      header: "Orders",
+      enableSorting: true,
+      cell: ({ getValue }) => (
+        <span className="font-medium">{getValue<number>()}</span>
+      ),
+    },
     {
       accessorKey: "lastLogin",
       header: "Last Login",
@@ -162,18 +155,43 @@ export default function CustomersTable({ initialData }: Props) {
     .getSelectedRowModel()
     .flatRows.map((r) => r.original.id);
 
-  function confirmBulkDelete() {
-    setData((d) => d.filter((c) => !selectedIds.includes(c.id)));
-    table.resetRowSelection();
-    setBulkDialogOpen(false);
-  }
-  function confirmSingleDelete() {
-    if (toDeleteId) {
+  // ── Single delete handler ───────────────────────────────────────────────
+  async function confirmSingleDelete() {
+    if (!toDeleteId) return setSingleDialogOpen(false);
+    try {
+      const res = await fetch(`/api/admin/customers/${toDeleteId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error((await res.json()).error || res.statusText);
       setData((d) => d.filter((c) => c.id !== toDeleteId));
+      toast.success(`Deleted customer ${toDeleteId}`);
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
+    } finally {
+      setSingleDialogOpen(false);
+      setToDeleteId(null);
       table.resetRowSelection();
     }
-    setSingleDialogOpen(false);
-    setToDeleteId(null);
+  }
+
+  // ── Bulk delete handler ─────────────────────────────────────────────────
+  async function confirmBulkDelete() {
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch(`/api/admin/customers/${id}`, { method: "DELETE" }).then((res) => {
+            if (!res.ok) throw new Error(id);
+          })
+        )
+      );
+      setData((d) => d.filter((c) => !selectedIds.includes(c.id)));
+      toast.success(`Deleted ${selectedIds.length} customers`);
+    } catch (err: any) {
+      toast.error("Failed to delete some customers");
+    } finally {
+      setBulkDialogOpen(false);
+      table.resetRowSelection();
+    }
   }
 
   return (
@@ -186,17 +204,12 @@ export default function CustomersTable({ initialData }: Props) {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
-
         {selectedIds.length > 0 && (
           <div className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded">
             <span className="text-sm">
               <strong>{selectedIds.length}</strong> selected
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setBulkDialogOpen(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setBulkDialogOpen(true)}>
               Delete
             </Button>
           </div>
@@ -214,16 +227,11 @@ export default function CustomersTable({ initialData }: Props) {
                   return (
                     <TableHead
                       key={header.id}
-                      className={`px-4 py-3 ${
-                        canSort ? "cursor-pointer select-none" : ""
-                      }`}
+                      className={`px-4 py-3 ${canSort ? "cursor-pointer select-none" : ""}`}
                       onClick={header.column.getToggleSortingHandler()}
                     >
                       <div className="flex items-center space-x-1">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
                         {canSort && (
                           <span>
                             {{
@@ -239,24 +247,16 @@ export default function CustomersTable({ initialData }: Props) {
               </TableRow>
             ))}
           </TableHeader>
-
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className="even:bg-gray-50 hover:bg-gray-100"
-              >
+              <TableRow key={row.id} className="even:bg-gray-50 hover:bg-gray-100">
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="px-4 py-3">
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
-
             {filteredData.length === 0 && (
               <tr>
                 <td colSpan={columns.length} className="py-8 text-center text-gray-500">
@@ -278,8 +278,7 @@ export default function CustomersTable({ initialData }: Props) {
           ← Prev
         </Button>
         <span className="text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
         <Button
           variant="link"
@@ -305,8 +304,7 @@ export default function CustomersTable({ initialData }: Props) {
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              Delete {selectedIds.length} customer
+            <DialogTitle>Delete {selectedIds.length} customer
               {selectedIds.length > 1 && "s"}?
             </DialogTitle>
             <DialogDescription>This cannot be undone.</DialogDescription>

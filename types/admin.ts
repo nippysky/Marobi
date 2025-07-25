@@ -1,11 +1,11 @@
 export interface AdminCustomerRow {
   id: string;
-  name: string;              // combined first + last
+  name: string;
   email: string;
   phone: string;
   totalOrders: number;
-  lastLogin: string | null;  // ISO
-  registeredAt: string;      // ISO
+  lastLogin: string | null;
+  registeredAt: string;
 }
 
 export interface AdminCustomerOrderProduct {
@@ -26,12 +26,27 @@ export interface AdminCustomerOrder {
   totalAmount: number;
   totalNGN: number;
   createdAt: string;
+  paymentMethod: string;
+
   products: AdminCustomerOrderProduct[];
-  customer: {
+
+  /** Populated if this order belongs to a registered customer */
+  customer?: {
     id: string;
     name: string;
     email: string;
     phone: string;
-    address: string; // from deliveryAddress OR billingAddress fallback
+    address: string;
+  };
+
+  /** Populated for one‑off guest checkouts (never persisted to Customer table) */
+  guestInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    country?: string;
+    state?: string;
   };
 }
