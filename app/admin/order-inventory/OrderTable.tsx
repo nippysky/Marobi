@@ -1,4 +1,3 @@
-// app/admin/orders/OrderTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -39,7 +38,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Printer, Download } from "lucide-react";
+import { ChevronUp, ChevronDown, Printer, Download, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
 
@@ -47,21 +46,12 @@ import Papa from "papaparse";
 
 import type { OrderRow } from "@/types/orders";
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
+import { receiptCSS } from "@/lib/utils";
 
 type Props = { initialData: OrderRow[] };
 
 const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Delivered"];
 const CURRENCY_OPTIONS: Currency[] = ["NGN", "USD", "EUR", "GBP"];
-
-// 80 mm‑wide receipt print CSS
-const receiptCSS = `
-  @page { size: 80mm auto; margin: 0; }
-  body { width: 80mm; font-family: monospace; margin:0; padding:4mm; }
-  .header, .footer { text-align: center; margin-bottom:4mm; }
-  .line { display:flex; justify-content:space-between; margin-bottom:2mm; }
-  .total { font-weight:bold; display:flex; justify-content:space-between; margin-top:4mm; }
-  .small { font-size:0.8em; }
-`;
 
 export default function OrderTable({ initialData }: Props) {
   // ─── State ────────────────────────────────────────────────────────────
@@ -72,13 +62,60 @@ export default function OrderTable({ initialData }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
 
+    // single & bulk delete states
+  const [pendingDelete, setPendingDelete] = useState<string[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   const [receiptOrder, setReceiptOrder] = useState<OrderRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
+
+  const [rowSelection, setRowSelection] = useState<{ [key: string]: boolean }>({});
+
+
 
   function openReceiptModal(order: OrderRow) {
     setReceiptOrder(order);
     setReceiptOpen(true);
   }
+
+
+    // ─── DELETE logic ─────────────────────────────────────────────────────
+  async function doDelete(ids: string[]) {
+    try {
+      await toast.promise(
+        Promise.all(
+          ids.map((id) =>
+            fetch(`/api/orders/${id}`, { method: "DELETE" }).then(res => {
+              if (!res.ok) throw new Error("Delete failed");
+            })
+          )
+        ),
+        {
+          loading: `Deleting ${ids.length} order(s)…`,
+          success: `Deleted ${ids.length} order(s)!`,
+          error: `Could not delete orders`,
+        }
+      );
+      // remove from UI
+      setData((d) => d.filter((o) => !ids.includes(o.id)));
+    } catch {
+      /* handled by toast */
+    } finally {
+      setDeleteOpen(false);
+      table.resetRowSelection();
+    }
+  }
+
+  function confirmDelete(id: string) {
+    setPendingDelete([id]);
+    setDeleteOpen(true);
+  }
+
+  function confirmBulkDelete() {
+    setPendingDelete(selectedIds);
+    setDeleteOpen(true);
+  }
+
 
   // ─── Inline status update ─────────────────────────────────────────────
   async function handleStatusChange(id: string, newStatus: OrderStatus) {
@@ -382,24 +419,54 @@ export default function OrderTable({ initialData }: Props) {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-red-600 hover:text-red-800"
+            onClick={() => confirmDelete(row.original.id)}
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
         </div>
       ),
     },
   ], []);
 
+  // ─── Columns & table instance ────────────────────────────────────────
   const table = useReactTable({
     data: filtered,
     columns,
-    state: { sorting, pagination },
+    state: { sorting, pagination, rowSelection },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  // ─── Helpers ───────────────────────────────────────────────────────────
+  const selectedIds = useMemo(
+    () => table.getSelectedRowModel().flatRows.map(r => r.original.id),
+    [table]
+  );
+  const anySelected = selectedIds.length > 0;
+
   return (
     <>
+      {/* Bulk toolbar */}
+      {anySelected && (
+        <div className="flex items-center justify-between bg-gray-100 p-2 rounded mb-4">
+          <span>
+            <strong>{selectedIds.length}</strong> selected
+          </span>
+          <Button size="sm" variant="destructive" onClick={confirmBulkDelete}>
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+
       {/* ── Export + Filters Bar ── */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
         <Button
@@ -668,6 +735,29 @@ export default function OrderTable({ initialData }: Props) {
           </DialogContent>
         </Dialog>
       )}
+
+      
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Delete {pendingDelete.length > 1 ? `${pendingDelete.length} orders?` : `order?`}
+            </DialogTitle>
+            <DialogDescription>
+              This <strong>cannot</strong> be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => doDelete(pendingDelete)}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

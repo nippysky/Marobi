@@ -81,3 +81,29 @@ export async function PATCH(
     );
   }
 }
+
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  try {
+    // 1) Remove dependent OrderItems
+    await prisma.orderItem.deleteMany({ where: { orderId: id } });
+    // 2) Remove any OfflineSale record
+    await prisma.offlineSale.deleteMany({ where: { orderId: id } });
+    // 3) Delete the Order itself
+    await prisma.order.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("Error deleting order:", err);
+    // If foreign‑key violation or not found
+    return NextResponse.json(
+      { error: err.message || "Failed to delete order" },
+      { status: 500 }
+    );
+  }
+}

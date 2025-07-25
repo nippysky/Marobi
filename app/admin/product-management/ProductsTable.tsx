@@ -190,8 +190,8 @@ export default function ProductsTable({ initialData }: Props) {
       id: "stock",
       header: "Stock",
       cell: ({ row }) => {
-        const { stockCount, stockTotal } = row.original;
-        const inStock = stockCount > 0;
+        const count = row.original.stockCount;
+        const inStock = count > 0;
         return (
           <div className="flex items-center space-x-1">
             <span
@@ -199,9 +199,7 @@ export default function ProductsTable({ initialData }: Props) {
                 inStock ? "bg-green-500" : "bg-red-500"
               }`}
             />
-            <span className="text-sm">
-              {stockCount}/{stockTotal}
-            </span>
+            <span className="text-sm">{count}</span>
           </div>
         );
       },

@@ -137,35 +137,47 @@ export default function OfflineSaleForm({ staffId }: Props) {
   };
   const debouncedFetchProducts = useDebounce(fetchProducts, 300);
 
-  function selectProduct(rowId: string, product: DBProduct) {
-    // derive distinct colors & sizes
-    const colors = Array.from(new Set(product.variants.map(v => v.color || "N/A")));
-    const sizes  = Array.from(new Set(product.variants.map(v => v.size  || "N/A")));
-    const selColor = colors[0] ?? "N/A";
-    const selSize  = sizes[0]  ?? "N/A";
-    const match = product.variants.find(v => v.color === selColor && v.size === selSize);
-    const stock = match?.stock ?? 1;
+function selectProduct(rowId: string, product: DBProduct) {
+  // 1) normalize the variants so color & size always match your dropdown
+  const normalizedVariants = product.variants.map((v) => ({
+    color: v.color.trim() || "N/A",
+    size:  v.size.trim()  || "N/A",
+    stock: v.stock,
+  }));
 
-    setItems(prev =>
-      prev.map(i =>
-        i.id === rowId
-          ? {
-              ...i,
-              productId:   product.id,
-              productName: product.name,
-              variants:    product.variants,
-              colorOptions: colors,
-              sizeOptions:  sizes,
-              color:       selColor,
-              size:        selSize,
-              maxQty:      stock,
-              quantity:    1,
-            }
-          : i
-      )
-    );
-    setProductSearch(p => ({ ...p, [rowId]: [] }));
-  }
+  // 2) build your dropdown lists from the normalized data
+  const colors = Array.from(new Set(normalizedVariants.map((v) => v.color)));
+  const sizes  = Array.from(new Set(normalizedVariants.map((v) => v.size)));
+
+  // 3) pick first
+  const selColor = colors[0];
+  const selSize  = sizes[0];
+  const match    = normalizedVariants.find(
+    (v) => v.color === selColor && v.size === selSize
+  );
+  const stock = match ? match.stock : 1;
+
+  // 4) write it all into state
+  setItems((prev) =>
+    prev.map((i) =>
+      i.id === rowId
+        ? {
+            ...i,
+            productId:    product.id,
+            productName:  product.name,
+            variants:     normalizedVariants,  // <<< store the normalized list!
+            colorOptions: colors,
+            sizeOptions:  sizes,
+            color:        selColor,
+            size:         selSize,
+            maxQty:       stock,
+            quantity:     1,
+          }
+        : i
+    )
+  );
+  setProductSearch((p) => ({ ...p, [rowId]: [] }));
+}
 
   // ─── Whenever color or size changes, re‑lookup stock ───────────────
   function updateVariantSelection(

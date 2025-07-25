@@ -1,4 +1,3 @@
-// components/admin/AdminDashboardClient.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -62,7 +61,7 @@ interface Props {
   totalCustomers: number;
   totalOrders: number;
   totalRevenue: number;
-  top5: { name: string; sold: number; revenue: number; image: string }[];
+  top3: {   id:      string;  name: string; sold: number; revenue: number; image: string }[];
   recentOrders: RecentOrder[];
   revenueSeries: RevenueSeries;
 }
@@ -77,7 +76,7 @@ export default function AdminDashboardClient({
   totalCustomers,
   totalOrders,
   totalRevenue,
-  top5,
+  top3,
   recentOrders,
   revenueSeries,
 }: Props) {
@@ -238,7 +237,6 @@ export default function AdminDashboardClient({
             <CardTitle>Revenue</CardTitle>
             <ChevronRight
               className="h-4 w-4 text-gray-400 cursor-pointer"
-              onClick={() => (location.href = "/admin/reports")}
             />
           </CardHeader>
           <CardContent className="pt-0 px-4 pb-4">
@@ -246,37 +244,70 @@ export default function AdminDashboardClient({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex justify-between items-center px-4 py-3">
-            <CardTitle>Top Products</CardTitle>
-            <ChevronRight
-              className="h-4 w-4 text-gray-400 cursor-pointer"
-              onClick={() => (location.href = "/admin/product-management")}
-            />
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 pb-4">
-            {top5.length === 0 ? (
-              <p className="text-sm text-gray-500 py-6 text-center">No sales yet.</p>
-            ) : (
-              top5.map((p) => (
-                <div key={p.name} className="flex items-center space-x-4">
+        {/* Top Products */}
+      <Card className="bg-white overflow-hidden shadow-lg">
+        <CardHeader className="flex justify-between items-center px-6 py-4 border-b">
+          <CardTitle className="text-lg font-semibold">Top Products</CardTitle>
+          <ChevronRight
+            className="h-5 w-5 text-gray-400 cursor-pointer hover:text-gray-600 transition"
+            onClick={() => (location.href = "/admin/product-management")}
+          />
+        </CardHeader>
+        <CardContent className="px-6 py-4">
+          {top3.length === 0 ? (
+            <p className="text-center text-gray-500 py-6">
+              No sales data available.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {top3.map((p, idx) => (
+                <li
+                 key={`${p.name}-${idx}`}
+                  className="flex items-center space-x-4 hover:bg-gray-50 p-3 rounded-lg transition"
+                >
                   <img
                     src={p.image}
                     alt={p.name}
-                    className="h-12 w-12 rounded border object-cover"
+                    className="h-16 w-16 rounded-lg object-cover border border-gray-200"
                   />
                   <div className="flex-1">
-                    <div className="font-medium">{p.name}</div>
-                    <div className="text-sm text-gray-600">Sold: {p.sold}</div>
-                    <div className="text-sm text-gray-600">
-                      Revenue: ₦{p.revenue.toLocaleString()}
+                    <Link
+                      href={`/admin/product-management/${encodeURIComponent(p.id)}`}
+                      className="text-md font-medium text-indigo-600 hover:underline"
+                    >
+                      {p.name}
+                    </Link>
+                    <div className="mt-1 text-sm text-gray-500 flex items-center">
+                      <span className="mr-2">Sold:</span>
+                      <span className="font-semibold">{p.sold}</span>
+                    </div>
+                    <div className="mt-1 text-sm text-gray-500 flex items-center">
+                      <span className="mr-2">Revenue:</span>
+                      <span className="font-semibold">
+                        ₦{p.revenue.toLocaleString()}
+                      </span>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                  <div className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        (location.href = `/admin/product-management/${encodeURIComponent(
+                          p.id
+                        )}`)
+                      }
+                    >
+                      View
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       </div>
 
       {/* Recent Orders */}
