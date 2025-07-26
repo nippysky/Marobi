@@ -1,3 +1,5 @@
+// schema.prisma
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -95,12 +97,20 @@ model Staff {
   lastLogin         DateTime?
 }
 
+model Category {
+  slug        String    @id
+  name        String
+  description String?
+  products    Product[] @relation("ProductToCategory")
+}
+
 model Product {
   id            String         @id @default(cuid())
   name          String
   description   String?
   images        String[]       @default([])
-  category      String
+  categorySlug  String
+  category      Category       @relation("ProductToCategory", fields: [categorySlug], references: [slug])
   priceNGN      Float?
   priceUSD      Float?
   priceEUR      Float?
@@ -125,7 +135,6 @@ model Variant {
   weight    Float?
   createdAt DateTime @default(now())
 
-  // back‑relation for OrderItem
   orderItems OrderItem[]
 
   @@unique([productId, color, size], name: "product_color_size")
@@ -175,7 +184,6 @@ model OrderItem {
   order   Order  @relation(fields: [orderId], references: [id])
   orderId String
 
-  // REQUIRED foreign key now
   variant   Variant @relation(fields: [variantId], references: [id])
   variantId String
 

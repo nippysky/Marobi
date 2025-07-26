@@ -11,10 +11,9 @@ function parsePositiveInt(value: string | null, fallback: number, max: number) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  context: { params: Promise<{ productId: string }> }
 ) {
-  // TODO: enforce admin auth (NextAuth session + role check)
-  const productId = params.productId;
+  const { productId } = await context.params
 
   const url = new URL(req.url);
   const page = parsePositiveInt(url.searchParams.get("page"), 1, 10_000);

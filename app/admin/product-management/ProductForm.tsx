@@ -1,8 +1,8 @@
-// app/admin/products/ProductForm.tsx
 "use client";
 
 import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { ProductPayload } from "@/types/product";
+import type { Category } from "@/lib/categories";
 import {
   Card,
   CardHeader,
@@ -29,14 +29,18 @@ const CONVENTIONAL_SIZES = ["S", "M", "L", "XL", "XXL", "XXXL"] as const;
 
 interface Props {
   initialProduct?: ProductPayload;
+  categories: Category[];
   onSave: (payload: ProductPayload) => Promise<void>;
 }
 
-export default function ProductForm({ initialProduct, onSave }: Props) {
-  /* ---------- Basic Fields ---------- */
+export default function ProductForm({
+  initialProduct,
+  categories,
+  onSave,
+}: Props) {
   const [name, setName] = useState(initialProduct?.name ?? "");
-  const [category, setCategory] = useState(
-    initialProduct?.category ?? "Corporate Wears"
+  const [category, setCategory] = useState<string>(
+    initialProduct?.category ?? categories[0]?.slug ?? ""
   );
   const [description, setDescription] = useState(
     initialProduct?.description ?? ""
@@ -53,8 +57,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
   const [sizeMods, setSizeMods] = useState(
     initialProduct?.sizeMods ?? false
   );
-
-  /* ---------- Colors ---------- */
   const initialHasColors = (initialProduct?.colors?.length ?? 0) > 0;
   const [hasColors, setHasColors] = useState(initialHasColors);
   const [colors, setColors] = useState<string[]>(
@@ -64,8 +66,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     if (hasColors && colors.length === 0) setColors([""]);
     if (!hasColors) setColors([]);
   }, [hasColors]);
-
-  /* ---------- Sizes ---------- */
   const [sizeStocks, setSizeStocks] = useState<Record<string, string>>(
     { ...(initialProduct?.sizeStocks ?? {}) }
   );
@@ -78,31 +78,22 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
       return base;
     }
   );
-
-  /* ---------- Custom Sizes ---------- */
   const [customSizes, setCustomSizes] = useState<string[]>(
     initialProduct?.customSizes ?? []
   );
-
-  /* ---------- Images ---------- */
   const [images, setImages] = useState<string[]>(
     initialProduct?.images ?? []
   );
-
-  /* ---------- Loading State ---------- */
   const [saving, setSaving] = useState(false);
 
-  /* ---------- Form Validation ---------- */
   const isFormValid = useMemo(() => {
-    if (!name.trim() || !category.trim() || !description.trim()) return false;
-
+    if (!name.trim() || !category || !description.trim()) return false;
     for (const cur of ["NGN", "USD", "EUR", "GBP"] as const) {
       const num = Number(price[cur]);
       if (!price[cur] || isNaN(num) || num < 1) return false;
     }
-
-    if (hasColors && colors.filter((c) => c.trim()).length === 0) return false;
-
+    if (hasColors && colors.filter((c) => c.trim()).length === 0)
+      return false;
     for (const sz of CONVENTIONAL_SIZES) {
       if (
         sizeEnabled[sz] &&
@@ -111,14 +102,11 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
         return false;
       }
     }
-
-    for (const label of customSizes) {
-      if (!label.trim()) return false;
-      if (!sizeStocks[label] || isNaN(Number(sizeStocks[label]))) return false;
+    for (const lbl of customSizes) {
+      if (!lbl.trim()) return false;
+      if (!sizeStocks[lbl] || isNaN(Number(sizeStocks[lbl]))) return false;
     }
-
     if (images.length === 0 || !images[0]) return false;
-
     return true;
   }, [
     name,
@@ -133,7 +121,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     images,
   ]);
 
-  /* ---------- Image Upload ---------- */
   async function uploadFile(file: File): Promise<string> {
     const form = new FormData();
     form.append("file", file);
@@ -152,16 +139,15 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     try {
       const url = await uploadFile(file);
       setImages((imgs) => {
-        const copy = [...imgs];
-        copy[idx] = url;
-        return copy;
+        const cpy = [...imgs];
+        cpy[idx] = url;
+        return cpy;
       });
     } catch (err: any) {
       toast.error(err.message || "Image upload failed");
     }
   }
 
-  /* ---------- Save Handler ---------- */
   async function handleSave() {
     if (!isFormValid) {
       toast.error("Please fill all required fields and ensure prices ≥ 1.");
@@ -171,7 +157,7 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     const payload: ProductPayload = {
       id: initialProduct?.id,
       name: name.trim(),
-      category: category.trim(),
+      category,
       description: description.trim(),
       price: {
         NGN: parseFloat(price.NGN),
@@ -190,8 +176,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
     };
     try {
       await onSave(payload);
-    } catch {
-      // onSave will display its own toast
     } finally {
       setSaving(false);
     }
@@ -203,7 +187,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
         <CardTitle>Product Details</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Name */}
         <div className="flex flex-col space-y-1">
           <Label>Product Name *</Label>
           <Input
@@ -212,8 +195,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             disabled={saving}
           />
         </div>
-
-        {/* Category */}
         <div className="flex flex-col space-y-1">
           <Label>Category *</Label>
           <Select
@@ -225,21 +206,14 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {[
-                "Corporate Wears",
-                "African Print",
-                "Casual Looks",
-                "I Have an Event",
-              ].map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+              {categories.map((cat) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {cat.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        {/* Status */}
         <div className="flex flex-col space-y-1">
           <Label>Status *</Label>
           <Select
@@ -259,8 +233,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             </SelectContent>
           </Select>
         </div>
-
-        {/* Enable Custom Size Mods */}
         <div className="flex items-center space-x-2">
           <Switch
             checked={sizeMods}
@@ -269,8 +241,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
           />
           <Label>Enable Custom Size Mods?</Label>
         </div>
-
-        {/* Has Colors */}
         <div className="flex items-center space-x-2">
           <Switch
             checked={hasColors}
@@ -279,8 +249,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
           />
           <Label>Has Colors?</Label>
         </div>
-
-        {/* Color Inputs */}
         {hasColors && (
           <div className="md:col-span-2 grid grid-cols-1 gap-2">
             {colors.map((c, i) => (
@@ -321,8 +289,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             ))}
           </div>
         )}
-
-        {/* Prices (min=1) */}
         {(["NGN", "USD", "EUR", "GBP"] as const).map((cur) => (
           <div key={cur} className="flex flex-col space-y-1">
             <Label>{cur} Price * (≥ 1)</Label>
@@ -338,8 +304,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             />
           </div>
         ))}
-
-        {/* Description */}
         <div className="md:col-span-2 flex flex-col space-y-1">
           <Label>Description *</Label>
           <Textarea
@@ -349,8 +313,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             className="h-32"
           />
         </div>
-
-        {/* Sizes & Stock */}
         <div className="md:col-span-2 space-y-2">
           <Label>Sizes & Stock</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -389,8 +351,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             ))}
           </div>
         </div>
-
-        {/* Custom Sizes */}
         <div className="md:col-span-2 flex justify-between items-center">
           <Label>Custom Sizes</Label>
           <Button
@@ -445,8 +405,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
             </Button>
           </div>
         ))}
-
-        {/* Images */}
         <div className="md:col-span-2">
           <Label>Images *</Label>
           <div className="grid grid-cols-4 gap-4 mt-2">
@@ -470,7 +428,9 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
                         className="absolute top-1 right-1"
                         disabled={saving}
                         onClick={() =>
-                          setImages((imgs) => imgs.filter((_, i) => i !== idx))
+                          setImages((imgs) =>
+                            imgs.filter((_, i) => i !== idx)
+                          )
                         }
                       >
                         <X className="h-4 w-4 text-red-600" />
@@ -506,7 +466,6 @@ export default function ProductForm({ initialProduct, onSave }: Props) {
           </p>
         </div>
       </CardContent>
-
       <CardFooter className="flex justify-end space-x-4">
         <Button
           variant="destructive"

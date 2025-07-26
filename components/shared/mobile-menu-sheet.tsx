@@ -11,23 +11,41 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { AlignJustify, PencilRuler, UserRound, LogOut } from "lucide-react";
-import { CATEGORIES } from "@/lib/constants/categories";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useSession, signOut } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const navItems = [
-  { label: "All Products", href: "/all-products" },
-  ...CATEGORIES.map((cat) => ({
-    label: cat.name,
-    href: `/categories/${cat.slug}`,
-  })),
-];
+import { useQuery } from "@tanstack/react-query";
+import type { Category } from "@/lib/categories";
 
 export const MobileMenuSheet: React.FC = () => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
   const { data: session, status } = useSession();
+
+  // Fetch categories from our new API
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+  } = useQuery<Category[], Error>({
+    queryKey: ["categories"],
+    queryFn: () =>
+      fetch("/api/categories")
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load categories");
+          return res.json();
+        })
+        .then((data) => data as Category[]),
+    staleTime: 300_000, // 5 minutes
+  });
+
+  // Build nav items dynamically
+  const navItems: { label: string; href: string }[] = [
+    { label: "All Products", href: "/all-products" },
+    ...categories.map((cat) => ({
+      label: cat.name,
+      href: `/categories/${cat.slug}`,
+    })),
+  ];
 
   return (
     <Sheet>
@@ -40,33 +58,35 @@ export const MobileMenuSheet: React.FC = () => {
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
 
-        {/* primary nav */}
+        {/* ─── Primary navigation ─── */}
         <nav className="mt-8 px-4 space-y-6">
-          {navItems.map(({ label, href }) => {
-            const isActive = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`block text-base font-medium text-gray-700 dark:text-gray-300 hover:underline ${
-                  isActive ? "underline font-semibold" : ""
-                }`}
-              >
-                {label}
-              </Link>
-            );
-          })}
+          {categoriesLoading ? (
+            <Skeleton className="h-4 w-32" />
+          ) : (
+            navItems.map(({ label, href }) => {
+              const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`block text-base font-medium text-gray-700 dark:text-gray-300 hover:underline ${
+                    isActive ? "underline font-semibold" : ""
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })
+          )}
         </nav>
 
         <div className="my-8 border-t border-gray-200 dark:border-gray-700" />
 
-        {/* account & utilities */}
+        {/* ─── Account & utilities ─── */}
         <div className="px-4 space-y-6">
           {status === "loading" ? (
-            // while loading session
             <Skeleton className="h-8 w-32" />
           ) : !session ? (
-            // not logged in
             <Link
               href="/auth/login"
               className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
@@ -75,7 +95,6 @@ export const MobileMenuSheet: React.FC = () => {
               <span>Login</span>
             </Link>
           ) : (
-            // authenticated
             <>
               <Link
                 href="/account"
@@ -94,7 +113,7 @@ export const MobileMenuSheet: React.FC = () => {
             </>
           )}
 
-          {/* size chart always available */}
+          {/* Size Chart */}
           <button
             onClick={openSizeChart}
             className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"

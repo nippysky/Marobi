@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   Search as SearchIcon,
   PencilRuler,
@@ -12,11 +12,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
-import { CATEGORIES } from "@/lib/constants/categories";
-import { CurrencySelector } from "./currency-selector";
 import { SizeChartModal } from "../SizeChartModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
-import { CartSheet } from "./cart-sheet";
+
 import {
   Tooltip,
   TooltipTrigger,
@@ -28,31 +26,48 @@ import { Skeleton } from "@/components/ui/skeleton";
 import MobileMenuSheet from "./mobile-menu-sheet";
 import SearchBar from "../SearchBar";
 
+import type { Category } from "@/lib/categories";
+import { CurrencySelector } from "./currency-selector";
+import { CartSheet } from "./cart-sheet";
+
 const BrandIcon: React.FC = () => (
   <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
     M!
   </div>
 );
 
-const navItems: { label: string; href: string }[] = [
-  { label: "All Products", href: "/all-products" },
-  ...CATEGORIES.map((cat) => ({
-    label: cat.name,
-    href: `/categories/${cat.slug}`,
-  })),
-];
-
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
-  const { isOpen,  openModal } = useSearchModal();
+  const { isOpen, openModal } = useSearchModal();
   const { data: session, status } = useSession();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // close menu on outside click
+  // fetch categories on mount
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((cats: Category[]) => setCategories(cats))
+      .catch(console.error);
+  }, []);
+
+  // build nav items
+  const navItems = useMemo(
+    () => [
+      { label: "All Products", href: "/all-products" },
+      ...categories.map((cat: Category) => ({
+        label: cat.name,
+        href: `/categories/${cat.slug}`,
+      })),
+    ],
+    [categories]
+  );
+
+  // close user menu on outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -71,7 +86,7 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // motion variants
+  // framer‑motion variants...
   const headerVariants = {
     expanded: { height: "auto", backgroundColor: "#ffffff" },
     collapsed: { height: "4rem", backgroundColor: "#ffffff" },
@@ -121,7 +136,10 @@ export const Header: React.FC = () => {
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href="/auth/login" className="p-2 text-gray-600 hover:text-gray-800">
+            <Link
+              href="/auth/login"
+              className="p-2 text-gray-600 hover:text-gray-800"
+            >
               <UserRound className="w-5 h-5" />
             </Link>
           </TooltipTrigger>
@@ -176,9 +194,7 @@ export const Header: React.FC = () => {
           <div className="hidden lg:block">
             {/* Collapsed */}
             <motion.div
-              className={`${
-                isCollapsed ? "flex" : "hidden"
-              } items-center justify-between h-16`}
+              className={`${isCollapsed ? "flex" : "hidden"} items-center justify-between h-16`}
               initial={false}
               animate={isCollapsed ? "collapsed" : "expanded"}
             >
@@ -248,7 +264,6 @@ export const Header: React.FC = () => {
                   </TooltipContent>
                 </Tooltip>
 
-                {/* user/profile */}
                 <UserMenu />
 
                 <Tooltip>
@@ -277,6 +292,7 @@ export const Header: React.FC = () => {
                     MAROB!
                   </Link>
                 </motion.div>
+
                 <div className="flex justify-center">
                   <motion.div
                     className="w-full max-w-lg"
@@ -287,6 +303,7 @@ export const Header: React.FC = () => {
                     <SearchBar />
                   </motion.div>
                 </div>
+
                 <div className="flex items-center justify-end space-x-6">
                   <CurrencySelector />
 
@@ -318,6 +335,7 @@ export const Header: React.FC = () => {
                   </Tooltip>
                 </div>
               </div>
+
               <motion.nav
                 aria-label="Main navigation"
                 className="mt-5 overflow-hidden"

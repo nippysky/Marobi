@@ -1,57 +1,53 @@
-import HeroSlider from "@/components/HeroSlider";
+export const dynamic = "force-dynamic";
+
+import React from "react";
+import HeroSlider, { Slide } from "@/components/HeroSlider";
 import FeatureHighlights from "@/components/FeatureHighlights";
 import ProductShowcase from "@/components/ProductShowcase";
 import { Header } from "@/components/shared/header";
-import { Metadata } from "next";
-import { getProductsByCategory, Product } from "@/lib/products";
 import Footer from "@/components/shared/footer";
+import { prisma } from "@/lib/db";
+import { getProductsByCategory, Product } from "@/lib/products";
+import { getAllCategories, Category } from "@/lib/categories";
 
-export const metadata: Metadata = {
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+export default async function Home() {
+  // ─── Hero slides from the database ───────────────────────────────
+  const heroRows = await prisma.heroSlide.findMany({
+    orderBy: { order: "asc" },
+  });
+  const heroSlides: Slide[] = heroRows.map((r) => ({
+    id:         r.id,
+    imageUrl:   r.imageUrl,
+    heading:    r.headline    ?? "",
+    subtext:    r.subheadline ?? "",
+    buttonText: r.ctaText     ?? undefined,
+    buttonHref: r.ctaUrl      ?? undefined,
+  }));
 
-export default function Home() {
-  const categoryMeta: { name: string; slug: string; viewMoreHref: string }[] = [
-    {
-      name: "Corporate Wears",
-      slug: "corporate-wears",
-      viewMoreHref: "/categories/corporate-wears",
-    },
-    {
-      name: "African Prints",
-      slug: "african-print",
-      viewMoreHref: "/categories/african-print",
-    },
-    {
-      name: "Casual Looks",
-      slug: "casual-looks",
-      viewMoreHref: "/categories/casual-looks",
-    },
-    {
-      name: "I Have an Event",
-      slug: "i-have-an-event",
-      viewMoreHref: "/categories/i-have-an-event",
-    },
-  ];
+  // ─── Fetch your four built‑in categories dynamically ───────────────
+  const categories: Category[] = await getAllCategories();
 
+  // ─── For each category, fetch up to 4 of its newest “Published” products ────
   const categoriesWithProducts: {
     name: string;
     viewMoreHref: string;
     products: Product[];
-  }[] = categoryMeta.map((cat) => ({
-    name: cat.name,
-    viewMoreHref: cat.viewMoreHref,
-    products: getProductsByCategory(cat.slug).slice(0, 4),
-  }));
+  }[] = await Promise.all(
+    categories.map(async ({ slug, name }) => {
+      const products = await getProductsByCategory(slug, 4);
+      return {
+        name,
+        viewMoreHref: `/categories/${slug}`,
+        products,
+      };
+    })
+  );
 
   return (
     <section className="min-h-screen flex flex-col">
       <Header />
       <main className="w-full flex-1">
-        <HeroSlider />
+        <HeroSlider slides={heroSlides} />
         <FeatureHighlights />
         <ProductShowcase categories={categoriesWithProducts} />
       </main>

@@ -9,6 +9,7 @@ import { SearchModalProvider } from "@/lib/context/searchModalContext";
 import ScrollToTop from "@/components/ScroolToTop";
 import NextAuthSessionProvider from "@/components/shared/SessionProvider";
 import { UserProvider } from "@/lib/context/UserContext";
+import ReactQueryProvider from "@/components/ReactQueryProvider";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -87,6 +88,8 @@ export default function RootLayout({
         className={`${openSans.variable} antialiased w-full max-w-[1920px] mx-auto`}
       >
         <NextAuthSessionProvider>
+          <ReactQueryProvider>
+
           <UserProvider>
         <CurrencyProvider>
           <SearchModalProvider>
@@ -96,6 +99,7 @@ export default function RootLayout({
           </SearchModalProvider>
         </CurrencyProvider>
           </UserProvider>
+          </ReactQueryProvider>
         </NextAuthSessionProvider>
         {/* React-Hot-Toast toaster */}
         <HotToaster position="top-right" />

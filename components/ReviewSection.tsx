@@ -1,3 +1,4 @@
+// /components/ReviewSection.tsx
 "use client";
 
 import React from "react";
@@ -10,40 +11,20 @@ import {
 } from "@/components/ui/accordion";
 import ReviewForm from "./ReviewForm";
 import { Button } from "@/components/ui/button";
-import PaginatedReviews, { Review } from "./PaginatedReview";
+import PaginatedReviews from "./PaginatedReview";
+import type { Review } from "@/lib/products";
 
 interface ReviewSectionProps {
-  id: string;
+  productId: string;
   user: any;
+  reviews: Review[];
 }
 
-// replace this dummy array or fetch from API
-const reviews: Review[] = [
-  {
-    author: "Collins Jr",
-    content: "I love the fact that the gown is well fitted.",
-  },
-  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
-  { author: "Sandra O", content: "Quality and fit are top-notch." },
-  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
-  {
-    author: "Collins Jr",
-    content: "I love the fact that the gown is well fitted.",
-  },
-  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
-  { author: "Sandra O", content: "Quality and fit are top-notch." },
-  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
-  {
-    author: "Collins Jr",
-    content: "I love the fact that the gown is well fitted.",
-  },
-  { author: "Adaobi K", content: "This dress made me feel elegant all night!" },
-  { author: "Sandra O", content: "Quality and fit are top-notch." },
-  { author: "Kim A", content: "Absolutely beautiful craftsmanship!" },
-  // ... potentially many more
-];
-
-export default function ReviewSection({ id, user }: ReviewSectionProps) {
+export default function ReviewSection({
+  productId,
+  user,
+  reviews,
+}: ReviewSectionProps) {
   return (
     <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
       {/* Reviews Accordion */}
@@ -55,7 +36,7 @@ export default function ReviewSection({ id, user }: ReviewSectionProps) {
             </AccordionTrigger>
             <AccordionContent className="mt-4">
               {reviews.length === 0 ? (
-                <p className="text-muted-foreground">
+                <p className="text-gray-500">
                   No reviews yet. Be the first to leave one!
                 </p>
               ) : (
@@ -71,7 +52,7 @@ export default function ReviewSection({ id, user }: ReviewSectionProps) {
         {user ? (
           <>
             <h3 className="text-lg font-semibold">Leave a Review</h3>
-            <ReviewForm productId={id} />
+            <ReviewForm productId={productId} />
           </>
         ) : (
           <Link href="/auth/login">

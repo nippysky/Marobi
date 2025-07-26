@@ -1,6 +1,9 @@
+export const dynamic = "force-dynamic";
+
 import BackButton from "@/components/BackButton";
 import EditProductSection from "./EditProductSection";
 import { prisma } from "@/lib/db";
+import { getAllCategories } from "@/lib/categories";
 import { notFound } from "next/navigation";
 import type { ProductPayload } from "@/types/product";
 
@@ -12,7 +15,8 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
     select: {
       id: true,
       name: true,
-      category: true,
+      // only grab the slug from the relation:
+      category: { select: { slug: true } },
       description: true,
       images: true,
       priceNGN: true,
@@ -50,19 +54,19 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
   return {
     id:          product.id,
     name:        product.name,
-    category:    product.category,
+    // map category relation to slug string:
+    category:    product.category.slug,
     description: product.description ?? "",
     images:      product.images,
-    // ⚠️ Now as numbers, not strings:
     price: {
       NGN: product.priceNGN ?? 0,
       USD: product.priceUSD ?? 0,
       EUR: product.priceEUR ?? 0,
       GBP: product.priceGBP ?? 0,
     },
-    status:    product.status,
-    sizeMods:  product.sizeMods,
-    colors:    distinctColors,
+    status:     product.status,
+    sizeMods:   product.sizeMods,
+    colors:     distinctColors,
     sizeStocks,
     customSizes,
   };
@@ -71,17 +75,23 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
 export default async function EditProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
   const payload = await loadProductPayload(id);
   if (!payload) return notFound();
+
+  // fetch all categories to populate the dropdown
+  const categories = await getAllCategories();
 
   return (
     <div className="p-6">
       <BackButton />
       <h1 className="text-2xl font-bold my-10">Edit Product</h1>
-      <EditProductSection initialProduct={payload} />
+      <EditProductSection
+        initialProduct={payload}
+        categories={categories}
+      />
     </div>
   );
 }

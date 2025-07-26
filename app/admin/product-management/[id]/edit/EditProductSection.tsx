@@ -2,14 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import type { ProductPayload } from "@/types/product";
+import type { Category } from "@/lib/categories";
 import toast from "react-hot-toast";
-import ProductForm from "../../ProductForm";
+import ProductForm from "@/app/admin/product-management/ProductForm";
 
 interface Props {
   initialProduct: ProductPayload;
+  categories: Category[];
 }
 
-export default function EditProductSection({ initialProduct }: Props) {
+export default function EditProductSection({ initialProduct, categories }: Props) {
   const router = useRouter();
 
   async function handleSave(payload: ProductPayload) {
@@ -30,6 +32,7 @@ export default function EditProductSection({ initialProduct }: Props) {
   return (
     <ProductForm
       initialProduct={initialProduct}
+      categories={categories}
       onSave={handleSave}
     />
   );

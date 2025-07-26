@@ -1,17 +1,12 @@
-export const dynamic = "force-dynamic";
-
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
-
-// ─── 1) Zod schema for validation ────────────────────────
 const ProductPayload = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, "Name is required"),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().nullable().optional(),
+  name: z.string().min(1),
+  category: z.string().min(1),     // this is the slug now
+  description: z.string().optional().nullable(),
   price: z.object({
     NGN: z.number(),
     USD: z.number(),
@@ -26,27 +21,28 @@ const ProductPayload = z.object({
   images: z.array(z.string()),
 });
 
-// ─── 2) Branded ID generator ─────────────────────────────
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-function generateBrandedId(length = 10): string {
-  let res = "";
-  for (let i = 0; i < length; i++) {
-    res += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+function generateBrandedId(len = 10) {
+  let s = "";
+  for (let i = 0; i < len; i++) {
+    s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
   }
-  return res;
+  return s;
 }
 
 export async function POST(request: NextRequest) {
   try {
-  const json = await request.json();
-  const parsed = ProductPayload.safeParse(json);
-  if (!parsed.success) {
-    const errs = z.treeifyError(parsed.error);
-    return NextResponse.json({ error: errs }, { status: 400 });
-  }
+    const json = await request.json();
+    const parsed = ProductPayload.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       name,
-      category,
+      category: slug,
       description,
       price,
       status,
@@ -57,20 +53,18 @@ export async function POST(request: NextRequest) {
       images,
     } = parsed.data;
 
-    // build variants list
-    const variants: {
-      color: string;
-      size: string;
-      stock: number;
-    }[] = [];
+    // build variants
+    const variants: { color: string; size: string; stock: number }[] = [];
     const sizes = Object.keys(sizeStocks);
-
-    if (colors.length > 0) {
+    if (colors.length) {
       for (const color of colors) {
         if (sizes.length) {
           for (const size of sizes) {
-            const qty = Number(sizeStocks[size]) || 0;
-            variants.push({ color, size, stock: qty });
+            variants.push({
+              color,
+              size,
+              stock: Number(sizeStocks[size]) || 0,
+            });
           }
         } else {
           variants.push({ color, size: "", stock: 0 });
@@ -78,36 +72,36 @@ export async function POST(request: NextRequest) {
       }
     } else {
       for (const size of sizes) {
-        const qty = Number(sizeStocks[size]) || 0;
-        variants.push({ color: "", size, stock: qty });
+        variants.push({
+          color: "",
+          size,
+          stock: Number(sizeStocks[size]) || 0,
+        });
       }
     }
 
-    // generate our branded product ID
     const brandedId = generateBrandedId(10);
 
-    // create the product + nested variants
     const product = await prisma.product.create({
       data: {
         id: brandedId,
         name,
         description: description ?? null,
         images,
-        category,
         priceNGN: price.NGN,
         priceUSD: price.USD,
         priceEUR: price.EUR,
         priceGBP: price.GBP,
         sizeMods,
         status,
+        // ◀── 👉 here’s the fix:
+        category: { connect: { slug } },
         variants: variants.length
-          ? {
-              create: variants.map((v) => ({
-                color: v.color,
-                size: v.size,
-                stock: v.stock,
-              })),
-            }
+          ? { create: variants.map((v) => ({
+              color: v.color,
+              size: v.size,
+              stock: v.stock,
+            })) }
           : undefined,
       },
     });

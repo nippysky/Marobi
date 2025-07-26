@@ -1,111 +1,124 @@
+// /components/ProductDetailHero.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
+import type { Session } from "next-auth";
 import type { Product } from "@/lib/products";
-import type { User } from "@/lib/session";
-import { getCategoryBySlug } from "@/lib/constants/categories";
-import OptionSelectors from "./OptionSelectors";
+
 import { BiCategory } from "react-icons/bi";
-import { BadgeCheck, Heart, PencilRuler, Play, Tag } from "lucide-react";
+import { BadgeCheck, Heart, Play, Tag } from "lucide-react";
+import { BsBag } from "react-icons/bs";
+
 import { Button } from "./ui/button";
-import { VideoModal } from "./YoutubeVideoModal";
 import { Skeleton } from "./ui/skeleton";
+import { VideoModal } from "./YoutubeVideoModal";
+import OptionSelectors from "./OptionSelectors";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
-import { BsBag } from "react-icons/bs";
 
-interface ProductDetailHeroProps {
+interface Props {
   product: Product;
-  user: User | null;
+  user: Session["user"] | null;
+  categoryName: string;
 }
 
-export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
+const ProductDetailHero: React.FC<Props> = ({
   product,
   user,
+  categoryName,
 }) => {
-  // prevent hydration mismatch for wishlist button
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  // avoid SSR/client mismatch
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  const [featuredImage, setFeaturedImage] = useState(product.imageUrl);
+  // unique color list
+  const colors = useMemo(
+    () => Array.from(new Set(product.variants.map((v) => v.color))),
+    [product.variants]
+  );
+
+  // image gallery
+  const [featuredImage, setFeaturedImage] = useState<string>(
+    product.images[0] || ""
+  );
   const [imgLoading, setImgLoading] = useState(true);
+  const moreImages = product.images.slice(1);
+
+  // video
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   const router = useRouter();
   const { openSizeChart } = useSizeChart();
   const addToCart = useCartStore((s) => s.addToCart);
 
-  // wishlist actions
+  // wishlist hooks (don’t call inside)
   const addToWishlist = useWishlistStore((s) => s.addToWishlist);
   const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
-  const isWishlisted = useWishlistStore((s) => s.isWishlisted(product.id));
+  const isWishlisted = useWishlistStore((s) =>
+    s.isWishlisted(product.id)
+  );
 
   const { currency } = useCurrency();
+  const rawPrice = product.prices[currency];
+  const currentPrice = formatAmount(rawPrice, currency);
 
-  // Pricing
-  const currentPrice = formatAmount(
-    product.isDiscounted && product.discountPrices
-      ? product.discountPrices[currency]
-      : product.prices[currency],
-    currency
+  // stock & sizes
+  const totalStock = product.variants.reduce(
+    (sum, v) => sum + v.inStock,
+    0
   );
-  const basePrice =
-    product.isDiscounted && product.basePrices
-      ? formatAmount(product.basePrices[currency], currency)
-      : null;
-
-  // Variants & stock
-  const colors = product.variants.map((v) => v.color);
-  const sizesForColor = (color: string) =>
-    product.variants.find((v) => v.color === color)?.sizes.map((s) => s.size) ||
-    [];
-  const totalStock = product.variants
-    .flatMap((v) => v.sizes)
-    .reduce((sum, s) => sum + s.inStock, 0);
   const outOfStock = totalStock === 0;
+  const sizesForColor = (color: string) =>
+    Array.from(
+      new Set(
+        product.variants
+          .filter((v) => v.color === color)
+          .map((v) => v.size)
+      )
+    );
 
-  // Local selectors
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
-  const [customSize, setCustomSize] = useState("");
-  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  // selection state
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [customSize, setCustomSize] = useState<string>("");
+  const [quantity, setQuantity] = useState(1);
 
   const sizeToUse =
-    product.isSizeModifiable && customSize ? customSize : selectedSize;
+    product.sizeMods && customSize ? customSize : selectedSize;
 
   const validate = () => {
     if (outOfStock) {
-      toast.error("Sorry, this item is out of stock.");
+      toast.error("Out of stock");
       return false;
     }
-    if (!selectedColor) {
-      toast.error("Please select a color.");
+    if (product.variants.length > 0 && !selectedColor) {
+      toast.error("Select a color");
       return false;
     }
-    if (!sizeToUse) {
-      toast.error("Please select or enter a size.");
+    if (product.sizeMods && !customSize) {
+      toast.error("Enter a custom size");
       return false;
     }
-    if (selectedQuantity < 1) {
-      toast.error("Quantity must be at least 1.");
+    if (!product.sizeMods && product.variants.length > 0 && !sizeToUse) {
+      toast.error("Select a size");
+      return false;
+    }
+    if (quantity < 1) {
+      toast.error("Quantity must be at least 1");
       return false;
     }
     return true;
   };
 
-  const handleAddToCart = () => {
+  const handleAdd = () => {
     if (!validate()) return;
-    for (let i = 0; i < selectedQuantity; i++) {
+    for (let i = 0; i < quantity; i++) {
       addToCart(product, selectedColor, sizeToUse);
     }
     toast.success("Added to cart");
@@ -113,9 +126,7 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
 
   const handleBuyNow = () => {
     if (!validate()) return;
-    for (let i = 0; i < selectedQuantity; i++) {
-      addToCart(product, selectedColor, sizeToUse);
-    }
+    addToCart(product, selectedColor, sizeToUse);
     router.push("/checkout");
   };
 
@@ -129,208 +140,126 @@ export const ProductDetailHero: React.FC<ProductDetailHeroProps> = ({
     }
   };
 
-  const categoryMeta = getCategoryBySlug(product.category);
-  const categoryName = categoryMeta ? categoryMeta.name : product.category;
-
   return (
     <>
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-        {/* Featured Image */}
+      <section className="grid lg:grid-cols-2 gap-10 mt-10">
+        {/* IMAGE */}
         <div className="relative w-full aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
-          <Skeleton
-            className={`absolute inset-0 h-full w-full ${
-              imgLoading ? "visible" : "hidden"
-            }`}
-          />
+          <Skeleton className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`} />
           <Image
             src={featuredImage}
             alt={product.name}
             fill
-            className="object-cover object-center"
-            priority
-            unoptimized
+            className="object-cover"
             onLoad={() => setImgLoading(false)}
+            priority
           />
         </div>
 
-        {/* Details */}
-        <div className="flex flex-col space-y-6">
-          {/* More Photos */}
-          <div className="space-y-2">
-            <p className="text-base font-medium text-gray-700 dark:text-gray-300">
-              More Photos
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {product.moreImages.map((thumbUrl, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setFeaturedImage(thumbUrl);
-                    setImgLoading(true);
-                  }}
-                  className={`relative w-full aspect-[4/5] overflow-hidden rounded-lg bg-gray-100 ${
-                    featuredImage === thumbUrl ? "ring-2 ring-green-500" : ""
-                  }`}
-                >
-                  <Image
-                    src={thumbUrl}
-                    alt={`${product.name} thumbnail ${idx + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              className="w-full mt-3"
-              onClick={() => setIsVideoOpen(true)}
-            >
-              <Play /> Play Video
-            </Button>
-          </div>
-
-          {/* Category / Size Chart / Stock */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-5 text-sm text-gray-700 dark:text-gray-300">
-            <Link
-              href={`/categories/${product.category}`}
-              className="flex items-center gap-1 underline"
-            >
-              <BiCategory className="w-7 h-7" />
-              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-                {categoryName}
-              </p>
-            </Link>
-            <button
-              onClick={openSizeChart}
-              className="flex items-center gap-1 underline"
-            >
-              <PencilRuler className="w-7 h-7" />
-              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-                See Size Chart
-              </p>
-            </button>
-            <div
-              className={`flex items-center gap-1 ${
-                outOfStock
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              <BadgeCheck className="w-7 h-7" />
-              <p className="text-[0.85rem] font-semibold tracking-wider uppercase">
-                {totalStock} in Stock
-              </p>
-            </div>
-          </div>
-
-          {/* Title & Description */}
-          <div className="space-y-3 mt-5">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-              {product.name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              {product.description}
-            </p>
-          </div>
-
-          {/* Price & Base Price */}
-          <div className="space-y-1 mt-5">
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {currentPrice}
-            </div>
-            {basePrice && (
-              <div className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                {basePrice}
+        {/* DETAILS */}
+        <div className="space-y-6">
+          {/* THUMBNAILS + VIDEO */}
+          {moreImages.length > 0 && (
+            <div className="space-y-2">
+              <p className="font-medium text-gray-700">More Photos</p>
+              <div className="grid grid-cols-3 gap-3">
+                {moreImages.map((url) => (
+                  <button
+                    key={url}
+                    onClick={() => {
+                      setFeaturedImage(url);
+                      setImgLoading(true);
+                    }}
+                    className={`relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 ${
+                      featuredImage === url ? "ring-2 ring-indigo-500" : ""
+                    }`}
+                  >
+                    <Image src={url} alt="" fill className="object-cover" />
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-
-          {/* Variant & Quantity Selectors */}
-          <OptionSelectors
-            sizes={sizesForColor(selectedColor)}
-            colors={colors}
-            maxQuantity={totalStock}
-            selectedSize={selectedSize}
-            onSizeChange={setSelectedSize}
-            selectedColor={selectedColor}
-            onColorChange={(c) => {
-              setSelectedColor(c);
-              setSelectedSize("");
-            }}
-            selectedQuantity={selectedQuantity}
-            onQuantityChange={setSelectedQuantity}
-          />
-
-          {/* Custom Size Input */}
-          {product.isSizeModifiable && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Custom Size
-              </label>
-              <input
-                type="text"
-                value={customSize}
-                onChange={(e) => setCustomSize(e.target.value)}
-                placeholder="Enter your size"
-                className="mt-1 w-full rounded border-gray-300 px-3 py-2 shadow-sm focus:ring focus:ring-green-200"
-              />
+              <Button variant="outline" className="w-full" onClick={() => setIsVideoOpen(true)}>
+                <Play className="mr-2" /> Play Video
+              </Button>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Button
-              onClick={handleBuyNow}
-              disabled={
-                outOfStock ||
-                !selectedColor ||
-                !sizeToUse ||
-                selectedQuantity < 1
-              }
-            >
-              <Tag /> Buy Now
+          {/* CATEGORY / STOCK / SIZE CHART */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm text-gray-700">
+            <a href={`/categories/${product.category}`} className="flex items-center gap-1 underline">
+              <BiCategory /> {categoryName}
+            </a>
+            {product.sizeMods && (
+              <button onClick={openSizeChart} className="flex items-center gap-1 underline">
+                <Tag /> Custom Size
+              </button>
+            )}
+            <div className="flex items-center gap-1">
+              <BadgeCheck className={outOfStock ? "text-red-600" : ""} />
+              {outOfStock ? "Out of stock" : `${totalStock} in stock`}
+            </div>
+          </div>
+
+          {/* NAME & DESC */}
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
+            <p className="text-gray-600">{product.description}</p>
+          </div>
+
+          {/* PRICE */}
+          <div className="text-3xl font-bold text-gray-900">{currentPrice}</div>
+
+          {/* OPTIONS */}
+          {product.variants.length > 0 && (
+            <OptionSelectors
+              colors={colors}
+              sizes={sizesForColor(selectedColor)}
+              maxQuantity={totalStock}
+              selectedColor={selectedColor}
+              onColorChange={(c) => {
+                setSelectedColor(c);
+                setSelectedSize("");
+              }}
+              selectedSize={selectedSize}
+              onSizeChange={setSelectedSize}
+              selectedQuantity={quantity}
+              onQuantityChange={setQuantity}
+            />
+          )}
+
+          {/* CUSTOM SIZE FIELD */}
+          {product.sizeMods && (
+            <input
+              type="text"
+              value={customSize}
+              onChange={(e) => setCustomSize(e.target.value)}
+              placeholder="Enter custom size"
+              className="w-full rounded border px-3 py-2"
+            />
+          )}
+
+          {/* ACTIONS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            <Button onClick={handleBuyNow} disabled={outOfStock}>
+              <Tag className="mr-2" /> Buy Now
             </Button>
-            <Button
-              variant="outline"
-              onClick={handleAddToCart}
-              disabled={
-                outOfStock ||
-                !selectedColor ||
-                !sizeToUse ||
-                selectedQuantity < 1
-              }
-            >
-              <BsBag className="w-5 h-5" />
-              Add to Cart
+            <Button variant="outline" onClick={handleAdd} disabled={outOfStock}>
+              <BsBag className="mr-2" /> Add to Cart
             </Button>
           </div>
 
-          {/* Wishlist Toggle */}
-          {user && hasMounted && (
-            <Button
-              variant="secondary"
-              className="mt-4"
-              onClick={toggleWishlist}
-              disabled={outOfStock}
-            >
-              <Heart className={isWishlisted ? "text-red-500" : ""} />
-              <span className="ml-2">
-                {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              </span>
+          {/* WISHLIST */}
+          {user && mounted && (
+            <Button variant="secondary" className="mt-4" onClick={toggleWishlist}>
+              <Heart className={isWishlisted ? "text-red-500" : ""} />{" "}
+              {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
             </Button>
           )}
         </div>
       </section>
 
-      {/* Video Modal */}
-      {isVideoOpen && (
-        <VideoModal
-          onClose={() => setIsVideoOpen(false)}
-          videoId="klKVm1FALhs?si=ad6AgSmIjc2QEqjq"
-        />
-      )}
+      {/* VIDEO MODAL */}
+      {isVideoOpen && <VideoModal onClose={() => setIsVideoOpen(false)} videoId={product.videoId || ""} />}
     </>
   );
 };

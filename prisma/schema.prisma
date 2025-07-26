@@ -1,3 +1,5 @@
+// schema.prisma
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -46,73 +48,81 @@ enum UserRole {
 }
 
 model Customer {
-  id                   String      @id @default(cuid())
-  firstName            String
-  lastName             String
-  email                String      @unique
-  phone                String
-  passwordHash         String?
-  deliveryAddress      String?
-  billingAddress       String?
-  country              String?
-  state                String?
-  registeredAt         DateTime    @default(now())
-  lastLogin            DateTime?
-  orders               Order[]
-  wishlistItems        WishlistItem[]
-  reviews              Review[]
-  emailVerified        Boolean     @default(false)
+  id                       String         @id @default(cuid())
+  firstName                String
+  lastName                 String
+  email                    String         @unique
+  phone                    String
+  passwordHash             String?
+  deliveryAddress          String?
+  billingAddress           String?
+  country                  String?
+  state                    String?
+  registeredAt             DateTime       @default(now())
+  lastLogin                DateTime?
+  orders                   Order[]
+  wishlistItems            WishlistItem[]
+  reviews                  Review[]
+  emailVerified            Boolean        @default(false)
   verificationToken        String?
-  verificationTokenExpiry DateTime?
-  resetToken           String?
-  resetTokenExpiry     DateTime?
+  verificationTokenExpiry  DateTime?
+  resetToken               String?
+  resetTokenExpiry         DateTime?
 }
 
 model Staff {
-  id                String          @id @default(cuid())
-  firstName         String
-  middleName        String?         @default("")
-  lastName          String
-  email             String          @unique
-  phone             String
-  passwordHash      String
-  jobRoles          JobRole[]       @default([])
-  access            UserRole
-  orders            Order[]
-  offlineSales      OfflineSale[]
-  createdAt         DateTime        @default(now())
-  emailVerified     Boolean         @default(true)
-  dateOfBirth       DateTime?
-  dateOfEmployment  DateTime?       @default(now())
-  dateOfResignation DateTime?
-  address           String?
-  emailPersonal     String?
-  guarantorName     String?
-  guarantorAddress  String?
-  guarantorPhone    String?
-  resetToken        String?
-  resetTokenExpiry  String?  
-  lastLogin         DateTime?
+  id                    String             @id @default(cuid())
+  firstName             String
+  middleName            String?            @default("")
+  lastName              String
+  email                 String             @unique
+  phone                 String
+  passwordHash          String
+  jobRoles              JobRole[]          @default([])
+  access                UserRole
+  orders                Order[]
+  offlineSales          OfflineSale[]
+  createdAt             DateTime           @default(now())
+  emailVerified         Boolean            @default(true)
+  dateOfBirth           DateTime?
+  dateOfEmployment      DateTime?          @default(now())
+  dateOfResignation     DateTime?
+  address               String?
+  emailPersonal         String?
+  guarantorName         String?
+  guarantorAddress      String?
+  guarantorPhone        String?
+  resetToken            String?
+  resetTokenExpiry      String?
+  lastLogin             DateTime?
+}
+
+model Category {
+  slug        String     @id
+  name        String
+  description String?
+  products    Product[]  @relation("ProductToCategory")
 }
 
 model Product {
-  id            String         @id @default(cuid())
-  name          String
-  description   String?
-  images        String[]       @default([])
-  category      String
-  priceNGN      Float?
-  priceUSD      Float?
-  priceEUR      Float?
-  priceGBP      Float?
-  sizeMods      Boolean        @default(false)
-  status        ProductStatus  @default(Draft)
-  variants      Variant[]
-  reviews       Review[]
-  averageRating Float          @default(0)
-  ratingCount   Int            @default(0)
-  wishlistItems WishlistItem[]
-  createdAt     DateTime       @default(now())
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  images         String[]        @default([])
+  categorySlug   String
+  category       Category        @relation("ProductToCategory", fields: [categorySlug], references: [slug])
+  priceNGN       Float?
+  priceUSD       Float?
+  priceEUR       Float?
+  priceGBP       Float?
+  sizeMods       Boolean         @default(false)
+  status         ProductStatus   @default(Draft)
+  variants       Variant[]
+  reviews        Review[]
+  averageRating  Float           @default(0)
+  ratingCount    Int             @default(0)
+  wishlistItems  WishlistItem[]
+  createdAt      DateTime        @default(now())
 }
 
 model Variant {
@@ -125,7 +135,6 @@ model Variant {
   weight     Float?
   createdAt  DateTime   @default(now())
 
-  // back‑relation for OrderItem
   orderItems OrderItem[]
 
   @@unique([productId, color, size], name: "product_color_size")
@@ -175,7 +184,6 @@ model OrderItem {
   order      Order    @relation(fields: [orderId], references: [id])
   orderId    String
 
-  // REQUIRED foreign key now
   variant    Variant  @relation(fields: [variantId], references: [id])
   variantId  String
 

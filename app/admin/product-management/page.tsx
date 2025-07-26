@@ -1,11 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
+import { getAllCategories } from "@/lib/categories";
 import AddNewProductButton from "@/components/admin/AddNewProductButton";
 import EmptyState from "@/components/admin/EmptyState";
 import ProductsTable, { AdminProduct } from "./ProductsTable";
-
-
 
 async function getProductsForTable(): Promise<AdminProduct[]> {
   const products = await prisma.product.findMany({
@@ -14,7 +13,9 @@ async function getProductsForTable(): Promise<AdminProduct[]> {
       id: true,
       name: true,
       images: true,
-      category: true,
+      category: {
+        select: { name: true },
+      },
       priceNGN: true,
       priceUSD: true,
       priceEUR: true,
@@ -27,13 +28,13 @@ async function getProductsForTable(): Promise<AdminProduct[]> {
     },
   });
 
-  return products.map(p => {
+  return products.map((p) => {
     const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
     return {
       id: p.id,
       name: p.name,
-      image: p.images[0] || "",
-      category: p.category as any,
+      image: p.images[0] ?? "",
+      category: p.category.name,
       price: {
         NGN: p.priceNGN ?? 0,
         USD: p.priceUSD ?? 0,
@@ -42,7 +43,7 @@ async function getProductsForTable(): Promise<AdminProduct[]> {
       },
       stockCount: totalStock,
       stockTotal: totalStock,
-      status: p.status,          // enum value Draft | Published | Archived
+      status: p.status,
       averageRating: p.averageRating,
       ratingCount: p.ratingCount,
       createdAt: p.createdAt,
@@ -52,6 +53,8 @@ async function getProductsForTable(): Promise<AdminProduct[]> {
 
 export default async function ProductsManagementPage() {
   const products = await getProductsForTable();
+  const categories = await getAllCategories();
+  const categoryNames = categories.map((c) => c.name);
 
   return (
     <div className="py-6 px-3 space-y-8">
@@ -67,7 +70,10 @@ export default async function ProductsManagementPage() {
           action={<AddNewProductButton />}
         />
       ) : (
-        <ProductsTable initialData={products} />
+        <ProductsTable
+          initialData={products}
+          categories={categoryNames}
+        />
       )}
     </div>
   );

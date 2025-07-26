@@ -6,23 +6,33 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALL_PRODUCTS, type Product } from "@/lib/products";
+import { useQuery } from "@tanstack/react-query";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
-import { getCategoryBySlug } from "@/lib/constants/categories";
+import type { Product } from "@/lib/products";
 
 interface SearchBarProps {
   className?: string;
 }
 
+// simple debounce hook
+function useDebounce<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState<T>(value);
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(handle);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function SearchBar({ className }: SearchBarProps) {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query.trim(), 300);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   const { currency } = useCurrency();
 
-  // Close dropdown on outside click
+  // close dropdown on outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -33,26 +43,35 @@ export default function SearchBar({ className }: SearchBarProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  // Filter products by name
-  const results: Product[] =
-    query.trim() === ""
-      ? []
-      : ALL_PRODUCTS.filter((p) =>
-          p.name.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 6); // limit to top 6
+  // fetch matching products via React Query (v5 single‑options signature)
+  const { data: products = [], isFetching } = useQuery<Product[], Error>({
+    queryKey: ["search-bar", debouncedQuery],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/search?query=${encodeURIComponent(debouncedQuery)}`
+      );
+      if (!res.ok) throw new Error("Search failed");
+      return (await res.json()) as Product[];
+    },
+    enabled: debouncedQuery.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // top 6 results
+  const results = products.slice(0, 6);
 
   return (
-    <div ref={ref} className={`relative ${className}`}>
+    <div ref={ref} className={`relative ${className ?? ""}`}>
       <div className="relative">
         <SearchIcon
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
           size={16}
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
         />
         <Input
           placeholder="Search products…"
           className="pl-10 pr-4 py-2 rounded-full placeholder:text-center"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.currentTarget.value)}
           onFocus={() => setOpen(true)}
         />
       </div>
@@ -60,32 +79,44 @@ export default function SearchBar({ className }: SearchBarProps) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
             className="absolute top-full mt-2 w-full max-h-80 overflow-y-auto rounded-lg bg-white shadow-lg z-50"
           >
-            {results.length > 0 ? (
-              results.map((product) => {
-                const category =
-                  getCategoryBySlug(product.category)?.name ?? product.category;
+            {debouncedQuery === "" ? (
+              <p className="p-4 text-gray-500 text-sm">Type to search…</p>
+            ) : isFetching ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 py-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse space-y-2 px-3">
+                    <div className="h-12 w-12 bg-gray-100 rounded" />
+                    <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                    <div className="h-3 w-1/2 bg-gray-100 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : results.length === 0 ? (
+              <p className="p-4 text-gray-500 text-sm">No products found.</p>
+            ) : (
+              results.map((p) => {
                 const price =
-                  product.isDiscounted && product.discountPrices
-                    ? formatAmount(product.discountPrices[currency], currency)
-                    : formatAmount(product.prices[currency], currency);
+                  p.isDiscounted && p.discountPrices
+                    ? formatAmount(p.discountPrices[currency], currency)
+                    : formatAmount(p.prices[currency], currency);
 
                 return (
                   <Link
-                    key={product.id}
-                    href={`/product/${product.id}`}
+                    key={p.id}
+                    href={`/product/${p.id}`}
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-gray-100">
+                    <div className="w-12 h-12 rounded overflow-hidden bg-gray-100">
                       <Image
-                        src={product.imageUrl}
-                        alt={product.name}
+                        src={p.imageUrl}
+                        alt={p.name}
                         width={48}
                         height={48}
                         className="object-cover"
@@ -93,20 +124,16 @@ export default function SearchBar({ className }: SearchBarProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-medium text-gray-900">
-                        {product.name}
+                        {p.name}
                       </p>
                       <p className="text-sm text-gray-600">{price}</p>
                       <p className="text-xs text-gray-500 truncate">
-                        {category}
+                        {p.category}
                       </p>
                     </div>
                   </Link>
                 );
               })
-            ) : (
-              <p className="p-4 text-gray-500 text-sm">
-                {query.trim() === "" ? "Type to search…" : "No products found."}
-              </p>
             )}
           </motion.div>
         )}

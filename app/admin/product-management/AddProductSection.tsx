@@ -4,12 +4,16 @@ import { useRouter } from "next/navigation";
 import ProductForm from "./ProductForm";
 import { ProductPayload } from "@/types/product";
 import toast from "react-hot-toast";
+import type { Category } from "@/lib/categories";
 
-export default function AddProductSection() {
+interface Props {
+  categories: Category[];
+}
+
+export default function AddProductSection({ categories }: Props) {
   const router = useRouter();
 
   async function handleSave(payload: ProductPayload) {
-    // This onSave is now only called when the form is valid.
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -19,12 +23,11 @@ export default function AddProductSection() {
       const j = await res.json().catch(() => ({}));
       throw new Error(j.error || "Create failed");
     }
-    // otherwise success
-    return;
   }
 
   return (
     <ProductForm
+      categories={categories}
       onSave={async (payload) => {
         const toastId = toast.loading("Saving product…");
         try {

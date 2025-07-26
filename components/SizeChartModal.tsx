@@ -1,9 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
+
+interface Entry {
+  id: string;
+  sizeLabel: string;
+  chestMin: number;
+  chestMax: number;
+  waistMin: number;
+  waistMax: number;
+}
 
 const backdropVariants = {
   hidden: { opacity: 0 },
@@ -18,6 +27,30 @@ const containerVariants = {
 
 export const SizeChartModal: React.FC = () => {
   const { isOpen, closeSizeChart } = useSizeChart();
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setLoading(true);
+    setError(null);
+
+    fetch("/api/store-settings/size-chart")
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data: { id: string; entries: Entry[] }) => {
+        setEntries(data.entries);
+      })
+      .catch(() => {
+        setError("Failed to load size chart");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -25,9 +58,8 @@ export const SizeChartModal: React.FC = () => {
         <>
           {/* Backdrop */}
           <motion.div
-            style={{ zIndex: 600000000 }}
             key="sc-backdrop"
-            className="fixed inset-0 z-50 bg-black/50"
+            className="fixed inset-0 bg-black/50"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -38,59 +70,63 @@ export const SizeChartModal: React.FC = () => {
 
           {/* Modal Container */}
           <motion.div
-            style={{ zIndex: 600000000 }}
             key="sc-container"
-            className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-black"
+            className="fixed bottom-0 inset-x-0 z-50 flex flex-col bg-white rounded-t-2xl shadow-xl max-h-[80vh]"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             transition={{ type: "tween", duration: 0.3 }}
           >
-            {/* Header with Close Button */}
-            <div className="flex items-center justify-between px-4 pt-6 pb-2 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Size Chart
-              </h2>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Size Chart</h2>
               <button
                 onClick={closeSizeChart}
-                className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 flex items-center space-x-2"
+                className="flex items-center space-x-1 text-gray-600 hover:text-gray-900"
                 aria-label="Close size chart"
               >
-                <p>Close</p>
+                <span>Close</span>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Replace the below div with your actual size-chart content */}
-            <div className="flex-1 px-4 py-6 overflow-y-auto">
-              {/* EXAMPLE: a simple table—swap in your real chart */}
-              <table className="w-full table-auto text-left text-sm">
-                <thead>
-                  <tr>
-                    <th className="px-2 py-1">Size</th>
-                    <th className="px-2 py-1">Chest (in)</th>
-                    <th className="px-2 py-1">Waist (in)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { size: "S", chest: "34-36", waist: "28-30" },
-                    { size: "M", chest: "38-40", waist: "32-34" },
-                    { size: "L", chest: "42-44", waist: "36-38" },
-                    { size: "XL", chest: "46-48", waist: "40-42" },
-                  ].map((row) => (
-                    <tr
-                      key={row.size}
-                      className="border-t border-gray-200 dark:border-gray-700"
-                    >
-                      <td className="px-2 py-2">{row.size}</td>
-                      <td className="px-2 py-2">{row.chest}</td>
-                      <td className="px-2 py-2">{row.waist}</td>
+            {/* Content */}
+            <div className="flex-1 px-6 py-4 overflow-y-auto">
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="animate-spin w-6 h-6 text-gray-500" />
+                </div>
+              ) : error ? (
+                <div className="text-center text-red-600">{error}</div>
+              ) : entries.length === 0 ? (
+                <div className="text-center text-gray-500">
+                  No size chart data available.
+                </div>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="px-4 py-2">Size</th>
+                      <th className="px-4 py-2">Chest (in)</th>
+                      <th className="px-4 py-2">Waist (in)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {entries.map((e) => (
+                      <tr key={e.id} className="border-b last:border-none">
+                        <td className="px-4 py-2">{e.sizeLabel}</td>
+                        <td className="px-4 py-2">
+                          {e.chestMin}–{e.chestMax}
+                        </td>
+                        <td className="px-4 py-2">
+                          {e.waistMin}–{e.waistMax}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </motion.div>
         </>

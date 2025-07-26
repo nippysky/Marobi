@@ -1,3 +1,4 @@
+// app/admin/product-management/ProductsTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -68,16 +69,27 @@ export type AdminProduct = {
 
 interface Props {
   initialData: AdminProduct[];
+  categories: string[];
 }
 
-export default function ProductsTable({ initialData }: Props) {
+export default function ProductsTable({
+  initialData,
+  categories,
+}: Props) {
   const [data, setData] = useState<AdminProduct[]>(initialData);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"All" | string>("All");
-  const [status, setStatus] = useState<"All" | AdminProduct["status"]>("All");
-  const [stock, setStock] = useState<"All" | "InStock" | "OutOfStock">("All");
+  const [status, setStatus] = useState<"All" | AdminProduct["status"]>(
+    "All"
+  );
+  const [stock, setStock] = useState<"All" | "InStock" | "OutOfStock">(
+    "All"
+  );
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 20,
+  });
 
   // dialog state
   const [pendingDelete, setPendingDelete] = useState<string[]>([]);
@@ -85,31 +97,32 @@ export default function ProductsTable({ initialData }: Props) {
 
   // 1) Columns ────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<AdminProduct>[]>(() => [
-    // 1. Select checkbox
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
+          onCheckedChange={(v) =>
+            table.toggleAllPageRowsSelected(!!v)
+          }
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={v => row.toggleSelected(!!v)}
+          onCheckedChange={(v) => row.toggleSelected(!!v)}
         />
       ),
     },
-    // 2. Product ID
     {
       accessorKey: "id",
       header: "ID",
       cell: ({ getValue }) => (
-        <code className="font-mono text-xs break-all">{getValue<string>()}</code>
+        <code className="font-mono text-xs break-all">
+          {getValue<string>()}
+        </code>
       ),
     },
-    // 3. Product Name + thumbnail
     {
       accessorKey: "name",
       header: "Product",
@@ -130,9 +143,7 @@ export default function ProductsTable({ initialData }: Props) {
         </div>
       ),
     },
-    // 4. Category
     { accessorKey: "category", header: "Category" },
-    // 5. Status
     {
       id: "status",
       header: "Status",
@@ -145,47 +156,49 @@ export default function ProductsTable({ initialData }: Props) {
             ? "bg-yellow-100 text-yellow-800"
             : "bg-gray-200 text-gray-700";
         return (
-          <span className={`px-2 py-0.5 rounded-full text-xs ${badge}`}>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs ${badge}`}
+          >
             {s}
           </span>
         );
       },
     },
-    // 6. ₦ Price
     {
       id: "priceNGN",
       header: "₦",
-      accessorFn: r => r.price.NGN,
+      accessorFn: (r) => r.price.NGN,
       cell: ({ getValue }) => (
-        <code className="font-mono">₦{getValue<number>().toLocaleString()}</code>
+        <code className="font-mono">
+          ₦{getValue<number>().toLocaleString()}
+        </code>
       ),
       enableSorting: true,
     },
-    // 7. $ Price
     {
       id: "priceUSD",
       header: "$",
-      accessorFn: r => r.price.USD,
-      cell: ({ getValue }) => `$${getValue<number>().toLocaleString()}`,
+      accessorFn: (r) => r.price.USD,
+      cell: ({ getValue }) =>
+        `$${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
-    // 8. € Price
     {
       id: "priceEUR",
       header: "€",
-      accessorFn: r => r.price.EUR,
-      cell: ({ getValue }) => `€${getValue<number>().toLocaleString()}`,
+      accessorFn: (r) => r.price.EUR,
+      cell: ({ getValue }) =>
+        `€${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
-    // 9. £ Price
     {
       id: "priceGBP",
       header: "£",
-      accessorFn: r => r.price.GBP,
-      cell: ({ getValue }) => `£${getValue<number>().toLocaleString()}`,
+      accessorFn: (r) => r.price.GBP,
+      cell: ({ getValue }) =>
+        `£${getValue<number>().toLocaleString()}`,
       enableSorting: true,
     },
-    // 10. Stock
     {
       id: "stock",
       header: "Stock",
@@ -204,7 +217,6 @@ export default function ProductsTable({ initialData }: Props) {
         );
       },
     },
-    // 11. Actions (View/Edit/Delete)
     {
       id: "actions",
       header: "Actions",
@@ -217,12 +229,16 @@ export default function ProductsTable({ initialData }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href={`/admin/product-management/${row.original.id}`}>
+              <Link
+                href={`/admin/product-management/${row.original.id}`}
+              >
                 <Eye className="mr-2 h-4 w-4" /> View
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href={`/admin/product-management/${row.original.id}/edit`}>
+              <Link
+                href={`/admin/product-management/${row.original.id}/edit`}
+              >
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
@@ -242,9 +258,13 @@ export default function ProductsTable({ initialData }: Props) {
 
   // 2) Filter rows client‐side ───────────────────────────────────────
   const filtered = useMemo(() => {
-    return data.filter(p => {
+    return data.filter((p) => {
       const term = search.toLowerCase();
-      if (search && !p.name.toLowerCase().includes(term) && !p.id.toLowerCase().includes(term))
+      if (
+        search &&
+        !p.name.toLowerCase().includes(term) &&
+        !p.id.toLowerCase().includes(term)
+      )
         return false;
       if (category !== "All" && p.category !== category) return false;
       if (status !== "All" && p.status !== status) return false;
@@ -268,7 +288,10 @@ export default function ProductsTable({ initialData }: Props) {
 
   // 4) Which rows are selected?
   const selectedIds = useMemo(
-    () => table.getSelectedRowModel().flatRows.map(r => r.original.id),
+    () =>
+      table
+        .getSelectedRowModel()
+        .flatRows.map((r) => r.original.id),
     [table.getSelectedRowModel().flatRows]
   );
 
@@ -280,20 +303,24 @@ export default function ProductsTable({ initialData }: Props) {
 
     await toast.promise(
       Promise.all(
-        toDelete.map(id =>
-          fetch(`/api/products/${id}`, { method: "DELETE" }).then(res => {
-            if (!res.ok) throw new Error("Delete failed");
-          })
+        toDelete.map((id) =>
+          fetch(`/api/products/${id}`, { method: "DELETE" }).then(
+            (res) => {
+              if (!res.ok) throw new Error("Delete failed");
+            }
+          )
         )
       ),
       {
         loading: "Deleting…",
-        success: `Deleted ${toDelete.length} product${toDelete.length > 1 ? "s" : ""}!`,
+        success: `Deleted ${toDelete.length} product${
+          toDelete.length > 1 ? "s" : ""
+        }!`,
         error: "Could not delete",
       }
     );
 
-    setData(d => d.filter(p => !toDelete.includes(p.id)));
+    setData((d) => d.filter((p) => !toDelete.includes(p.id)));
     table.resetRowSelection();
   }
 
@@ -332,23 +359,24 @@ export default function ProductsTable({ initialData }: Props) {
         <Input
           placeholder="Search by ID or name…"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-sm"
         />
         <div className="flex space-x-2">
-          <Select value={category} onValueChange={v => setCategory(v)}>
+          <Select value={category} onValueChange={(v) => setCategory(v)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Categories</SelectItem>
-              <SelectItem value="Corporate Wears">Corporate Wears</SelectItem>
-              <SelectItem value="African Print">African Print</SelectItem>
-              <SelectItem value="Casual Looks">Casual Looks</SelectItem>
-              <SelectItem value="I Have an Event">I Have an Event</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select value={status} onValueChange={v => setStatus(v as any)}>
+          <Select value={status} onValueChange={(v) => setStatus(v as any)}>
             <SelectTrigger className="w-[152px]">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
@@ -359,9 +387,9 @@ export default function ProductsTable({ initialData }: Props) {
               <SelectItem value="Archived">Archived</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={stock} onValueChange={v => setStock(v as any)}>
+          <Select value={stock} onValueChange={(v) => setStock(v as any)}>
             <SelectTrigger className="w-[152px]">
-              <SelectValue placeholder="Stock Filter" />
+              <SelectValue placeholder="All Stock" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Stock</SelectItem>
@@ -376,13 +404,15 @@ export default function ProductsTable({ initialData }: Props) {
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(hg => (
+            {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="bg-gray-50">
-                {hg.headers.map(header => (
+                {hg.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     className={`px-4 py-2 text-left ${
-                      header.column.getCanSort() ? "cursor-pointer select-none" : ""
+                      header.column.getCanSort()
+                        ? "cursor-pointer select-none"
+                        : ""
                     }`}
                     onClick={header.column.getToggleSortingHandler()}
                   >
@@ -404,21 +434,27 @@ export default function ProductsTable({ initialData }: Props) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
                 className="even:bg-white odd:bg-gray-50 hover:bg-gray-100"
               >
-                {row.getVisibleCells().map(cell => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="px-4 py-2">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-6 text-gray-500">
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center py-6 text-gray-500"
+                >
                   No products found.
                 </TableCell>
               </TableRow>
@@ -437,7 +473,8 @@ export default function ProductsTable({ initialData }: Props) {
           ← Prev
         </Button>
         <span className="text-sm text-gray-700">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
         </span>
         <Button
           variant="link"
@@ -449,9 +486,9 @@ export default function ProductsTable({ initialData }: Props) {
         <select
           className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
-          onChange={e => table.setPageSize(Number(e.target.value))}
+          onChange={(e) => table.setPageSize(Number(e.target.value))}
         >
-          {[10, 20, 30, 50].map(s => (
+          {[10, 20, 30, 50].map((s) => (
             <option key={s} value={s}>
               {s} / page
             </option>
@@ -471,10 +508,16 @@ export default function ProductsTable({ initialData }: Props) {
             <DialogDescription>This cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+            >
               Delete
             </Button>
           </DialogFooter>

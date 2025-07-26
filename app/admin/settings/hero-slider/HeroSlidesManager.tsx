@@ -1,66 +1,57 @@
-// components/admin/HeroSlidesManager.tsx
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { v4 as uuid } from 'uuid'
+import React, { useState, useMemo } from 'react';
+import { v4 as uuid } from 'uuid';
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from '@/components/ui/accordion'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Trash2, Plus, UploadCloud } from 'lucide-react'
-import toast from 'react-hot-toast'
-import BackButton from '../BackButton'
+} from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Trash2, Plus, UploadCloud } from 'lucide-react';
+import toast from 'react-hot-toast';
+import BackButton from '../../../../components/BackButton';
 
 interface Slide {
-  id: string
-  imageUrl: string
-  headline?: string
-  subheadline?: string
-  ctaText?: string
-  ctaUrl?: string
-  order: number
+  id: string;
+  imageUrl: string;
+  headline?: string;
+  subheadline?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  order: number;
 }
 
 export default function HeroSlidesManager({
   initialSlides,
 }: {
-  initialSlides: Slide[]
+  initialSlides: Slide[];
 }) {
-  // state
-  const [slides, setSlides] = useState<Slide[]>(initialSlides)
-  const [openIds, setOpenIds] = useState<string[]>(
-    initialSlides.map((s) => s.id)
-  )
+  // keep track of which IDs originated from the DB
+  const initialIds = useMemo(() => initialSlides.map((s) => s.id), [initialSlides]);
 
-  // patch one slide
+  // state
+  const [slides, setSlides] = useState<Slide[]>(initialSlides);
+  const [openIds, setOpenIds] = useState<string[]>(initialIds);
+
+  // helper: update a slide in-place
   const updateSlide = (id: string, patch: Partial<Slide>) => {
     setSlides((all) =>
       all.map((sl) => (sl.id === id ? { ...sl, ...patch } : sl))
-    )
-  }
+    );
+  };
 
-  // delete on DB & from UI
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await fetch(`/api/store-settings/hero-slides/${id}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('delete failed')
-      toast.success('Slide deleted')
-      setSlides((all) => all.filter((sl) => sl.id !== id))
-      setOpenIds((open) => open.filter((x) => x !== id))
-    } catch {
-      toast.error('Failed to delete slide')
-    }
-  }
+  // remove slide locally (no API call)
+  const removeSlide = (id: string) => {
+    setSlides((all) => all.filter((sl) => sl.id !== id));
+    setOpenIds((open) => open.filter((x) => x !== id));
+  };
 
-  // add new slide (open its accordion immediately)
+  // add new blank slide
   const addSlide = () => {
-    const newId = uuid()
+    const newId = uuid();
     setSlides((all) => [
       ...all,
       {
@@ -72,61 +63,69 @@ export default function HeroSlidesManager({
         ctaUrl: '',
         order: all.length,
       },
-    ])
-    setOpenIds((open) => [...open, newId])
-  }
+    ]);
+    setOpenIds((open) => [...open, newId]);
+  };
 
-  // upload helper
+  // upload to your API
   async function uploadFile(file: File): Promise<string> {
-    const form = new FormData()
-    form.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: form })
-    const json = await res.json()
-    return json.data.secure_url
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const json = await res.json();
+    return json.data.secure_url;
   }
 
-  // save all slides in one go
+  // save everything at once
   const saveAll = async () => {
     try {
       const res = await fetch('/api/store-settings/hero-slides', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(slides),
-      })
-      if (!res.ok) throw new Error('save failed')
-      toast.success('Hero slides saved!')
+      });
+      if (!res.ok) throw new Error('save failed');
+      toast.success('Hero slides saved!');
     } catch {
-      toast.error('Failed to save hero slides.')
+      toast.error('Failed to save hero slides.');
     }
-  }
+  };
 
-  // disable “Save All” until every slide has an image
-  const anyMissingImage = slides.some((sl) => !sl.imageUrl)
+  // disable save until every slide has an image
+  const anyMissingImage = slides.some((sl) => !sl.imageUrl);
 
   return (
     <div className="space-y-6">
       <BackButton />
 
-      {/* Header + Save */}
-      <div className="flex justify-end items-center">
+      {/* Save All */}
+      <div className="flex justify-end">
         {slides.length > 0 && (
-          <Button onClick={saveAll} disabled={anyMissingImage}>
+          <Button
+            onClick={saveAll}
+            disabled={anyMissingImage}
+            className="bg-brand text-white hover:bg-brand/90 disabled:opacity-50"
+          >
             Save All
           </Button>
         )}
       </div>
 
-      {/* No slides yet */}
+      {/* Empty State */}
       {slides.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center text-gray-600 py-12">
           <p className="mb-4">No slides yet.</p>
-          <Button onClick={addSlide} variant="outline">
+          <Button
+            onClick={addSlide}
+            variant="outline"
+            className="border-gray-300 text-gray-800 hover:border-brand hover:text-brand"
+          >
             <Plus className="mr-2" /> Add Your First Slide
           </Button>
         </div>
       ) : (
         <>
-          {/* Accordion of slides */}
+          {/* Accordion of Slides */}
           <Accordion
             type="multiple"
             value={openIds}
@@ -137,33 +136,31 @@ export default function HeroSlidesManager({
               <AccordionItem
                 key={slide.id}
                 value={slide.id}
-                className="border rounded-lg overflow-hidden"
+                className="border rounded-lg border-gray-200 shadow-sm overflow-hidden"
               >
-                {/* Header */}
-                <div className="bg-gray-50 px-4 py-3">
-                  <AccordionTrigger className="flex items-center justify-between w-full">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-8 border rounded overflow-hidden bg-white">
-                        {slide.imageUrl && (
-                          <img
-                            src={slide.imageUrl}
-                            alt=""
-                            className="object-cover w-full h-full"
-                          />
-                        )}
-                      </div>
-                      <span className="font-medium">Slide {idx + 1}</span>
+                <AccordionTrigger className="flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-8 border border-gray-300 rounded overflow-hidden bg-gray-100">
+                      {slide.imageUrl && (
+                        <img
+                          src={slide.imageUrl}
+                          alt={`Slide ${idx + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                      )}
                     </div>
-                  </AccordionTrigger>
-                </div>
+                    <span className="font-medium text-gray-800">
+                      Slide {idx + 1}
+                    </span>
+                  </div>
+                </AccordionTrigger>
 
-                {/* Body */}
-                <AccordionContent className="p-4 bg-white">
+                <AccordionContent className="p-4 bg-white space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Upload area */}
+                    {/* Image Upload */}
                     <div className="flex flex-col items-center">
                       <div
-                        className="w-full h-48 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500 cursor-pointer overflow-hidden"
+                        className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-500 hover:border-brand hover:text-brand transition cursor-pointer overflow-hidden"
                         onClick={() =>
                           document
                             .getElementById(`file-${slide.id}`)
@@ -189,24 +186,26 @@ export default function HeroSlidesManager({
                         accept="image/*"
                         className="hidden"
                         onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          const url = await uploadFile(file)
-                          updateSlide(slide.id, { imageUrl: url })
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const url = await uploadFile(file);
+                          updateSlide(slide.id, { imageUrl: url });
                         }}
                       />
-                      <p className="mt-2 text-sm text-gray-400">
+                      <p className="mt-2 text-sm text-gray-500">
                         Recommended: 1200×600px
                       </p>
                     </div>
 
-                    {/* Text fields + order + delete */}
+                    {/* Text Fields + Order/Delete */}
                     <div className="space-y-4">
                       <Input
                         placeholder="Headline (optional)"
                         value={slide.headline || ''}
                         onChange={(e) =>
-                          updateSlide(slide.id, { headline: e.target.value })
+                          updateSlide(slide.id, {
+                            headline: e.target.value,
+                          })
                         }
                       />
                       <Input
@@ -222,23 +221,26 @@ export default function HeroSlidesManager({
                         placeholder="Button Text (optional)"
                         value={slide.ctaText || ''}
                         onChange={(e) =>
-                          updateSlide(slide.id, { ctaText: e.target.value })
+                          updateSlide(slide.id, {
+                            ctaText: e.target.value,
+                          })
                         }
                       />
                       <Input
                         placeholder="Button URL (optional)"
                         value={slide.ctaUrl || ''}
                         onChange={(e) =>
-                          updateSlide(slide.id, { ctaUrl: e.target.value })
+                          updateSlide(slide.id, {
+                            ctaUrl: e.target.value,
+                          })
                         }
                       />
 
-                      {/* Order + Delete */}
                       <div className="flex items-center space-x-2">
                         <Input
                           type="number"
                           min={0}
-                          className="w-24"
+                          className="w-20"
                           value={slide.order}
                           onChange={(e) =>
                             updateSlide(slide.id, {
@@ -249,9 +251,10 @@ export default function HeroSlidesManager({
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDelete(slide.id)}
+                          className="bg-red-600 text-white hover:bg-red-700"
+                          onClick={() => removeSlide(slide.id)}
                         >
-                          <Trash2 className="mr-2" /> Delete Slide
+                          <Trash2 className="mr-2" /> Delete
                         </Button>
                       </div>
                     </div>
@@ -261,14 +264,18 @@ export default function HeroSlidesManager({
             ))}
           </Accordion>
 
-          {/* Add another */}
-          <div className="pt-4">
-            <Button variant="outline" onClick={addSlide}>
+          {/* Add Another Slide */}
+          <div className="pt-4 text-center">
+            <Button
+              variant="outline"
+              onClick={addSlide}
+              className="border-gray-300 text-gray-800 hover:border-brand hover:text-brand"
+            >
               <Plus className="mr-2" /> Add New Slide
             </Button>
           </div>
         </>
       )}
     </div>
-  )
+  );
 }

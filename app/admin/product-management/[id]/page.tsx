@@ -1,3 +1,4 @@
+// app/admin/product-management/[id]/page.tsx
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
@@ -5,55 +6,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductTabsClient from "./ProductTabsClient";
 
-/** ----- Server‑side fetch ----- */
-async function getProductBasics(id: string) {
-  return prisma.product.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      images: true,
-      category: true,
-      averageRating: true,
-      ratingCount: true,
-      createdAt: true,
-      priceNGN: true,
-      priceUSD: true,
-      priceEUR: true,
-      priceGBP: true,
-    },
-  });
-}
-
-type Params = { id: string };
-
-/** ----- Page (Server Component) ----- */
-export default async function ProductViewPage({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
-  const { id } = await params;
-  const product = await getProductBasics(id);
-  if (!product) return notFound();
-
-  return (
-    <div className="p-6 space-y-6">
-      <HeaderSection product={product} />
-      {/* hydrate only the tabs on the client */}
-      <ProductTabsClient product={product} />
-    </div>
-  );
-}
-
-/** ----------------- Shared Types ----------------- */
 interface ProductBasics {
   id: string;
   name: string;
   description: string | null;
   images: string[];
-  category: string;
+  category: string;             // now a simple string
   averageRating: number;
   ratingCount: number;
   createdAt: Date;
@@ -63,14 +21,68 @@ interface ProductBasics {
   priceGBP: number | null;
 }
 
-/** ----------------- Header (Server) ----------------- */
+async function getProductBasics(id: string): Promise<ProductBasics | null> {
+  const row = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      images: true,
+      // only grab the category.name here:
+      category: {
+        select: {
+          name: true,
+        },
+      },
+      averageRating: true,
+      ratingCount: true,
+      createdAt: true,
+      priceNGN: true,
+      priceUSD: true,
+      priceEUR: true,
+      priceGBP: true,
+    },
+  });
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    images: row.images,
+    category: row.category.name,   // ← string now!
+    averageRating: row.averageRating,
+    ratingCount: row.ratingCount,
+    createdAt: row.createdAt,
+    priceNGN: row.priceNGN,
+    priceUSD: row.priceUSD,
+    priceEUR: row.priceEUR,
+    priceGBP: row.priceGBP,
+  };
+}
+
+export default async function ProductViewPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const product = await getProductBasics(params.id);
+  if (!product) return notFound();
+
+  return (
+    <div className="p-6 space-y-6">
+      <HeaderSection product={product} />
+      <ProductTabsClient product={product} />
+    </div>
+  );
+}
+
 function HeaderSection({ product }: { product: ProductBasics }) {
   const primary = product.images[0] ?? null;
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-4">
         {primary ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={primary}
             alt={product.name}
@@ -85,7 +97,7 @@ function HeaderSection({ product }: { product: ProductBasics }) {
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <div className="mt-1 text-sm text-gray-600">
             Category: {product.category} • Created:{" "}
-            {new Date(product.createdAt).toLocaleDateString()}
+            {product.createdAt.toLocaleDateString()}
           </div>
           <div className="mt-2">
             <RatingBadge
@@ -114,7 +126,6 @@ function HeaderSection({ product }: { product: ProductBasics }) {
   );
 }
 
-/** ----------------- Rating Badge (Server) ----------------- */
 function RatingBadge({
   average,
   count,
@@ -131,6 +142,7 @@ function RatingBadge({
     </div>
   );
 }
+
 function Stars({ value, count }: { value: number; count: number }) {
   if (count === 0)
     return <span className="text-xs text-gray-500">No reviews</span>;
@@ -147,7 +159,7 @@ function Stars({ value, count }: { value: number; count: number }) {
           fill="currentColor"
           viewBox="0 0 20 20"
         >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 …" />
+          <path d="M9.049 2.927c.3-.921 ... (rest of path)" />
         </svg>
       ))}
     </span>
