@@ -117,6 +117,7 @@ model Product {
   priceGBP      Float?
   sizeMods      Boolean        @default(false)
   status        ProductStatus  @default(Draft)
+  videoUrl      String?
   variants      Variant[]
   reviews       Review[]
   averageRating Float          @default(0)

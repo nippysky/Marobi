@@ -21,13 +21,11 @@ import ReviewSection from "@/components/ReviewSection";
 import ProductCard from "@/components/shared/product-card";
 import ProductDetailHero from "@/components/ProductDetailsHero";
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default async function ProductPage({ params }: PageProps) {
-  const { id } = params;
-
+export default async function ProductPage({   params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   // 1️⃣ Load the product
   const product: Product | null = await getProductById(id);
   if (!product) return notFound();

@@ -9,7 +9,8 @@ export type ProductPayload = {
   price: { NGN: string | number; USD: string | number; EUR: string | number; GBP: string | number };
   status: "Draft" | "Published" | "Archived";
   sizeMods: boolean;
-  colors: string[];        // empty => no color dimension
-  sizeStocks: Record<string, string>; // size -> stock (string input)
-  customSizes: string[];   // custom size labels
+  colors: string[]; 
+  sizeStocks: Record<string, string>; 
+  customSizes: string[]; 
+  videoUrl?: string | null;
 };

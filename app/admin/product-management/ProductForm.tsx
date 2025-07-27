@@ -62,6 +62,8 @@ export default function ProductForm({
   const [colors, setColors] = useState<string[]>(
     initialHasColors ? [...(initialProduct?.colors || [])] : []
   );
+  const [videoUrl, setVideoUrl] = useState(initialProduct?.videoUrl ?? "");
+
   useEffect(() => {
     if (hasColors && colors.length === 0) setColors([""]);
     if (!hasColors) setColors([]);
@@ -173,6 +175,7 @@ export default function ProductForm({
       sizeStocks,
       customSizes: customSizes.filter((c) => c.trim()),
       images,
+      videoUrl: videoUrl.trim() || null,
     };
     try {
       await onSave(payload);
@@ -291,7 +294,7 @@ export default function ProductForm({
         )}
         {(["NGN", "USD", "EUR", "GBP"] as const).map((cur) => (
           <div key={cur} className="flex flex-col space-y-1">
-            <Label>{cur} Price * (≥ 1)</Label>
+            <Label>{cur} Price *</Label>
             <Input
               type="number"
               placeholder="0.00"
@@ -313,6 +316,19 @@ export default function ProductForm({
             className="h-32"
           />
         </div>
+
+        <div className="md:col-span-2 flex flex-col space-y-1">
+  <Label>Video URL</Label>
+  <Input
+    type="url"
+    placeholder="https://youtube.com/…"
+    value={videoUrl}
+    onChange={(e) => setVideoUrl(e.target.value)}
+    disabled={saving}
+  />
+</div>
+
+
         <div className="md:col-span-2 space-y-2">
           <Label>Sizes & Stock</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

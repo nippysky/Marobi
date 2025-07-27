@@ -4,26 +4,20 @@ import { prisma } from "@/lib/db";
 const PRODUCT_STATUSES = ["Draft", "Published", "Archived"] as const;
 type ProductStatus = typeof PRODUCT_STATUSES[number];
 const isProductStatus = (v: unknown): v is ProductStatus =>
-  typeof v === "string" && (PRODUCT_STATUSES as readonly string[]).includes(v);
+  typeof v === "string" && PRODUCT_STATUSES.includes(v as any);
 
-/* ------------------------------------------------------------------
-   UTILITIES
-------------------------------------------------------------------- */
+// ────────────────────────────────────────────────────────
+// UTILITIES
+// ────────────────────────────────────────────────────────
 const comboKey = (c: string, s: string) => `${c}|||${s}`;
-
 function numOrNull(v: unknown): number | null {
-  if (v === "" || v === null || v === undefined) return null;
+  if (v === "" || v == null) return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
-
 function cleanStringArray(
   raw: unknown,
-  {
-    dedupe = true,
-    max = 50,
-    maxLen = 180,
-  }: { dedupe?: boolean; max?: number; maxLen?: number } = {}
+  { dedupe = true, max = 50, maxLen = 500 }: { dedupe?: boolean; max?: number; maxLen?: number } = {}
 ): string[] {
   if (!Array.isArray(raw)) return [];
   const out: string[] = [];
@@ -42,7 +36,6 @@ function cleanStringArray(
   }
   return out;
 }
-
 function cleanSizeStocks(raw: unknown): Record<string, string> {
   const out: Record<string, string> = {};
   if (!raw || typeof raw !== "object") return out;
@@ -55,34 +48,25 @@ function cleanSizeStocks(raw: unknown): Record<string, string> {
   }
   return out;
 }
-
-function safePositiveInt(str: string, {
-  min = 0,
-  max = 1_000_000,
-}: { min?: number; max?: number } = {}): number | null {
+function safePositiveInt(str: string, { min = 0, max = 1_000_000 }: { min?: number; max?: number } = {}): number | null {
   const n = parseInt(str, 10);
   if (!Number.isFinite(n)) return null;
   if (n < min) return null;
   if (n > max) return max;
   return n;
 }
-
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
-/* ------------------------------------------------------------------
-   PUT /api/products/[id]
-------------------------------------------------------------------- */
+// ────────────────────────────────────────────────────────
+// PUT /api/products/[id]
+// ────────────────────────────────────────────────────────
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params
-  const productId = id;
-
-  // (Auth placeholder) — add NextAuth or custom guard here.
-  // const session = await getServerSession(authOptions); etc.
+  const { id: productId } = await context.params;
 
   let body: any;
   try {
@@ -91,97 +75,60 @@ export async function PUT(
     return jsonError("Invalid JSON body");
   }
 
-  /* ---------- Basic Field Validation ---------- */
-  if (!body?.name || typeof body.name !== "string")
-    return jsonError("Product name is required.");
-  if (!body?.category || typeof body.category !== "string")
-    return jsonError("Category is required.");
-  if (!isProductStatus(body.status))
-    return jsonError("Invalid status.");
+  // basic validation
+  if (!body?.name || typeof body.name !== "string") return jsonError("Product name is required.");
+  if (!body?.category || typeof body.category !== "string") return jsonError("Category is required.");
+  if (!isProductStatus(body.status)) return jsonError("Invalid status.");
 
   const name = body.name.trim().slice(0, 200);
-  const category = body.category.trim().slice(0, 120);
-  const description =
-    typeof body.description === "string"
-      ? body.description.trim().slice(0, 10_000) || null
-      : null;
-
-  /* ---------- Images & Dimensions ---------- */
-  const images = cleanStringArray(body.images, {
-    max: 20,
-    maxLen: 500,
-  });
-
-  // Colors optional; after cleaning
-  const colors = cleanStringArray(body.colors, {
-    max: 50,
-    maxLen: 120,
-  });
-
+  const categorySlug = body.category.trim().slice(0, 120);
+  const description = typeof body.description === "string"
+    ? body.description.trim().slice(0, 10_000) || null
+    : null;
+  const images = cleanStringArray(body.images, { max: 20, maxLen: 500 });
+  const colors = cleanStringArray(body.colors, { max: 50, maxLen: 120 });
   const sizeMods = !!body.sizeMods;
+  const videoUrl = typeof body.videoUrl === "string" && body.videoUrl.trim() !== ""
+    ? body.videoUrl.trim()
+    : null;
 
-  /* ---------- Prices (nullable) ---------- */
   const priceNGN = numOrNull(body.price?.NGN);
   const priceUSD = numOrNull(body.price?.USD);
   const priceEUR = numOrNull(body.price?.EUR);
   const priceGBP = numOrNull(body.price?.GBP);
 
-  /* ---------- Size Stocks ---------- */
   const rawSizeStocks = cleanSizeStocks(body.sizeStocks);
   const sizeLabels = Object.keys(rawSizeStocks);
-
-  // If publishing, enforce at least one size/variant (basic rule—adjust as needed)
   if (body.status === "Published" && sizeLabels.length === 0) {
     return jsonError("At least one size/stock entry is required to publish.");
   }
 
-  /* ---------- Build Desired Variants ---------- */
-  // If no colors present, use a single sentinel "" color dimension.
+  // build desired variants
   const effectiveColors = colors.length ? colors : [""];
-
-  const desiredMap = new Map<
-    string,
-    { color: string; size: string; stock: number }
-  >();
-
+  const desiredMap = new Map<string, { color: string; size: string; stock: number }>();
   for (const size of sizeLabels) {
-    const stockStr = rawSizeStocks[size];
-    const stockNum = safePositiveInt(stockStr);
-    if (stockNum === null) continue;
+    const stock = safePositiveInt(rawSizeStocks[size]);
+    if (stock == null) continue;
     for (const color of effectiveColors) {
-      const record = {
-        color,
-        size: size.trim(),
-        stock: stockNum,
-      };
-      const key = comboKey(record.color, record.size);
-      // Overwrite duplicates deterministically (last wins)
-      desiredMap.set(key, record);
+      desiredMap.set(comboKey(color, size), { color, size: size.trim(), stock });
     }
   }
-
-  // If publishing and no valid variant rows survive sanitization:
   if (body.status === "Published" && desiredMap.size === 0) {
-    return jsonError("No valid variants (size/color + stock) supplied for publish.");
+    return jsonError("No valid variants supplied for publish.");
   }
 
-  /* ---------- Perform Transaction ---------- */
   try {
-    const updated = await prisma.$transaction(async tx => {
-      // Ensure product exists
-      const existingProduct = await tx.product.findUnique({
-        where: { id: productId },
-        select: { id: true },
-      });
-      if (!existingProduct) {
-        throw new Error("NOT_FOUND");
-      }
+    // 1) transaction
+    await prisma.$transaction(async (tx) => {
+      const exists = await tx.product.findUnique({ where: { id: productId }, select: { id: true } });
+      if (!exists) throw new Error("NOT_FOUND");
 
+      // update main record
       await tx.product.update({
         where: { id: productId },
         data: {
           name,
-          category,
+          categorySlug,
           description,
           images,
           priceNGN,
@@ -190,122 +137,83 @@ export async function PUT(
           priceGBP,
           sizeMods,
           status: body.status as ProductStatus,
+          videoUrl,   
         },
       });
 
-      const existingVariants = await tx.variant.findMany({
+      const existing = await tx.variant.findMany({
         where: { productId },
         select: { id: true, color: true, size: true },
       });
+      const existingMap = new Map(existing.map(v => [comboKey(v.color, v.size), v]));
 
-      const existingMap = new Map(
-        existingVariants.map(v => [comboKey(v.color, v.size), v])
-      );
-
-      // Upsert or update
       for (const desired of desiredMap.values()) {
         const key = comboKey(desired.color, desired.size);
         if (existingMap.has(key)) {
-            const ev = existingMap.get(key)!;
-            await tx.variant.update({
-              where: { id: ev.id },
-              data: { stock: desired.stock },
-            });
-            existingMap.delete(key);
+          const ev = existingMap.get(key)!;
+          await tx.variant.update({ where: { id: ev.id }, data: { stock: desired.stock } });
+          existingMap.delete(key);
         } else {
-          await tx.variant.create({
-            data: {
-              productId,
-              color: desired.color,
-              size: desired.size,
-              stock: desired.stock,
-            },
-          });
+          await tx.variant.create({ data: { productId, ...desired } });
         }
       }
-
-      // Remove stale variants
-      for (const leftover of existingMap.values()) {
-        await tx.variant.delete({ where: { id: leftover.id } });
+      for (const stale of existingMap.values()) {
+        await tx.variant.delete({ where: { id: stale.id } });
       }
-
-      // Return a lean payload (could expand if UI needs more)
-      return tx.product.findUnique({
-        where: { id: productId },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          description: true,
-          images: true,
-          priceNGN: true,
-          priceUSD: true,
-          priceEUR: true,
-          priceGBP: true,
-          status: true,
-          sizeMods: true,
-          variants: {
-            select: { id: true, color: true, size: true, stock: true },
-            orderBy: [{ color: "asc" }, { size: "asc" }],
-          },
-        },
-      });
     });
 
-    if (!updated) {
-      return jsonError("Product not found.", 404);
-    }
+    // 2) fresh read
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        name: true,
+        categorySlug: true,
+        description: true,
+        images: true,
+        priceNGN: true,
+        priceUSD: true,
+        priceEUR: true,
+        priceGBP: true,
+        sizeMods: true,
+        status: true,
+        videoUrl: true, 
+        variants: { select: { color: true, size: true, stock: true }, orderBy: [{ color: "asc" }, { size: "asc" }] },
+      },
+    });
+    if (!updated) return jsonError("Product not found after update", 404);
 
     return NextResponse.json({
       success: true,
-      product: updated,
+      product: {
+        ...updated,
+        category: updated.categorySlug,
+      },
     });
   } catch (err: any) {
-    if (err?.message === "NOT_FOUND") {
-      return jsonError("Product not found.", 404);
-    }
-    console.error("Product update error:", {
-      message: err?.message,
-      stack: err?.stack,
-    });
+    if (err.message === "NOT_FOUND") return jsonError("Product not found.", 404);
+    console.error("PUT /api/products/[id] error:", err);
     return jsonError("Update failed", 500);
   }
 }
 
-
-
-// ////////////////////////DELETE////////////////////////////
+// ────────────────────────────────────────────────────────
+// DELETE /api/products/[id]
+// ────────────────────────────────────────────────────────
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params
-  const productId = id;
-
+  const { id: productId } = await context.params;
   try {
-    // 1) remove any variants
-    await prisma.variant.deleteMany({
-      where: { productId },
-    });
-
-    // 2) delete the product itself
-    await prisma.product.delete({
-      where: { id: productId },
-    });
-
+    await prisma.variant.deleteMany({ where: { productId } });
+    await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("DELETE /api/products/[id] error:", err);
-    // Prisma “record not found” error comes back as P2025
     if (err.code === "P2025") {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
-    return NextResponse.json(
-      { error: "Could not delete product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Could not delete product" }, { status: 500 });
   }
 }

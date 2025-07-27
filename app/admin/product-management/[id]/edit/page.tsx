@@ -75,9 +75,9 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
 export default async function EditProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
   const payload = await loadProductPayload(id);
   if (!payload) return notFound();
 

@@ -5979,6 +5979,7 @@ export namespace Prisma {
     priceGBP: number | null
     sizeMods: boolean | null
     status: $Enums.ProductStatus | null
+    videoUrl: string | null
     averageRating: number | null
     ratingCount: number | null
     createdAt: Date | null
@@ -5995,6 +5996,7 @@ export namespace Prisma {
     priceGBP: number | null
     sizeMods: boolean | null
     status: $Enums.ProductStatus | null
+    videoUrl: string | null
     averageRating: number | null
     ratingCount: number | null
     createdAt: Date | null
@@ -6012,6 +6014,7 @@ export namespace Prisma {
     priceGBP: number
     sizeMods: number
     status: number
+    videoUrl: number
     averageRating: number
     ratingCount: number
     createdAt: number
@@ -6048,6 +6051,7 @@ export namespace Prisma {
     priceGBP?: true
     sizeMods?: true
     status?: true
+    videoUrl?: true
     averageRating?: true
     ratingCount?: true
     createdAt?: true
@@ -6064,6 +6068,7 @@ export namespace Prisma {
     priceGBP?: true
     sizeMods?: true
     status?: true
+    videoUrl?: true
     averageRating?: true
     ratingCount?: true
     createdAt?: true
@@ -6081,6 +6086,7 @@ export namespace Prisma {
     priceGBP?: true
     sizeMods?: true
     status?: true
+    videoUrl?: true
     averageRating?: true
     ratingCount?: true
     createdAt?: true
@@ -6185,6 +6191,7 @@ export namespace Prisma {
     priceGBP: number | null
     sizeMods: boolean
     status: $Enums.ProductStatus
+    videoUrl: string | null
     averageRating: number
     ratingCount: number
     createdAt: Date
@@ -6221,6 +6228,7 @@ export namespace Prisma {
     priceGBP?: boolean
     sizeMods?: boolean
     status?: boolean
+    videoUrl?: boolean
     averageRating?: boolean
     ratingCount?: boolean
     createdAt?: boolean
@@ -6243,6 +6251,7 @@ export namespace Prisma {
     priceGBP?: boolean
     sizeMods?: boolean
     status?: boolean
+    videoUrl?: boolean
     averageRating?: boolean
     ratingCount?: boolean
     createdAt?: boolean
@@ -6261,6 +6270,7 @@ export namespace Prisma {
     priceGBP?: boolean
     sizeMods?: boolean
     status?: boolean
+    videoUrl?: boolean
     averageRating?: boolean
     ratingCount?: boolean
     createdAt?: boolean
@@ -6279,12 +6289,13 @@ export namespace Prisma {
     priceGBP?: boolean
     sizeMods?: boolean
     status?: boolean
+    videoUrl?: boolean
     averageRating?: boolean
     ratingCount?: boolean
     createdAt?: boolean
   }
 
-  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "images" | "categorySlug" | "priceNGN" | "priceUSD" | "priceEUR" | "priceGBP" | "sizeMods" | "status" | "averageRating" | "ratingCount" | "createdAt", ExtArgs["result"]["product"]>
+  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "images" | "categorySlug" | "priceNGN" | "priceUSD" | "priceEUR" | "priceGBP" | "sizeMods" | "status" | "videoUrl" | "averageRating" | "ratingCount" | "createdAt", ExtArgs["result"]["product"]>
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     category?: boolean | CategoryDefaultArgs<ExtArgs>
     variants?: boolean | Product$variantsArgs<ExtArgs>
@@ -6319,6 +6330,7 @@ export namespace Prisma {
       priceGBP: number | null
       sizeMods: boolean
       status: $Enums.ProductStatus
+      videoUrl: string | null
       averageRating: number
       ratingCount: number
       createdAt: Date
@@ -6760,6 +6772,7 @@ export namespace Prisma {
     readonly priceGBP: FieldRef<"Product", 'Float'>
     readonly sizeMods: FieldRef<"Product", 'Boolean'>
     readonly status: FieldRef<"Product", 'ProductStatus'>
+    readonly videoUrl: FieldRef<"Product", 'String'>
     readonly averageRating: FieldRef<"Product", 'Float'>
     readonly ratingCount: FieldRef<"Product", 'Int'>
     readonly createdAt: FieldRef<"Product", 'DateTime'>
@@ -17386,6 +17399,7 @@ export namespace Prisma {
     priceGBP: 'priceGBP',
     sizeMods: 'sizeMods',
     status: 'status',
+    videoUrl: 'videoUrl',
     averageRating: 'averageRating',
     ratingCount: 'ratingCount',
     createdAt: 'createdAt'
@@ -18028,6 +18042,7 @@ export namespace Prisma {
     priceGBP?: FloatNullableFilter<"Product"> | number | null
     sizeMods?: BoolFilter<"Product"> | boolean
     status?: EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+    videoUrl?: StringNullableFilter<"Product"> | string | null
     averageRating?: FloatFilter<"Product"> | number
     ratingCount?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
@@ -18049,6 +18064,7 @@ export namespace Prisma {
     priceGBP?: SortOrderInput | SortOrder
     sizeMods?: SortOrder
     status?: SortOrder
+    videoUrl?: SortOrderInput | SortOrder
     averageRating?: SortOrder
     ratingCount?: SortOrder
     createdAt?: SortOrder
@@ -18073,6 +18089,7 @@ export namespace Prisma {
     priceGBP?: FloatNullableFilter<"Product"> | number | null
     sizeMods?: BoolFilter<"Product"> | boolean
     status?: EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+    videoUrl?: StringNullableFilter<"Product"> | string | null
     averageRating?: FloatFilter<"Product"> | number
     ratingCount?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
@@ -18094,6 +18111,7 @@ export namespace Prisma {
     priceGBP?: SortOrderInput | SortOrder
     sizeMods?: SortOrder
     status?: SortOrder
+    videoUrl?: SortOrderInput | SortOrder
     averageRating?: SortOrder
     ratingCount?: SortOrder
     createdAt?: SortOrder
@@ -18119,6 +18137,7 @@ export namespace Prisma {
     priceGBP?: FloatNullableWithAggregatesFilter<"Product"> | number | null
     sizeMods?: BoolWithAggregatesFilter<"Product"> | boolean
     status?: EnumProductStatusWithAggregatesFilter<"Product"> | $Enums.ProductStatus
+    videoUrl?: StringNullableWithAggregatesFilter<"Product"> | string | null
     averageRating?: FloatWithAggregatesFilter<"Product"> | number
     ratingCount?: IntWithAggregatesFilter<"Product"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Product"> | Date | string
@@ -19122,6 +19141,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -19143,6 +19163,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -19162,6 +19183,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19183,6 +19205,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19203,6 +19226,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -19219,6 +19243,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19236,6 +19261,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20289,6 +20315,7 @@ export namespace Prisma {
     priceGBP?: SortOrder
     sizeMods?: SortOrder
     status?: SortOrder
+    videoUrl?: SortOrder
     averageRating?: SortOrder
     ratingCount?: SortOrder
     createdAt?: SortOrder
@@ -20314,6 +20341,7 @@ export namespace Prisma {
     priceGBP?: SortOrder
     sizeMods?: SortOrder
     status?: SortOrder
+    videoUrl?: SortOrder
     averageRating?: SortOrder
     ratingCount?: SortOrder
     createdAt?: SortOrder
@@ -20330,6 +20358,7 @@ export namespace Prisma {
     priceGBP?: SortOrder
     sizeMods?: SortOrder
     status?: SortOrder
+    videoUrl?: SortOrder
     averageRating?: SortOrder
     ratingCount?: SortOrder
     createdAt?: SortOrder
@@ -22281,6 +22310,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22300,6 +22330,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22349,6 +22380,7 @@ export namespace Prisma {
     priceGBP?: FloatNullableFilter<"Product"> | number | null
     sizeMods?: BoolFilter<"Product"> | boolean
     status?: EnumProductStatusFilter<"Product"> | $Enums.ProductStatus
+    videoUrl?: StringNullableFilter<"Product"> | string | null
     averageRating?: FloatFilter<"Product"> | number
     ratingCount?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
@@ -22546,6 +22578,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22566,6 +22599,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22636,6 +22670,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22656,6 +22691,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22707,6 +22743,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22727,6 +22764,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -22810,6 +22848,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22830,6 +22869,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23685,6 +23725,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -23705,6 +23746,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -23794,6 +23836,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23814,6 +23857,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24020,6 +24064,7 @@ export namespace Prisma {
     priceGBP?: number | null
     sizeMods?: boolean
     status?: $Enums.ProductStatus
+    videoUrl?: string | null
     averageRating?: number
     ratingCount?: number
     createdAt?: Date | string
@@ -24036,6 +24081,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24055,6 +24101,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24074,6 +24121,7 @@ export namespace Prisma {
     priceGBP?: NullableFloatFieldUpdateOperationsInput | number | null
     sizeMods?: BoolFieldUpdateOperationsInput | boolean
     status?: EnumProductStatusFieldUpdateOperationsInput | $Enums.ProductStatus
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     ratingCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

@@ -1,4 +1,3 @@
-// /lib/products.ts
 import { prisma } from "./db";
 
 export interface Product {
@@ -14,7 +13,7 @@ export interface Product {
     inStock: number;
   }>;
   sizeMods: boolean;
-  videoId: string | null;
+  videoUrl: string | null;
 }
 
 export interface Review {
@@ -50,7 +49,7 @@ export async function getProductById(id: string): Promise<Product | null> {
       inStock: v.stock,
     })),
     sizeMods: p.sizeMods,
-    videoId: null, // or map from a real field if you have one
+    videoUrl: p.videoUrl, // ← pulled from your new Prisma field
   };
 }
 
@@ -82,7 +81,7 @@ export async function getProductsByCategory(
       inStock: v.stock,
     })),
     sizeMods: p.sizeMods,
-    videoId: null,
+    videoUrl: p.videoUrl, // ← also here
   }));
 }
 

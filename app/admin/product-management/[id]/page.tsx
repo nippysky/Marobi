@@ -1,4 +1,3 @@
-// app/admin/product-management/[id]/page.tsx
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
@@ -64,9 +63,10 @@ async function getProductBasics(id: string): Promise<ProductBasics | null> {
 export default async function ProductViewPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const product = await getProductBasics(params.id);
+  const { id } = await params;
+  const product = await getProductBasics(id);
   if (!product) return notFound();
 
   return (

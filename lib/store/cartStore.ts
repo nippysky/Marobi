@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Product } from "@/lib/products";
@@ -17,17 +16,20 @@ export interface CartItem {
 interface CartStoreState {
   items: CartItem[];
 
-  addToCart: (product: Product, color: string, size: string) => void;
+  addToCart: (product: Product, color: string, size: string, quantity?: number) => void;
   removeFromCart: (productId: string, color: string, size: string) => void;
-  updateQuantity: (
-    productId: string,
-    color: string,
-    size: string,
-    newQty: number
-  ) => void;
+  updateQuantity: (productId: string, color: string, size: string, newQty: number) => void;
   clearCart: () => void;
   totalItems: () => number;
   totalAmount: () => number;
+}
+
+// Util: get inStock for a product/color/size
+function getVariantStock(product: Product, color: string, size: string) {
+  const variant = product.variants.find(
+    (v) => v.color === color && v.size === size
+  );
+  return variant?.inStock ?? 0;
 }
 
 export const useCartStore = create<CartStoreState>()(
@@ -35,7 +37,7 @@ export const useCartStore = create<CartStoreState>()(
     (set, get) => ({
       items: [],
 
-      addToCart: (product, color, size) => {
+      addToCart: (product, color, size, quantity = 1) => {
         const items = get().items;
         const idx = items.findIndex(
           (ci) =>
@@ -44,15 +46,12 @@ export const useCartStore = create<CartStoreState>()(
             ci.size === size
         );
 
-        // find the correct variant & size entry
-        const variant = product.variants.find((v) => v.color === color);
-        const sizeEntry = variant?.sizes.find((s) => s.size === size);
-        const maxStock = sizeEntry?.inStock ?? Infinity;
+        const maxStock = getVariantStock(product, color, size);
 
         if (idx !== -1) {
           // increment but cap at that size's inStock
           const existing = items[idx];
-          const newQty = Math.min(existing.quantity + 1, maxStock);
+          const newQty = Math.min(existing.quantity + quantity, maxStock);
           const updated = [
             ...items.slice(0, idx),
             { product, quantity: newQty, color, size },
@@ -60,9 +59,12 @@ export const useCartStore = create<CartStoreState>()(
           ];
           set({ items: updated });
         } else {
-          // new item → quantity = 1
+          // new item → quantity = min(quantity, stock)
           set({
-            items: [...items, { product, quantity: 1, color, size }],
+            items: [
+              ...items,
+              { product, quantity: Math.min(quantity, maxStock), color, size },
+            ],
           });
         }
       },
@@ -92,10 +94,7 @@ export const useCartStore = create<CartStoreState>()(
         if (idx === -1) return;
 
         const productInCart = items[idx].product;
-        // find that variant's stock
-        const variant = productInCart.variants.find((v) => v.color === color);
-        const sizeEntry = variant?.sizes.find((s) => s.size === size);
-        const maxStock = sizeEntry?.inStock ?? Infinity;
+        const maxStock = getVariantStock(productInCart, color, size);
         const cappedQty = Math.min(Math.max(newQty, 0), maxStock);
 
         if (cappedQty <= 0) {
@@ -131,11 +130,14 @@ export const useCartStore = create<CartStoreState>()(
       // returns total in NGN (base currency)
       totalAmount: () => {
         return get().items.reduce((sum, { product, quantity }) => {
-          // pick NGN price, or fallback to USD if missing
+          // Use NGN, then USD, then any other price
           const unitPrice =
             product.prices.NGN ??
             product.prices.USD ??
-            Object.values(product.prices)[0];
+            product.prices.EUR ??
+            product.prices.GBP ??
+            Object.values(product.prices)[0] ??
+            0;
           return sum + unitPrice * quantity;
         }, 0);
       },

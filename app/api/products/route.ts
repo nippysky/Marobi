@@ -19,6 +19,7 @@ const ProductPayload = z.object({
   sizeStocks: z.record(z.string(), z.string()),
   customSizes: z.array(z.string()),
   images: z.array(z.string()),
+  videoUrl: z.string().url().optional().nullable(),
 });
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
       sizeStocks,
       customSizes,
       images,
+      videoUrl,
     } = parsed.data;
 
     // build variants
@@ -94,15 +96,32 @@ export async function POST(request: NextRequest) {
         priceGBP: price.GBP,
         sizeMods,
         status,
-        // ◀── 👉 here’s the fix:
+        videoUrl,                      // ← include the new field
         category: { connect: { slug } },
         variants: variants.length
-          ? { create: variants.map((v) => ({
-              color: v.color,
-              size: v.size,
-              stock: v.stock,
-            })) }
+          ? {
+              create: variants.map((v) => ({
+                color: v.color,
+                size: v.size,
+                stock: v.stock,
+              })),
+            }
           : undefined,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        images: true,
+        priceNGN: true,
+        priceUSD: true,
+        priceEUR: true,
+        priceGBP: true,
+        sizeMods: true,
+        status: true,
+        videoUrl: true,               // ← select it back
+        categorySlug: true,
+        variants: { select: { color: true, size: true, stock: true } },
       },
     });
 
