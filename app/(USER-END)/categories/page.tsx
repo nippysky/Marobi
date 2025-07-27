@@ -1,8 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import React from "react";
-
 import Header from "@/components/shared/header";
-import { CATEGORIES } from "@/lib/constants/categories";
 import {
   Card,
   CardContent,
@@ -11,7 +11,35 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-export default function CategoriesIndex() {
+// ⬇️ Import Prisma client
+import { prisma } from "@/lib/db";
+
+// ⬇️ Type for a category (optional: infer from Prisma if needed)
+type Category = {
+  slug: string;
+  name: string;
+  description?: string | null;
+};
+
+
+
+// Fetch categories from DB (sorted by name)
+async function getCategories(): Promise<Category[]> {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      slug: true,
+      name: true,
+      description: true,
+    },
+  });
+  return categories;
+}
+
+// Server Component (async)
+export default async function CategoriesIndex() {
+  const categories = await getCategories();
+
   return (
     <section className="flex flex-col lg:px-20 md:px-10 px-5">
       <Header />
@@ -44,7 +72,7 @@ export default function CategoriesIndex() {
 
         {/* ───── Category Cards Grid ───── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 pb-20">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/categories/${cat.slug}`}

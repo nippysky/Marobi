@@ -25,6 +25,7 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
       priceGBP: true,
       status: true,
       sizeMods: true,
+       videoUrl: true,
       variants: {
         select: { color: true, size: true, stock: true },
         orderBy: [{ color: "asc" }, { size: "asc" }],
@@ -69,6 +70,7 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
     colors:     distinctColors,
     sizeStocks,
     customSizes,
+    videoUrl:   product.videoUrl ?? "", 
   };
 }
 

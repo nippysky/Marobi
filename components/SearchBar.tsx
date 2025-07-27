@@ -43,7 +43,7 @@ export default function SearchBar({ className }: SearchBarProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  // fetch matching products via React Query (v5 single‑options signature)
+  // fetch matching products via React Query
   const { data: products = [], isFetching } = useQuery<Product[], Error>({
     queryKey: ["search-bar", debouncedQuery],
     queryFn: async () => {
@@ -101,10 +101,12 @@ export default function SearchBar({ className }: SearchBarProps) {
               <p className="p-4 text-gray-500 text-sm">No products found.</p>
             ) : (
               results.map((p) => {
-                const price =
-                  p.isDiscounted && p.discountPrices
-                    ? formatAmount(p.discountPrices[currency], currency)
-                    : formatAmount(p.prices[currency], currency);
+                // Use only your real product price
+                const price = formatAmount(p.prices[currency], currency);
+                // Use main image (or a placeholder)
+                const imgSrc = p.images && p.images.length > 0
+                  ? p.images[0]
+                  : "/placeholder.svg";
 
                 return (
                   <Link
@@ -113,13 +115,14 @@ export default function SearchBar({ className }: SearchBarProps) {
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100"
                   >
-                    <div className="w-12 h-12 rounded overflow-hidden bg-gray-100">
+                    <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
                       <Image
-                        src={p.imageUrl}
+                        src={imgSrc}
                         alt={p.name}
                         width={48}
                         height={48}
                         className="object-cover"
+                        unoptimized // Optional: skip Next.js optimization for local images
                       />
                     </div>
                     <div className="flex-1 min-w-0">

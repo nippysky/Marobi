@@ -53,15 +53,18 @@ export async function getProductById(id: string): Promise<Product | null> {
   };
 }
 
-/** 2️⃣ Fetch related products in same category */
 export async function getProductsByCategory(
   categorySlug: string,
   limit = 8
 ): Promise<Product[]> {
   const rows = await prisma.product.findMany({
-    where: { categorySlug },
+    where: {
+      categorySlug,
+      status: "Published",
+    },
     take: limit,
     include: { variants: { take: 1 } },
+    orderBy: { createdAt: "desc" },
   });
   return rows.map((p) => ({
     id: p.id,
@@ -81,9 +84,10 @@ export async function getProductsByCategory(
       inStock: v.stock,
     })),
     sizeMods: p.sizeMods,
-    videoUrl: p.videoUrl, // ← also here
+    videoUrl: p.videoUrl,
   }));
 }
+
 
 /** 3️⃣ Fetch reviews for a product */
 export async function getReviewsByProduct(
@@ -100,5 +104,69 @@ export async function getReviewsByProduct(
     content: r.body,
     rating: r.rating,
     createdAt: r.createdAt,
+  }));
+}
+
+
+// Fetch all published products with at least one image (for carousel ads)
+export async function getAdProducts(limit = 10): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: {
+      status: "Published",
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { variants: true },
+  });
+  return rows
+    .filter((p) => Array.isArray(p.images) && p.images.length > 0)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description ?? "",
+      images: p.images,
+      category: p.categorySlug,
+      prices: {
+        NGN: p.priceNGN ?? 0,
+        USD: p.priceUSD ?? 0,
+        EUR: p.priceEUR ?? 0,
+        GBP: p.priceGBP ?? 0,
+      },
+      variants: p.variants.map((v: { color: string; size: string; stock: number }) => ({
+        color: v.color,
+        size: v.size,
+        inStock: v.stock,
+      })),
+      sizeMods: p.sizeMods,
+      videoUrl: p.videoUrl,
+    }));
+}
+
+
+export async function getAllProducts(): Promise<Product[]> {
+  const rows = await prisma.product.findMany({
+    where: { status: "Published" },
+    include: { variants: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description ?? "",
+    images: p.images,
+    category: p.categorySlug,
+    prices: {
+      NGN: p.priceNGN ?? 0,
+      USD: p.priceUSD ?? 0,
+      EUR: p.priceEUR ?? 0,
+      GBP: p.priceGBP ?? 0,
+    },
+    variants: p.variants.map((v) => ({
+      color: v.color,
+      size: v.size,
+      inStock: v.stock,
+    })),
+    sizeMods: p.sizeMods,
+    videoUrl: p.videoUrl,
   }));
 }

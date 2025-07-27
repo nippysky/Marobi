@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus, UploadCloud } from 'lucide-react';
+import { Trash2, Plus, UploadCloud, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BackButton from '../../../../components/BackButton';
 
@@ -29,12 +29,10 @@ export default function HeroSlidesManager({
 }: {
   initialSlides: Slide[];
 }) {
-  // keep track of which IDs originated from the DB
   const initialIds = useMemo(() => initialSlides.map((s) => s.id), [initialSlides]);
-
-  // state
   const [slides, setSlides] = useState<Slide[]>(initialSlides);
   const [openIds, setOpenIds] = useState<string[]>(initialIds);
+  const [saving, setSaving] = useState(false); // 👈 NEW: track saving state
 
   // helper: update a slide in-place
   const updateSlide = (id: string, patch: Partial<Slide>) => {
@@ -43,13 +41,11 @@ export default function HeroSlidesManager({
     );
   };
 
-  // remove slide locally (no API call)
   const removeSlide = (id: string) => {
     setSlides((all) => all.filter((sl) => sl.id !== id));
     setOpenIds((open) => open.filter((x) => x !== id));
   };
 
-  // add new blank slide
   const addSlide = () => {
     const newId = uuid();
     setSlides((all) => [
@@ -67,7 +63,6 @@ export default function HeroSlidesManager({
     setOpenIds((open) => [...open, newId]);
   };
 
-  // upload to your API
   async function uploadFile(file: File): Promise<string> {
     const form = new FormData();
     form.append('file', file);
@@ -76,8 +71,10 @@ export default function HeroSlidesManager({
     return json.data.secure_url;
   }
 
-  // save everything at once
+  // 👇 NEW: show toast and spinner while saving
   const saveAll = async () => {
+    setSaving(true);
+    const toastId = toast.loading("Saving slides…");
     try {
       const res = await fetch('/api/store-settings/hero-slides', {
         method: 'PUT',
@@ -85,13 +82,13 @@ export default function HeroSlidesManager({
         body: JSON.stringify(slides),
       });
       if (!res.ok) throw new Error('save failed');
-      toast.success('Hero slides saved!');
+      toast.success('Hero slides saved!', { id: toastId });
     } catch {
-      toast.error('Failed to save hero slides.');
+      toast.error('Failed to save hero slides.', { id: toastId });
     }
+    setSaving(false);
   };
 
-  // disable save until every slide has an image
   const anyMissingImage = slides.some((sl) => !sl.imageUrl);
 
   return (
@@ -103,9 +100,10 @@ export default function HeroSlidesManager({
         {slides.length > 0 && (
           <Button
             onClick={saveAll}
-            disabled={anyMissingImage}
-            className="bg-brand text-white hover:bg-brand/90 disabled:opacity-50"
+            disabled={anyMissingImage || saving}
+            className="bg-brand text-white hover:bg-brand/90 disabled:opacity-50 flex items-center gap-2"
           >
+            {saving && <Loader2 className="animate-spin w-4 h-4 mr-2" />}
             Save All
           </Button>
         )}
@@ -125,7 +123,6 @@ export default function HeroSlidesManager({
         </div>
       ) : (
         <>
-          {/* Accordion of Slides */}
           <Accordion
             type="multiple"
             value={openIds}

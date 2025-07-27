@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
-
-import { ALL_PRODUCTS, Product } from "@/lib/products";
+import { getAllProducts, Product } from "@/lib/products"; // <-- FIXED
 import Header from "@/components/shared/header";
 import FilterableProductList from "@/components/categories/FilterableProductList";
 import Footer from "@/components/shared/footer";
@@ -16,8 +15,8 @@ function shuffle<T>(array: T[]): T[] {
   return arr;
 }
 
-export default function AllProductsPage() {
-  const products: Product[] = shuffle(ALL_PRODUCTS);
+export default async function AllProductsPage() {
+  const products: Product[] = shuffle(await getAllProducts()); // <-- ASYNC fetch
 
   return (
     <section className="flex flex-col">

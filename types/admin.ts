@@ -27,7 +27,6 @@ export interface AdminCustomerOrder {
   totalNGN: number;
   createdAt: string;
   paymentMethod: string;
-
   products: AdminCustomerOrderProduct[];
 
   /** Populated if this order belongs to a registered customer */

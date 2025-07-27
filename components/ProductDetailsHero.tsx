@@ -403,7 +403,7 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
       {isVideoOpen && product.videoUrl && (
         <VideoModal
           onClose={() => setIsVideoOpen(false)}
-          videoId={product.videoUrl}
+          videoUrl={product.videoUrl}
         />
       )}
     </section>

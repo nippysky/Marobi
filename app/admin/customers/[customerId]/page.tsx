@@ -9,7 +9,6 @@ import CustomerSummary from "../CustomerSummary";
 import CustomerOrdersTable from "../CustomerOrdersTable";
 
 export const dynamic = "force-dynamic";
-
 async function fetchCustomer(customerId: string) {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
@@ -32,6 +31,7 @@ async function fetchCustomer(customerId: string) {
           totalAmount: true,
           totalNGN: true,
           createdAt: true,
+          paymentMethod: true,
           items: {
             select: {
               id: true,
@@ -50,6 +50,7 @@ async function fetchCustomer(customerId: string) {
   });
   return customer;
 }
+
 
 export default async function CustomerDetailPage({
   params,
@@ -97,6 +98,7 @@ export default async function CustomerDetailPage({
     totalAmount: o.totalAmount,
     totalNGN: o.totalNGN,
     createdAt: o.createdAt.toISOString(),
+     paymentMethod: o.paymentMethod, 
     customer: {
       id: c.id,
       name: `${c.firstName} ${c.lastName}`.trim(),

@@ -20,26 +20,24 @@ export default function FilterableProductList({ initialProducts }: Props) {
         initialProducts.filter((p) => {
           const pr = p.prices[currency];
           if (pr < f.priceRange[0] || pr > f.priceRange[1]) return false;
-          if (f.onSale && !p.isDiscounted) return false;
-          if (f.inStock) {
-            const totalStock = p.variants.reduce(
-              (sum, v) => sum + v.sizes.reduce((ss, s) => ss + s.inStock, 0),
-              0
-            );
-            if (totalStock === 0) return false;
-          }
-          if (
-            f.colors.length &&
-            !p.variants.some((v) => f.colors.includes(v.color))
-          )
+
+          // "On sale" logic: you may want to remove this, or define a "sale" field on Product in the DB
+          // if (f.onSale && !p.isDiscounted) return false;
+
+          // In stock: product must have at least one variant with inStock > 0
+          if (f.inStock && !p.variants.some((v) => v.inStock > 0)) return false;
+
+          // Color filter: at least one variant with the selected color
+          if (f.colors.length && !p.variants.some((v) => f.colors.includes(v.color)))
             return false;
+
+          // Size filter: at least one variant with the selected size and inStock > 0
           if (
             f.sizes.length &&
-            !p.variants.some((v) =>
-              v.sizes.some((s) => f.sizes.includes(s.size) && s.inStock > 0)
-            )
+            !p.variants.some((v) => f.sizes.includes(v.size) && v.inStock > 0)
           )
             return false;
+
           return true;
         })
       );

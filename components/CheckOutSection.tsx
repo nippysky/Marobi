@@ -95,10 +95,7 @@ export default function CheckoutSection({ user }: Props) {
   }[];
   const DELIVERY_FEE = 500;
   const subtotal = items.reduce((sum, item) => {
-    const price =
-      item.product.isDiscounted && item.product.discountPrices
-        ? item.product.discountPrices[currency]
-        : item.product.prices[currency];
+    const price = item.product.prices[currency];
     return sum + price * item.quantity;
   }, 0);
   const total = subtotal + DELIVERY_FEE;
@@ -188,7 +185,7 @@ export default function CheckoutSection({ user }: Props) {
 
   return (
     <section className="px-5 md:px-10 lg:px-20 xl:px-40 py-20">
-       {/* Breadcrumbs */}
+      {/* Breadcrumbs */}
       <nav className="text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
         <Link href="/" className="hover:underline">
           Home
@@ -210,7 +207,7 @@ export default function CheckoutSection({ user }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Delivery Information */}
-        <div className="lg:col-span-2 space-y-6 bg-white p-6 rounded-lg border border-gray-200 dark:bg-black dark:border-gray-700">
+        <div className="lg:col-span-2 space-y-6 bg-white p-6 rounded-lg border border-gray-200 dark:bg-black dark:border-gray-700 shadow-md">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Delivery Information
           </h2>
@@ -333,35 +330,41 @@ export default function CheckoutSection({ user }: Props) {
         {/* Cart & Payment */}
         <div className="space-y-6">
           {/* Your Cart */}
-          <div className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Your Cart
             </h2>
             <ScrollArea className="max-h-64 overflow-y-auto">
               <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                 {items.map((item) => {
-                  const unitPrice =
-                    item.product.isDiscounted &&
-                    item.product.discountPrices
-                      ? item.product.discountPrices[currency]
-                      : item.product.prices[currency];
+                  const unitPrice = item.product.prices[currency];
+                  const imageUrl = item.product.images[0];
                   return (
                     <li
                       key={`${item.product.id}-${item.color}-${item.size}`}
-                      className="py-2 flex justify-between items-start"
+                      className="py-2 flex justify-between items-center gap-3"
                     >
-                      <div>
-                        <Link
-                          href={`/product/${item.product.id}`}
-                          className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:underline"
-                        >
-                          {item.product.name}
-                        </Link>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {item.color}, {item.size}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        {imageUrl && (
+                          <img
+                            src={imageUrl}
+                            alt={item.product.name}
+                            className="w-14 h-14 rounded-lg object-cover border"
+                          />
+                        )}
+                        <div>
+                          <Link
+                            href={`/product/${item.product.id}`}
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:underline"
+                          >
+                            {item.product.name}
+                          </Link>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.color}, {item.size}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-900 dark:text-gray-100">
+                      <div className="text-sm font-bold text-gray-900 dark:text-gray-100 text-right min-w-[90px]">
                         ×{item.quantity} ×{" "}
                         {formatAmount(unitPrice, currency)}
                       </div>
@@ -373,7 +376,7 @@ export default function CheckoutSection({ user }: Props) {
           </div>
 
           {/* Order Summary & Paystack */}
-          <div className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-black p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Order Summary
             </h2>
@@ -386,7 +389,7 @@ export default function CheckoutSection({ user }: Props) {
                 <span>Delivery</span>
                 <span>{formatAmount(DELIVERY_FEE, currency)}</span>
               </div>
-              <div className="flex justify-between font-semibold">
+              <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
                 <span>{formatAmount(total, currency)}</span>
               </div>

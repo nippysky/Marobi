@@ -1,10 +1,38 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 
-export const VideoModal: React.FC<{ onClose: () => void; videoId: string }> = ({
-  onClose,
-  videoId,
-}) => {
+/**
+ * Extracts YouTube video ID from a full URL or returns null.
+ */
+function getYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu")) {
+      if (u.pathname === "/watch") {
+        const v = u.searchParams.get("v");
+        return v ?? null;
+      }
+      if (u.hostname === "youtu.be") {
+        return u.pathname.slice(1) || null;
+      }
+      // Handles /embed/VIDEOID
+      const parts = u.pathname.split("/");
+      if (parts.includes("embed")) {
+        const embedId = parts.pop();
+        return embedId || null;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+
+export const VideoModal: React.FC<{
+  onClose: () => void;
+  videoUrl: string;
+}> = ({ onClose, videoUrl }) => {
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -17,6 +45,8 @@ export const VideoModal: React.FC<{ onClose: () => void; videoId: string }> = ({
       document.removeEventListener("keydown", handleKey);
     };
   }, [onClose]);
+
+  const ytId = getYouTubeId(videoUrl);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -41,13 +71,32 @@ export const VideoModal: React.FC<{ onClose: () => void; videoId: string }> = ({
             aspectRatio: "16/9",
           }}
         >
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-            title="Product Video"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            className="w-full h-full"
-          />
+          {ytId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+              title="Product Video"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            />
+          ) : videoUrl.endsWith(".mp4") ? (
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              className="w-full h-full rounded-lg bg-black"
+              style={{ objectFit: "cover" }}
+            />
+          ) : (
+            // fallback for any embed url (could be vimeo, etc)
+            <iframe
+              src={videoUrl}
+              title="Product Video"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            />
+          )}
         </div>
       </div>
     </div>
