@@ -5,23 +5,55 @@ import type { Product } from "@/lib/products";
 /**
  * A single item in the cart: wraps a Product plus the desired quantity,
  * as well as the specific color and size the user chose.
+ * Optionally, customMods for size modifications.
  */
 export interface CartItem {
   product: Product;
   quantity: number;
   color: string;
   size: string;
+  customMods?: Record<string, string | number>;
 }
 
 interface CartStoreState {
   items: CartItem[];
 
-  addToCart: (product: Product, color: string, size: string, quantity?: number) => void;
-  removeFromCart: (productId: string, color: string, size: string) => void;
-  updateQuantity: (productId: string, color: string, size: string, newQty: number) => void;
+  addToCart: (
+    product: Product,
+    color: string,
+    size: string,
+    quantity?: number,
+    customMods?: Record<string, string | number>
+  ) => void;
+  removeFromCart: (
+    productId: string,
+    color: string,
+    size: string,
+    customMods?: Record<string, string | number>
+  ) => void;
+  updateQuantity: (
+    productId: string,
+    color: string,
+    size: string,
+    newQty: number,
+    customMods?: Record<string, string | number>
+  ) => void;
   clearCart: () => void;
   totalItems: () => number;
   totalAmount: () => number;
+}
+
+// --- Utility for deep equals on customMods ---
+function areCustomModsEqual(
+  a?: Record<string, string | number>,
+  b?: Record<string, string | number>
+) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((k) => a[k] === b[k]);
 }
 
 // Util: get inStock for a product/color/size
@@ -37,13 +69,14 @@ export const useCartStore = create<CartStoreState>()(
     (set, get) => ({
       items: [],
 
-      addToCart: (product, color, size, quantity = 1) => {
+      addToCart: (product, color, size, quantity = 1, customMods) => {
         const items = get().items;
         const idx = items.findIndex(
           (ci) =>
             ci.product.id === product.id &&
             ci.color === color &&
-            ci.size === size
+            ci.size === size &&
+            areCustomModsEqual(ci.customMods, customMods)
         );
 
         const maxStock = getVariantStock(product, color, size);
@@ -54,7 +87,7 @@ export const useCartStore = create<CartStoreState>()(
           const newQty = Math.min(existing.quantity + quantity, maxStock);
           const updated = [
             ...items.slice(0, idx),
-            { product, quantity: newQty, color, size },
+            { ...existing, quantity: newQty },
             ...items.slice(idx + 1),
           ];
           set({ items: updated });
@@ -63,13 +96,13 @@ export const useCartStore = create<CartStoreState>()(
           set({
             items: [
               ...items,
-              { product, quantity: Math.min(quantity, maxStock), color, size },
+              { product, quantity: Math.min(quantity, maxStock), color, size, customMods },
             ],
           });
         }
       },
 
-      removeFromCart: (productId, color, size) => {
+      removeFromCart: (productId, color, size, customMods) => {
         const items = get().items;
         set({
           items: items.filter(
@@ -77,19 +110,21 @@ export const useCartStore = create<CartStoreState>()(
               !(
                 ci.product.id === productId &&
                 ci.color === color &&
-                ci.size === size
+                ci.size === size &&
+                areCustomModsEqual(ci.customMods, customMods)
               )
           ),
         });
       },
 
-      updateQuantity: (productId, color, size, newQty) => {
+      updateQuantity: (productId, color, size, newQty, customMods) => {
         const items = get().items;
         const idx = items.findIndex(
           (ci) =>
             ci.product.id === productId &&
             ci.color === color &&
-            ci.size === size
+            ci.size === size &&
+            areCustomModsEqual(ci.customMods, customMods)
         );
         if (idx === -1) return;
 
@@ -105,14 +140,15 @@ export const useCartStore = create<CartStoreState>()(
                 !(
                   ci.product.id === productId &&
                   ci.color === color &&
-                  ci.size === size
+                  ci.size === size &&
+                  areCustomModsEqual(ci.customMods, customMods)
                 )
             ),
           });
         } else {
           const updated = [
             ...items.slice(0, idx),
-            { product: productInCart, quantity: cappedQty, color, size },
+            { ...items[idx], quantity: cappedQty },
             ...items.slice(idx + 1),
           ];
           set({ items: updated });

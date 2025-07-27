@@ -8,6 +8,8 @@ type IncomingEntry = {
   chestMax: number;
   waistMin: number;
   waistMax: number;
+  hipMin: number;
+  hipMax: number;
 };
 
 export async function GET() {
@@ -35,6 +37,8 @@ export async function GET() {
           chestMax: e.chestMax,
           waistMin: e.waistMin,
           waistMax: e.waistMax,
+          hipMin: e.hipMin,
+          hipMax: e.hipMax,    
         })),
     });
   } catch (err) {
@@ -79,6 +83,8 @@ export async function PUT(req: Request) {
           chestMax: e.chestMax,
           waistMin: e.waistMin,
           waistMax: e.waistMax,
+          hipMin: e.hipMin,
+          hipMax: e.hipMax,      
         },
         update: {
           sizeLabel: e.sizeLabel,
@@ -86,6 +92,8 @@ export async function PUT(req: Request) {
           chestMax: e.chestMax,
           waistMin: e.waistMin,
           waistMax: e.waistMax,
+          hipMin: e.hipMin,
+          hipMax: e.hipMax,      
         },
       })
     );

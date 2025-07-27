@@ -231,6 +231,8 @@ model SizeChartEntry {
   chestMax   Int
   waistMin   Int
   waistMax   Int
+  hipMin     Int
+  hipMax     Int
   chart      SizeChart @relation(fields: [chartId], references: [id])
   chartId    String
 }

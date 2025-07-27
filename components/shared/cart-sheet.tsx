@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, X } from "lucide-react";
+import { ShoppingCart, X, Trash2 } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -19,33 +19,23 @@ import { formatAmount } from "@/lib/formatCurrency";
 import { useRouter } from "next/navigation";
 
 export function CartSheet() {
-  const router = useRouter()
-  // Avoid hydration mismatches for the badge
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  // Cart data
   const items = useCartStore((s) => s.items);
   const removeFromCart = useCartStore((s) => s.removeFromCart);
-
+  const clearCart = useCartStore((s) => s.clearCart);
   const { currency } = useCurrency();
 
-  // Pick effective per-unit price (discount if available)
+  // Just use prices as per your schema/type
   const getEffectiveUnitPrice = (product: CartItem["product"]) =>
-    product.isDiscounted && product.discountPrices
-      ? product.discountPrices[currency]
-      : product.prices[currency];
+    product.prices[currency] ?? 0;
 
   // Totals
-  const totalItemsCount = items.reduce(
-    (acc, { quantity }) => acc + quantity,
-    0
-  );
+  const totalItemsCount = items.reduce((acc, { quantity }) => acc + quantity, 0);
   const totalPriceValue = items.reduce(
-    (sum, { product, quantity }) =>
-      sum + getEffectiveUnitPrice(product) * quantity,
+    (sum, { product, quantity }) => sum + getEffectiveUnitPrice(product) * quantity,
     0
   );
   const formattedTotal = formatAmount(totalPriceValue, currency);
@@ -62,68 +52,90 @@ export function CartSheet() {
           )}
         </button>
       </SheetTrigger>
-
-      {/* Full-width on small screens, 1/4 width on md+ */}
-      <SheetContent side="right" className="w-full md:w-1/4">
+      <SheetContent side="right" className="w-full md:w-[400px] max-w-full flex flex-col">
         <SheetHeader>
           <SheetTitle>Your Cart</SheetTitle>
         </SheetHeader>
 
+        {/* Cart is empty */}
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
             <ShoppingCart className="w-12 h-12 mb-2 opacity-50" />
-            <p>Your cart is empty</p>
+            <p className="mb-2">Your cart is empty</p>
             <Link href="/all-products" className="mt-4">
               <Button>Start Shopping</Button>
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
-            {/* ─── Cart Items ─── */}
-            <div className="flex-1 overflow-y-auto px-2 py-4">
-              <div className="flex flex-col space-y-4">
-                {items.map(({ product, quantity, color, size }: CartItem) => {
+          <div className="flex flex-col flex-1">
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto px-1 py-4">
+              <div className="flex flex-col gap-5">
+                {items.map(({ product, quantity, color, size, customMods }: CartItem) => {
                   const unitPrice = getEffectiveUnitPrice(product);
                   const formattedUnit = formatAmount(unitPrice, currency);
 
                   return (
                     <div
-                      key={`${product.id}-${color}-${size}`}
-                      className="flex items-start bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                      key={`${product.id}-${color}-${size}-${JSON.stringify(customMods)}`}
+                      className="flex gap-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700"
                     >
+                      {/* Product Image */}
                       <Link
                         href={`/product/${product.id}`}
-                        className="flex-1 flex items-start space-x-3 p-3"
+                        className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100"
                       >
-                        <div className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                          <Image
-                            src={product.imageUrl}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 flex flex-col">
-                          <p
-                            className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1"
+                        <Image
+                          src={product.images[0] || "/placeholder.jpg"}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </Link>
+                      {/* Info */}
+                      <div className="flex-1 flex flex-col justify-between py-2 pr-2">
+                        <div>
+                          <Link
+                            href={`/product/${product.id}`}
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:underline"
                             title={product.name}
                           >
                             {product.name}
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          </Link>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                             {formattedUnit} × {quantity}
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
                             Color: <span className="font-medium">{color}</span>{" "}
                             | Size: <span className="font-medium">{size}</span>
-                          </p>
+                          </div>
                         </div>
-                      </Link>
-
+                        {/* Custom Mods Grid */}
+                        {customMods && Object.keys(customMods).length > 0 && (
+                          <div className="mt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Object.entries(customMods).map(([k, v]) => (
+                                <div
+                                  key={k}
+                                  className="flex text-xs bg-gray-50 dark:bg-gray-700 rounded px-2 py-1"
+                                >
+                                  <span className="font-medium capitalize mr-1">
+                                    {k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}:
+                                  </span>
+                                  <span>{v}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Remove button */}
                       <button
-                        onClick={() => removeFromCart(product.id, color, size)}
-                        className="m-3 p-1 text-gray-500 hover:text-red-600"
+                        onClick={() => removeFromCart(product.id, color, size, customMods)}
+                        className="self-start m-2 p-1 text-gray-500 hover:text-red-600"
                         aria-label="Remove item"
+                        tabIndex={0}
+                        type="button"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -133,19 +145,34 @@ export function CartSheet() {
               </div>
             </div>
 
-            {/* ─── Total & Checkout ─── */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                Total: {formattedTotal}
-              </p>
-              <Button
-                className="w-full mt-3"
-                onClick={() => {
-                  router.push("/checkout")
-                }}
-              >
-                Proceed to Checkout
-              </Button>
+            {/* Total & Checkout & Clear All */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 sticky bottom-0 left-0">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  Total:
+                </span>
+                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {formattedTotal}
+                </span>
+              </div>
+              <div className="flex gap-2 mt-1">
+                <Button
+                  className="flex-1"
+                  onClick={() => router.push("/checkout")}
+                >
+                  Proceed to Checkout
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400"
+                  onClick={clearCart}
+                  aria-label="Clear all cart"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
             </div>
           </div>
         )}

@@ -38,28 +38,37 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
   const { currency } = useCurrency();
   const symbol = SYMBOLS[currency];
 
-  // recompute price list on currency change
+  // Recompute price list on currency change
   const priceValues = useMemo(
-    () => products.map((p) => p.prices[currency]),
+    () => (products ?? []).map((p) => p.prices[currency]),
     [products, currency]
   );
-  const min = Math.min(...priceValues);
-  const max = Math.max(...priceValues);
+  const min = priceValues.length > 0 ? Math.min(...priceValues) : 0;
+  const max = priceValues.length > 0 ? Math.max(...priceValues) : 0;
 
+  // Colors
   const colors = useMemo(
     () =>
       Array.from(
-        new Set(products.flatMap((p) => p.variants.map((v) => v.color)))
+        new Set(
+          (products ?? [])
+            .flatMap((p) => Array.isArray(p.variants) ? p.variants : [])
+            .map((v) => v.color)
+            .filter(Boolean)
+        )
       ),
     [products]
   );
+
+  // Sizes (corrected: just v.size)
   const sizes = useMemo(
     () =>
       Array.from(
         new Set(
-          products.flatMap((p) =>
-            p.variants.flatMap((v) => v.sizes.map((s) => s.size))
-          )
+          (products ?? [])
+            .flatMap((p) => Array.isArray(p.variants) ? p.variants : [])
+            .map((v) => v.size)
+            .filter(Boolean)
         )
       ),
     [products]
@@ -71,7 +80,7 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
   const [onSale, setOnSale] = useState(false);
   const [inStock, setInStock] = useState(false);
 
-  // reset slider when currency or product set changes
+  // Reset slider when currency or product set changes
   useEffect(() => {
     setPriceRange([min, max]);
   }, [min, max]);
@@ -81,7 +90,7 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
     ? ["price", "color", "size", "onSale", "inStock"]
     : [];
 
-  // notify parent when filters change
+  // Notify parent when filters change
   useEffect(() => {
     onChange({
       priceRange,

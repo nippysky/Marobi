@@ -28,13 +28,15 @@ export default async function SizeChartPage() {
       chestMax: e.chestMax,
       waistMin: e.waistMin,
       waistMax: e.waistMax,
+      hipMin: e.hipMin ?? 0,
+      hipMax: e.hipMax ?? 0,
     })),
   };
 
   return (
     <div className="bg-gray-50 min-h-screen p-6 sm:p-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Size Chart</h1>
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow p-6">
         <SizeChartManager initialChart={initialChart} />
       </div>
     </div>

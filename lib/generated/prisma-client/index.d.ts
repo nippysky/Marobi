@@ -15147,6 +15147,8 @@ export namespace Prisma {
     chestMax: number | null
     waistMin: number | null
     waistMax: number | null
+    hipMin: number | null
+    hipMax: number | null
   }
 
   export type SizeChartEntrySumAggregateOutputType = {
@@ -15154,6 +15156,8 @@ export namespace Prisma {
     chestMax: number | null
     waistMin: number | null
     waistMax: number | null
+    hipMin: number | null
+    hipMax: number | null
   }
 
   export type SizeChartEntryMinAggregateOutputType = {
@@ -15163,6 +15167,8 @@ export namespace Prisma {
     chestMax: number | null
     waistMin: number | null
     waistMax: number | null
+    hipMin: number | null
+    hipMax: number | null
     chartId: string | null
   }
 
@@ -15173,6 +15179,8 @@ export namespace Prisma {
     chestMax: number | null
     waistMin: number | null
     waistMax: number | null
+    hipMin: number | null
+    hipMax: number | null
     chartId: string | null
   }
 
@@ -15183,6 +15191,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin: number
+    hipMax: number
     chartId: number
     _all: number
   }
@@ -15193,6 +15203,8 @@ export namespace Prisma {
     chestMax?: true
     waistMin?: true
     waistMax?: true
+    hipMin?: true
+    hipMax?: true
   }
 
   export type SizeChartEntrySumAggregateInputType = {
@@ -15200,6 +15212,8 @@ export namespace Prisma {
     chestMax?: true
     waistMin?: true
     waistMax?: true
+    hipMin?: true
+    hipMax?: true
   }
 
   export type SizeChartEntryMinAggregateInputType = {
@@ -15209,6 +15223,8 @@ export namespace Prisma {
     chestMax?: true
     waistMin?: true
     waistMax?: true
+    hipMin?: true
+    hipMax?: true
     chartId?: true
   }
 
@@ -15219,6 +15235,8 @@ export namespace Prisma {
     chestMax?: true
     waistMin?: true
     waistMax?: true
+    hipMin?: true
+    hipMax?: true
     chartId?: true
   }
 
@@ -15229,6 +15247,8 @@ export namespace Prisma {
     chestMax?: true
     waistMin?: true
     waistMax?: true
+    hipMin?: true
+    hipMax?: true
     chartId?: true
     _all?: true
   }
@@ -15326,6 +15346,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin: number | null
+    hipMax: number | null
     chartId: string
     _count: SizeChartEntryCountAggregateOutputType | null
     _avg: SizeChartEntryAvgAggregateOutputType | null
@@ -15355,6 +15377,8 @@ export namespace Prisma {
     chestMax?: boolean
     waistMin?: boolean
     waistMax?: boolean
+    hipMin?: boolean
+    hipMax?: boolean
     chartId?: boolean
     chart?: boolean | SizeChartDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sizeChartEntry"]>
@@ -15366,6 +15390,8 @@ export namespace Prisma {
     chestMax?: boolean
     waistMin?: boolean
     waistMax?: boolean
+    hipMin?: boolean
+    hipMax?: boolean
     chartId?: boolean
     chart?: boolean | SizeChartDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sizeChartEntry"]>
@@ -15377,6 +15403,8 @@ export namespace Prisma {
     chestMax?: boolean
     waistMin?: boolean
     waistMax?: boolean
+    hipMin?: boolean
+    hipMax?: boolean
     chartId?: boolean
     chart?: boolean | SizeChartDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sizeChartEntry"]>
@@ -15388,10 +15416,12 @@ export namespace Prisma {
     chestMax?: boolean
     waistMin?: boolean
     waistMax?: boolean
+    hipMin?: boolean
+    hipMax?: boolean
     chartId?: boolean
   }
 
-  export type SizeChartEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sizeLabel" | "chestMin" | "chestMax" | "waistMin" | "waistMax" | "chartId", ExtArgs["result"]["sizeChartEntry"]>
+  export type SizeChartEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sizeLabel" | "chestMin" | "chestMax" | "waistMin" | "waistMax" | "hipMin" | "hipMax" | "chartId", ExtArgs["result"]["sizeChartEntry"]>
   export type SizeChartEntryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     chart?: boolean | SizeChartDefaultArgs<ExtArgs>
   }
@@ -15414,6 +15444,8 @@ export namespace Prisma {
       chestMax: number
       waistMin: number
       waistMax: number
+      hipMin: number | null
+      hipMax: number | null
       chartId: string
     }, ExtArgs["result"]["sizeChartEntry"]>
     composites: {}
@@ -15845,6 +15877,8 @@ export namespace Prisma {
     readonly chestMax: FieldRef<"SizeChartEntry", 'Int'>
     readonly waistMin: FieldRef<"SizeChartEntry", 'Int'>
     readonly waistMax: FieldRef<"SizeChartEntry", 'Int'>
+    readonly hipMin: FieldRef<"SizeChartEntry", 'Int'>
+    readonly hipMax: FieldRef<"SizeChartEntry", 'Int'>
     readonly chartId: FieldRef<"SizeChartEntry", 'String'>
   }
     
@@ -17506,6 +17540,8 @@ export namespace Prisma {
     chestMax: 'chestMax',
     waistMin: 'waistMin',
     waistMax: 'waistMax',
+    hipMin: 'hipMin',
+    hipMax: 'hipMax',
     chartId: 'chartId'
   };
 
@@ -18638,6 +18674,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
+    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
     chartId?: StringFilter<"SizeChartEntry"> | string
     chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
   }
@@ -18649,6 +18687,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrderInput | SortOrder
+    hipMax?: SortOrderInput | SortOrder
     chartId?: SortOrder
     chart?: SizeChartOrderByWithRelationInput
   }
@@ -18663,6 +18703,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
+    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
     chartId?: StringFilter<"SizeChartEntry"> | string
     chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
   }, "id">
@@ -18674,6 +18716,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrderInput | SortOrder
+    hipMax?: SortOrderInput | SortOrder
     chartId?: SortOrder
     _count?: SizeChartEntryCountOrderByAggregateInput
     _avg?: SizeChartEntryAvgOrderByAggregateInput
@@ -18692,6 +18736,8 @@ export namespace Prisma {
     chestMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
     waistMin?: IntWithAggregatesFilter<"SizeChartEntry"> | number
     waistMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    hipMin?: IntNullableWithAggregatesFilter<"SizeChartEntry"> | number | null
+    hipMax?: IntNullableWithAggregatesFilter<"SizeChartEntry"> | number | null
     chartId?: StringWithAggregatesFilter<"SizeChartEntry"> | string
   }
 
@@ -19771,6 +19817,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
     chart: SizeChartCreateNestedOneWithoutEntriesInput
   }
 
@@ -19781,6 +19829,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
     chartId: string
   }
 
@@ -19791,6 +19841,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
     chart?: SizeChartUpdateOneRequiredWithoutEntriesNestedInput
   }
 
@@ -19801,6 +19853,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
     chartId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -19811,6 +19865,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
     chartId: string
   }
 
@@ -19821,6 +19877,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type SizeChartEntryUncheckedUpdateManyInput = {
@@ -19830,6 +19888,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
     chartId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -20839,6 +20899,17 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type SizeChartScalarRelationFilter = {
     is?: SizeChartWhereInput
     isNot?: SizeChartWhereInput
@@ -20851,6 +20922,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
     chartId?: SortOrder
   }
 
@@ -20859,6 +20932,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
   }
 
   export type SizeChartEntryMaxOrderByAggregateInput = {
@@ -20868,6 +20943,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
     chartId?: SortOrder
   }
 
@@ -20878,6 +20955,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
     chartId?: SortOrder
   }
 
@@ -20886,6 +20965,24 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type WishlistItemCustomerIdProductIdCompoundUniqueInput = {
@@ -21678,6 +21775,14 @@ export namespace Prisma {
     connect?: SizeChartWhereUniqueInput
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type SizeChartUpdateOneRequiredWithoutEntriesNestedInput = {
     create?: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
     connectOrCreate?: SizeChartCreateOrConnectWithoutEntriesInput
@@ -22020,6 +22125,22 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type OrderCreateWithoutCustomerInput = {
@@ -23575,6 +23696,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
   }
 
   export type SizeChartEntryUncheckedCreateWithoutChartInput = {
@@ -23584,6 +23707,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
   }
 
   export type SizeChartEntryCreateOrConnectWithoutChartInput = {
@@ -23622,6 +23747,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
+    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
     chartId?: StringFilter<"SizeChartEntry"> | string
   }
 
@@ -24336,6 +24463,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
+    hipMin?: number | null
+    hipMax?: number | null
   }
 
   export type SizeChartEntryUpdateWithoutChartInput = {
@@ -24345,6 +24474,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type SizeChartEntryUncheckedUpdateWithoutChartInput = {
@@ -24354,6 +24485,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type SizeChartEntryUncheckedUpdateManyWithoutChartInput = {
@@ -24363,6 +24496,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
+    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
 

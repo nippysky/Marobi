@@ -1,33 +1,27 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 
-/**
- * Extracts YouTube video ID from a full URL or returns null.
- */
+// Universal YouTube ID extractor
 function getYouTubeId(url: string): string | null {
   try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtu")) {
-      if (u.pathname === "/watch") {
-        const v = u.searchParams.get("v");
-        return v ?? null;
-      }
-      if (u.hostname === "youtu.be") {
-        return u.pathname.slice(1) || null;
-      }
-      // Handles /embed/VIDEOID
-      const parts = u.pathname.split("/");
-      if (parts.includes("embed")) {
-        const embedId = parts.pop();
-        return embedId || null;
-      }
-    }
-    return null;
+    const regex =
+      /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
   } catch {
     return null;
   }
 }
 
+// Vimeo extractor
+function getVimeoId(url: string): string | null {
+  try {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
 
 export const VideoModal: React.FC<{
   onClose: () => void;
@@ -47,6 +41,24 @@ export const VideoModal: React.FC<{
   }, [onClose]);
 
   const ytId = getYouTubeId(videoUrl);
+  const vimeoId = getVimeoId(videoUrl);
+
+  let embedUrl: string | null = null;
+  let embedType: "youtube" | "vimeo" | "mp4" | "other" = "other";
+
+  if (ytId) {
+    embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+    embedType = "youtube";
+  } else if (vimeoId) {
+    embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
+    embedType = "vimeo";
+  } else if (videoUrl.endsWith(".mp4")) {
+    embedType = "mp4";
+    embedUrl = videoUrl;
+  } else {
+    embedType = "other";
+    embedUrl = videoUrl;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -69,33 +81,31 @@ export const VideoModal: React.FC<{
             width: "90vw",
             maxWidth: "800px",
             aspectRatio: "16/9",
+            background: "#222",
+            borderRadius: "12px",
           }}
         >
-          {ytId ? (
+          {embedType === "youtube" || embedType === "vimeo" || embedType === "other" ? (
             <iframe
-              src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+              src={embedUrl!}
               title="Product Video"
               allow="autoplay; encrypted-media"
               allowFullScreen
               className="w-full h-full rounded-lg"
+              style={{ minHeight: 300 }}
             />
-          ) : videoUrl.endsWith(".mp4") ? (
+          ) : embedType === "mp4" ? (
             <video
-              src={videoUrl}
+              src={embedUrl!}
               controls
               autoPlay
               className="w-full h-full rounded-lg bg-black"
-              style={{ objectFit: "cover" }}
+              style={{ objectFit: "cover", minHeight: 300 }}
             />
           ) : (
-            // fallback for any embed url (could be vimeo, etc)
-            <iframe
-              src={videoUrl}
-              title="Product Video"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-              className="w-full h-full rounded-lg"
-            />
+            <div className="flex items-center justify-center h-full text-white">
+              Video could not be loaded.
+            </div>
           )}
         </div>
       </div>

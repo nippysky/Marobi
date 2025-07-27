@@ -1,4 +1,3 @@
-// /app/(USER-END)/product/[id]/page.tsx
 export const dynamic = "force-dynamic";
 
 import React from "react";
@@ -21,28 +20,17 @@ import ReviewSection from "@/components/ReviewSection";
 import ProductCard from "@/components/shared/product-card";
 import ProductDetailHero from "@/components/ProductDetailsHero";
 
-export default async function ProductPage({   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // 1️⃣ Load the product
   const product: Product | null = await getProductById(id);
   if (!product) return notFound();
 
-  // 2️⃣ Category display
   const category = await getCategoryBySlug(product.category);
   const categoryName = category?.name ?? product.category;
 
-  // 3️⃣ Related products
-  const related = (
-    await getProductsByCategory(product.category, 8)
-  ).filter((p) => p.id !== id);
-
-  // 4️⃣ Reviews
+  const related = (await getProductsByCategory(product.category, 8)).filter((p) => p.id !== id);
   const reviews: Review[] = await getReviewsByProduct(id);
 
-  // 5️⃣ Session
   const session: Session | null = await getServerSession(authOptions);
   const user = session?.user ?? null;
 
@@ -55,42 +43,23 @@ export default async function ProductPage({   params,
         <nav aria-label="Breadcrumb" className="text-sm text-gray-600 mb-4">
           <ol className="flex flex-wrap items-center space-x-1 sm:space-x-2">
             <li>
-              <a href="/" className="hover:underline">
-                Home
-              </a>
+              <a href="/" className="hover:underline">Home</a>
             </li>
+            <li><span className="mx-2">/</span></li>
             <li>
-              <span className="mx-2">/</span>
+              <a href="/categories" className="hover:underline">Categories</a>
             </li>
+            <li><span className="mx-2">/</span></li>
             <li>
-              <a href="/categories" className="hover:underline">
-                Categories
-              </a>
+              <a href={`/categories/${product.category}`} className="hover:underline">{categoryName}</a>
             </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <a
-                href={`/categories/${product.category}`}
-                className="hover:underline"
-              >
-                {categoryName}
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
+            <li><span className="mx-2">/</span></li>
             <li className="font-semibold text-gray-900">{product.name}</li>
           </ol>
         </nav>
 
         {/* Hero & Details */}
-        <ProductDetailHero
-          product={product}
-          user={user}
-          categoryName={categoryName}
-        />
+        <ProductDetailHero product={product} user={user} categoryName={categoryName} />
 
         {/* Reviews */}
         <ReviewSection productId={product.id} user={user} reviews={reviews} />
@@ -103,29 +72,15 @@ export default async function ProductPage({   params,
           {related.length > 0 ? (
             <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {related.map((p) => (
-                <a
-                  key={p.id}
-                  href={`/product/${p.id}`}
-                  className="block"
-                >
+                <a key={p.id} href={`/product/${p.id}`} className="block">
                   <ProductCard product={p} />
                 </a>
               ))}
             </div>
           ) : (
             <div className="flex flex-col items-center py-12 text-gray-500">
-              <svg
-                className="w-12 h-12 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M4 7h16M4 12h16M4 17h16" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <p className="text-lg">No related products found.</p>
             </div>

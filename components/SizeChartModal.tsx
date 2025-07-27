@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
 
+// Updated Entry interface to match new fields
 interface Entry {
   id: string;
   sizeLabel: string;
@@ -12,6 +13,8 @@ interface Entry {
   chestMax: number;
   waistMin: number;
   waistMax: number;
+  hipMin: number;
+  hipMax: number;
 }
 
 const backdropVariants = {
@@ -42,7 +45,14 @@ export const SizeChartModal: React.FC = () => {
         return res.json();
       })
       .then((data: { id: string; entries: Entry[] }) => {
-        setEntries(data.entries);
+        setEntries(
+          // Defensive: coerce nulls to 0 for backward compatibility (optional)
+          data.entries.map((e) => ({
+            ...e,
+            hipMin: e.hipMin ?? 0,
+            hipMax: e.hipMax ?? 0,
+          }))
+        );
       })
       .catch(() => {
         setError("Failed to load size chart");
@@ -59,7 +69,7 @@ export const SizeChartModal: React.FC = () => {
           {/* Backdrop */}
           <motion.div
             key="sc-backdrop"
-            className="fixed inset-0 bg-black/50"
+            className="fixed inset-0 bg-black/50 z-40"
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -104,28 +114,37 @@ export const SizeChartModal: React.FC = () => {
                   No size chart data available.
                 </div>
               ) : (
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-2">Size</th>
-                      <th className="px-4 py-2">Chest (in)</th>
-                      <th className="px-4 py-2">Waist (in)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((e) => (
-                      <tr key={e.id} className="border-b last:border-none">
-                        <td className="px-4 py-2">{e.sizeLabel}</td>
-                        <td className="px-4 py-2">
-                          {e.chestMin}–{e.chestMax}
-                        </td>
-                        <td className="px-4 py-2">
-                          {e.waistMin}–{e.waistMax}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm border border-gray-200 rounded-lg">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="px-4 py-2">Size</th>
+                        <th className="px-4 py-2">Bust/Chest (in)</th>
+                        <th className="px-4 py-2">Waist (in)</th>
+                        <th className="px-4 py-2">Hip (in)</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {entries.map((e) => (
+                        <tr key={e.id} className="border-b last:border-none">
+                          <td className="px-4 py-2 font-medium">{e.sizeLabel}</td>
+                          <td className="px-4 py-2">
+                            {e.chestMin}–{e.chestMax}
+                          </td>
+                          <td className="px-4 py-2">
+                            {e.waistMin}–{e.waistMax}
+                          </td>
+                          <td className="px-4 py-2">
+                            {e.hipMin}–{e.hipMax}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="mt-4 text-xs text-gray-500">
+                    All measurements are in inches. Please use this chart as a general guide. For the best fit, measure yourself and compare to the chart.
+                  </p>
+                </div>
               )}
             </div>
           </motion.div>

@@ -15,6 +15,8 @@ interface Entry {
   chestMax: number;
   waistMin: number;
   waistMax: number;
+  hipMin: number;
+  hipMax: number;  
 }
 
 interface Chart {
@@ -67,6 +69,8 @@ export default function SizeChartManager({
         chestMax: 0,
         waistMin: 0,
         waistMax: 0,
+        hipMin: 0,
+        hipMax: 0,
       },
     ]);
   };
@@ -76,7 +80,8 @@ export default function SizeChartManager({
     (e) =>
       e.sizeLabel.trim() !== '' &&
       e.chestMin <= e.chestMax &&
-      e.waistMin <= e.waistMax
+      e.waistMin <= e.waistMax &&
+      e.hipMin <= e.hipMax    
   );
 
   // Persist to the backend with loading indication
@@ -120,98 +125,112 @@ export default function SizeChartManager({
           {/* Table */}
           <div className="overflow-x-auto bg-white rounded-lg shadow">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
-                <tr>
-                  {[
-                    'Size',
-                    'Chest Min',
-                    'Chest Max',
-                    'Waist Min',
-                    'Waist Max',
-                    'Actions',
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-2 text-left text-sm font-medium text-gray-700"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {entries.map((e, i) => (
-                  <tr
-                    key={e.id}
-                    className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                  >
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
-                      <Input
-                        value={e.sizeLabel}
-                        placeholder="e.g. M"
-                        onChange={(ev) =>
-                          updateEntry(i, 'sizeLabel', ev.target.value)
-                        }
-                        className="w-full border-gray-300 focus:border-brand focus:ring-brand"
-                      />
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={e.chestMin}
-                        onChange={(ev) =>
-                          updateEntry(i, 'chestMin', ev.target.value)
-                        }
-                        className="w-full border-gray-300 focus:border-brand focus:ring-brand"
-                      />
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
-                      <Input
-                        type="number"
-                        min={e.chestMin}
-                        value={e.chestMax}
-                        onChange={(ev) =>
-                          updateEntry(i, 'chestMax', ev.target.value)
-                        }
-                        className="w-full border-gray-300 focus:border-brand focus:ring-brand"
-                      />
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={e.waistMin}
-                        onChange={(ev) =>
-                          updateEntry(i, 'waistMin', ev.target.value)
-                        }
-                        className="w-full border-gray-300 focus:border-brand focus:ring-brand"
-                      />
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
-                      <Input
-                        type="number"
-                        min={e.waistMin}
-                        value={e.waistMax}
-                        onChange={(ev) =>
-                          updateEntry(i, 'waistMax', ev.target.value)
-                        }
-                        className="w-full border-gray-300 focus:border-brand focus:ring-brand"
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:text-brand"
-                        onClick={() => removeRow(i)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+     <thead className="bg-gray-100">
+  <tr>
+    {[
+      'Size',
+      'Bust/Chest Min',
+      'Bust/Chest Max',
+      'Waist Min',
+      'Waist Max',
+      'Hip Min',
+      'Hip Max',
+      'Actions',
+    ].map((h) => (
+      <th
+        key={h}
+        className="px-4 py-2 text-left text-sm font-medium text-gray-700"
+      >
+        {h}
+      </th>
+    ))}
+  </tr>
+</thead>
+<tbody className="divide-y divide-gray-200">
+  {entries.map((e, i) => (
+    <tr key={e.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          value={e.sizeLabel}
+          placeholder="e.g. M"
+          onChange={(ev) => updateEntry(i, 'sizeLabel', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* CHEST MIN */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={0}
+          value={e.chestMin}
+          onChange={(ev) => updateEntry(i, 'chestMin', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* CHEST MAX */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={e.chestMin}
+          value={e.chestMax}
+          onChange={(ev) => updateEntry(i, 'chestMax', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* WAIST MIN */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={0}
+          value={e.waistMin}
+          onChange={(ev) => updateEntry(i, 'waistMin', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* WAIST MAX */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={e.waistMin}
+          value={e.waistMax}
+          onChange={(ev) => updateEntry(i, 'waistMax', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* HIP MIN */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={0}
+          value={e.hipMin}
+          onChange={(ev) => updateEntry(i, 'hipMin', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      {/* HIP MAX */}
+      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">
+        <Input
+          type="number"
+          min={e.hipMin}
+          value={e.hipMax}
+          onChange={(ev) => updateEntry(i, 'hipMax', ev.target.value)}
+          className="w-full border-gray-300 focus:border-brand focus:ring-brand"
+        />
+      </td>
+      <td className="px-4 py-2 text-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-red-600 hover:text-brand"
+          onClick={() => removeRow(i)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
             </table>
           </div>
 
