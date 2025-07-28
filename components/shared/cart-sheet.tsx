@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, X, Trash2 } from "lucide-react";
+import {  Trash2, TrashIcon } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -33,7 +33,7 @@ export function CartSheet() {
     product.prices[currency] ?? 0;
 
   // Totals
-  const totalItemsCount = items.reduce((acc, { quantity }) => acc + quantity, 0);
+const totalItemsCount = useCartStore((s) => s.totalItems());
   const totalPriceValue = items.reduce(
     (sum, { product, quantity }) => sum + getEffectiveUnitPrice(product) * quantity,
     0
@@ -60,10 +60,13 @@ export function CartSheet() {
         {/* Cart is empty */}
         {items.length === 0 ? (
           <div className="flex flex-col flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
-            <ShoppingCart className="w-12 h-12 mb-2 opacity-50" />
+            <BsBag className="w-12 h-12 mb-2 opacity-50" />
             <p className="mb-2">Your cart is empty</p>
             <Link href="/all-products" className="mt-4">
-              <Button>Start Shopping</Button>
+        
+              <Button>
+                    <BsBag className="w-5 h-5 inline-block mr-1" />
+                Start Shopping</Button>
             </Link>
           </div>
         ) : (
@@ -86,7 +89,7 @@ export function CartSheet() {
                         className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100"
                       >
                         <Image
-                          src={product.images[0] || "/placeholder.jpg"}
+                          src={product.images[0]}
                           alt={product.name}
                           fill
                           className="object-cover"
@@ -132,12 +135,12 @@ export function CartSheet() {
                       {/* Remove button */}
                       <button
                         onClick={() => removeFromCart(product.id, color, size, customMods)}
-                        className="self-start m-2 p-1 text-gray-500 hover:text-red-600"
+                        className="self-start m-2 p-1 text-red-500 hover:text-brand transition-colors"
                         aria-label="Remove item"
                         tabIndex={0}
                         type="button"
                       >
-                        <X className="w-4 h-4" />
+                        <TrashIcon className="w-4 h-4" />
                       </button>
                     </div>
                   );
@@ -155,22 +158,25 @@ export function CartSheet() {
                   {formattedTotal}
                 </span>
               </div>
-              <div className="flex gap-2 mt-1">
-                <Button
-                  className="flex-1"
-                  onClick={() => router.push("/checkout")}
-                >
-                  Proceed to Checkout
-                </Button>
+              <div className="flex gap-2 mt-5">
+           
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400"
                   onClick={clearCart}
                   aria-label="Clear all cart"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Clear All
+                </Button>
+
+
+                     <Button
+                  className="flex-1"
+                  onClick={() => router.push("/checkout")}
+                >
+                  Proceed
                 </Button>
               </div>
             </div>

@@ -159,8 +159,8 @@ export const useCartStore = create<CartStoreState>()(
         set({ items: [] });
       },
 
-      totalItems: () => {
-        return get().items.reduce((sum, ci) => sum + ci.quantity, 0);
+  totalItems: () => {
+        return get().items.length;
       },
 
       // returns total in NGN (base currency)

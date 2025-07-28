@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
           variantId: variant.id,
           name:      variant.product.name,
           image:     variant.product.images[0] ?? null,
-          category:  variant.product.category,
+          category:  variant.product.categorySlug,
           quantity:  i.quantity,
           currency:  currency as Currency,
           lineTotal,
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
       const order = await tx.order.create({
         data: {
           id:           newOrderId,
-          status:       "Delivered",
+          status:       "Processing",
           currency,
           totalAmount,
           totalNGN:     Math.round(totalNGN),

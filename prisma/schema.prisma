@@ -166,28 +166,21 @@ model Order {
   totalNGN      Int
   paymentMethod String
   createdAt     DateTime     @default(now())
-
   customer      Customer?    @relation(fields: [customerId], references: [id])
   customerId    String?
-
   guestInfo     Json?
-
   staff         Staff?       @relation(fields: [staffId], references: [id])
   staffId       String?
-
   items         OrderItem[]
   offlineSale   OfflineSale?
 }
 
 model OrderItem {
   id         String   @id @default(cuid())
-
   order      Order    @relation(fields: [orderId], references: [id])
   orderId    String
-
   variant    Variant  @relation(fields: [variantId], references: [id])
   variantId  String
-
   name       String
   image      String?
   category   String

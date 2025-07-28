@@ -1,5 +1,5 @@
-// app/admin/log‑sale/OfflineSaleForm.tsx
 "use client";
+
 import React, { useState, useRef } from "react";
 import { v4 as uuid } from "uuid";
 import {
@@ -165,7 +165,7 @@ function selectProduct(rowId: string, product: DBProduct) {
             ...i,
             productId:    product.id,
             productName:  product.name,
-            variants:     normalizedVariants,  // <<< store the normalized list!
+            variants:     normalizedVariants,
             colorOptions: colors,
             sizeOptions:  sizes,
             color:        selColor,

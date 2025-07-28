@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Session } from "next-auth";
 import type { Product } from "@/lib/products";
-import { BiCategory } from "react-icons/bi";
-import { Heart, Play, Tag } from "lucide-react";
+import { CheckCircle, Heart, LayoutGrid, PencilRuler, Play, Tag } from "lucide-react";
 import { BsBag } from "react-icons/bs";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
@@ -274,16 +273,17 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
             href={`/categories/${product.category}`}
             className="flex items-center gap-1 underline"
           >
-            <BiCategory /> {categoryName}
+            <LayoutGrid /> {categoryName}
           </a>
           <button
             onClick={openSizeChart}
             className="flex items-center gap-1 underline"
             type="button"
           >
-            <Tag /> Size Chart
+            <PencilRuler /> Size Chart
           </button>
           <div className="flex items-center gap-1">
+            <CheckCircle />
             <span className="font-semibold">{totalStock}</span>
             <span>in stock</span>
           </div>
