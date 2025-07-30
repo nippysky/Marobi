@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function DELETE(
-  _req: Request,
-  { params }: { params: { reviewId: string } }
+  req: NextRequest,
+  context: { params: Promise<{ reviewId: string }> }
 ) {
-  // TODO: enforce admin auth (NextAuth role check)
-  const { reviewId } = params;
+  const { reviewId } = await context.params
 
   // 1. Fetch the review with product stats in one go (two queries inside a tx anyway)
   const review = await prisma.review.findUnique({
