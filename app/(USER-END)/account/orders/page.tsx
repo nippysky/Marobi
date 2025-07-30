@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
-import OrdersTable from "@/components/account/OrdersTable";
 import { Button } from "@/components/ui/button";
+import OrdersTable from "./OrdersTable";
 
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);
@@ -27,39 +27,30 @@ export default async function OrdersPage() {
   });
   if (!userWithOrders) redirect("/auth/login");
 
-  // convert dates to strings for the table
   const ordersForTable = userWithOrders.orders.map((o) => ({
-    id: o.id,
-    status: o.status,
-    currency: o.currency,
-    totalAmount: o.totalAmount,
+    ...o,
     createdAt: o.createdAt.toISOString(),
   }));
 
   return (
     <>
-      {/* Breadcrumbs */}
-      <nav className="text-sm mb-6">
-        <Link href="/" className="text-gray-700 hover:underline">
-          Home
-        </Link>
-        <span className="mx-2 text-gray-500">/</span>
-        <Link href="/account" className="text-gray-700 hover:underline">
-          Account
-        </Link>
-        <span className="mx-2 text-gray-500">/</span>
-        <span className="text-gray-700">Orders</span>
+      <nav className="text-sm text-gray-600 mb-6 flex items-center gap-2">
+        <Link href="/" className="hover:underline">Home</Link>
+        <span>/</span>
+        <Link href="/account" className="hover:underline">Account</Link>
+        <span>/</span>
+        <span className="font-medium">Orders</span>
       </nav>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-4">Your Orders</h2>
-        {ordersForTable.length > 0 ? (
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">Your Orders</h2>
+        {ordersForTable.length ? (
           <OrdersTable orders={ordersForTable} />
         ) : (
-          <div className="text-center py-10">
-            <p className="mb-4">You haven’t placed any orders yet.</p>
+          <div className="text-center py-12 space-y-4">
+            <p className="text-gray-500">You haven’t placed any orders yet.</p>
             <Link href="/all-products">
-              <Button>Shop Now</Button>
+              <Button>Start Shopping</Button>
             </Link>
           </div>
         )}

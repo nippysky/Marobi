@@ -289,7 +289,7 @@ export default function RegisterClient() {
                 onValueChange={setPhoneCode}
                 disabled={loading}
               >
-                <SelectTrigger className="min-w-[5rem] w-auto mr-2">
+                <SelectTrigger className="min-w-[6rem] w-auto mr-2">
                   <SelectValue>{phoneCode}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>

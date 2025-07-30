@@ -111,6 +111,14 @@ export const Currency: {
 export type Currency = (typeof Currency)[keyof typeof Currency]
 
 
+export const OrderChannel: {
+  ONLINE: 'ONLINE',
+  OFFLINE: 'OFFLINE'
+};
+
+export type OrderChannel = (typeof OrderChannel)[keyof typeof OrderChannel]
+
+
 export const JobRole: {
   SystemAdministrator: 'SystemAdministrator',
   DispatchCoordinator: 'DispatchCoordinator',
@@ -145,6 +153,10 @@ export const OrderStatus: typeof $Enums.OrderStatus
 export type Currency = $Enums.Currency
 
 export const Currency: typeof $Enums.Currency
+
+export type OrderChannel = $Enums.OrderChannel
+
+export const OrderChannel: typeof $Enums.OrderChannel
 
 export type JobRole = $Enums.JobRole
 
@@ -9572,6 +9584,7 @@ export namespace Prisma {
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
+    channel: $Enums.OrderChannel | null
   }
 
   export type OrderMaxAggregateOutputType = {
@@ -9584,6 +9597,7 @@ export namespace Prisma {
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
+    channel: $Enums.OrderChannel | null
   }
 
   export type OrderCountAggregateOutputType = {
@@ -9597,6 +9611,7 @@ export namespace Prisma {
     customerId: number
     guestInfo: number
     staffId: number
+    channel: number
     _all: number
   }
 
@@ -9621,6 +9636,7 @@ export namespace Prisma {
     createdAt?: true
     customerId?: true
     staffId?: true
+    channel?: true
   }
 
   export type OrderMaxAggregateInputType = {
@@ -9633,6 +9649,7 @@ export namespace Prisma {
     createdAt?: true
     customerId?: true
     staffId?: true
+    channel?: true
   }
 
   export type OrderCountAggregateInputType = {
@@ -9646,6 +9663,7 @@ export namespace Prisma {
     customerId?: true
     guestInfo?: true
     staffId?: true
+    channel?: true
     _all?: true
   }
 
@@ -9746,6 +9764,7 @@ export namespace Prisma {
     customerId: string | null
     guestInfo: JsonValue | null
     staffId: string | null
+    channel: $Enums.OrderChannel
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
     _sum: OrderSumAggregateOutputType | null
@@ -9778,6 +9797,7 @@ export namespace Prisma {
     customerId?: boolean
     guestInfo?: boolean
     staffId?: boolean
+    channel?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -9796,6 +9816,7 @@ export namespace Prisma {
     customerId?: boolean
     guestInfo?: boolean
     staffId?: boolean
+    channel?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -9811,6 +9832,7 @@ export namespace Prisma {
     customerId?: boolean
     guestInfo?: boolean
     staffId?: boolean
+    channel?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -9826,9 +9848,10 @@ export namespace Prisma {
     customerId?: boolean
     guestInfo?: boolean
     staffId?: boolean
+    channel?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "guestInfo" | "staffId", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "guestInfo" | "staffId" | "channel", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
@@ -9864,6 +9887,7 @@ export namespace Prisma {
       customerId: string | null
       guestInfo: Prisma.JsonValue | null
       staffId: string | null
+      channel: $Enums.OrderChannel
     }, ExtArgs["result"]["order"]>
     composites: {}
   }
@@ -10301,6 +10325,7 @@ export namespace Prisma {
     readonly customerId: FieldRef<"Order", 'String'>
     readonly guestInfo: FieldRef<"Order", 'Json'>
     readonly staffId: FieldRef<"Order", 'String'>
+    readonly channel: FieldRef<"Order", 'OrderChannel'>
   }
     
 
@@ -10811,11 +10836,13 @@ export namespace Prisma {
   export type OrderItemAvgAggregateOutputType = {
     quantity: number | null
     lineTotal: number | null
+    sizeModFee: number | null
   }
 
   export type OrderItemSumAggregateOutputType = {
     quantity: number | null
     lineTotal: number | null
+    sizeModFee: number | null
   }
 
   export type OrderItemMinAggregateOutputType = {
@@ -10830,6 +10857,8 @@ export namespace Prisma {
     lineTotal: number | null
     color: string | null
     size: string | null
+    hasSizeMod: boolean | null
+    sizeModFee: number | null
   }
 
   export type OrderItemMaxAggregateOutputType = {
@@ -10844,6 +10873,8 @@ export namespace Prisma {
     lineTotal: number | null
     color: string | null
     size: string | null
+    hasSizeMod: boolean | null
+    sizeModFee: number | null
   }
 
   export type OrderItemCountAggregateOutputType = {
@@ -10858,6 +10889,8 @@ export namespace Prisma {
     lineTotal: number
     color: number
     size: number
+    hasSizeMod: number
+    sizeModFee: number
     _all: number
   }
 
@@ -10865,11 +10898,13 @@ export namespace Prisma {
   export type OrderItemAvgAggregateInputType = {
     quantity?: true
     lineTotal?: true
+    sizeModFee?: true
   }
 
   export type OrderItemSumAggregateInputType = {
     quantity?: true
     lineTotal?: true
+    sizeModFee?: true
   }
 
   export type OrderItemMinAggregateInputType = {
@@ -10884,6 +10919,8 @@ export namespace Prisma {
     lineTotal?: true
     color?: true
     size?: true
+    hasSizeMod?: true
+    sizeModFee?: true
   }
 
   export type OrderItemMaxAggregateInputType = {
@@ -10898,6 +10935,8 @@ export namespace Prisma {
     lineTotal?: true
     color?: true
     size?: true
+    hasSizeMod?: true
+    sizeModFee?: true
   }
 
   export type OrderItemCountAggregateInputType = {
@@ -10912,6 +10951,8 @@ export namespace Prisma {
     lineTotal?: true
     color?: true
     size?: true
+    hasSizeMod?: true
+    sizeModFee?: true
     _all?: true
   }
 
@@ -11013,6 +11054,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod: boolean
+    sizeModFee: number
     _count: OrderItemCountAggregateOutputType | null
     _avg: OrderItemAvgAggregateOutputType | null
     _sum: OrderItemSumAggregateOutputType | null
@@ -11046,6 +11089,8 @@ export namespace Prisma {
     lineTotal?: boolean
     color?: boolean
     size?: boolean
+    hasSizeMod?: boolean
+    sizeModFee?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
     variant?: boolean | VariantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["orderItem"]>
@@ -11062,6 +11107,8 @@ export namespace Prisma {
     lineTotal?: boolean
     color?: boolean
     size?: boolean
+    hasSizeMod?: boolean
+    sizeModFee?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
     variant?: boolean | VariantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["orderItem"]>
@@ -11078,6 +11125,8 @@ export namespace Prisma {
     lineTotal?: boolean
     color?: boolean
     size?: boolean
+    hasSizeMod?: boolean
+    sizeModFee?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
     variant?: boolean | VariantDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["orderItem"]>
@@ -11094,9 +11143,11 @@ export namespace Prisma {
     lineTotal?: boolean
     color?: boolean
     size?: boolean
+    hasSizeMod?: boolean
+    sizeModFee?: boolean
   }
 
-  export type OrderItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "variantId" | "name" | "image" | "category" | "quantity" | "currency" | "lineTotal" | "color" | "size", ExtArgs["result"]["orderItem"]>
+  export type OrderItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "orderId" | "variantId" | "name" | "image" | "category" | "quantity" | "currency" | "lineTotal" | "color" | "size" | "hasSizeMod" | "sizeModFee", ExtArgs["result"]["orderItem"]>
   export type OrderItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     order?: boolean | OrderDefaultArgs<ExtArgs>
     variant?: boolean | VariantDefaultArgs<ExtArgs>
@@ -11128,6 +11179,8 @@ export namespace Prisma {
       lineTotal: number
       color: string
       size: string
+      hasSizeMod: boolean
+      sizeModFee: number
     }, ExtArgs["result"]["orderItem"]>
     composites: {}
   }
@@ -11564,6 +11617,8 @@ export namespace Prisma {
     readonly lineTotal: FieldRef<"OrderItem", 'Float'>
     readonly color: FieldRef<"OrderItem", 'String'>
     readonly size: FieldRef<"OrderItem", 'String'>
+    readonly hasSizeMod: FieldRef<"OrderItem", 'Boolean'>
+    readonly sizeModFee: FieldRef<"OrderItem", 'Float'>
   }
     
 
@@ -15346,8 +15401,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin: number | null
-    hipMax: number | null
+    hipMin: number
+    hipMax: number
     chartId: string
     _count: SizeChartEntryCountAggregateOutputType | null
     _avg: SizeChartEntryAvgAggregateOutputType | null
@@ -15444,8 +15499,8 @@ export namespace Prisma {
       chestMax: number
       waistMin: number
       waistMax: number
-      hipMin: number | null
-      hipMax: number | null
+      hipMin: number
+      hipMax: number
       chartId: string
     }, ExtArgs["result"]["sizeChartEntry"]>
     composites: {}
@@ -17478,7 +17533,8 @@ export namespace Prisma {
     createdAt: 'createdAt',
     customerId: 'customerId',
     guestInfo: 'guestInfo',
-    staffId: 'staffId'
+    staffId: 'staffId',
+    channel: 'channel'
   };
 
   export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
@@ -17495,7 +17551,9 @@ export namespace Prisma {
     currency: 'currency',
     lineTotal: 'lineTotal',
     color: 'color',
-    size: 'size'
+    size: 'size',
+    hasSizeMod: 'hasSizeMod',
+    sizeModFee: 'sizeModFee'
   };
 
   export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
@@ -17748,6 +17806,20 @@ export namespace Prisma {
    * Reference to a field of type 'QueryMode'
    */
   export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrderChannel'
+   */
+  export type EnumOrderChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderChannel'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrderChannel[]'
+   */
+  export type ListEnumOrderChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderChannel[]'>
     
   /**
    * Deep Input Types
@@ -18335,6 +18407,7 @@ export namespace Prisma {
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
+    channel?: EnumOrderChannelFilter<"Order"> | $Enums.OrderChannel
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
@@ -18352,6 +18425,7 @@ export namespace Prisma {
     customerId?: SortOrderInput | SortOrder
     guestInfo?: SortOrderInput | SortOrder
     staffId?: SortOrderInput | SortOrder
+    channel?: SortOrder
     customer?: CustomerOrderByWithRelationInput
     staff?: StaffOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
@@ -18372,6 +18446,7 @@ export namespace Prisma {
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
+    channel?: EnumOrderChannelFilter<"Order"> | $Enums.OrderChannel
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
@@ -18389,6 +18464,7 @@ export namespace Prisma {
     customerId?: SortOrderInput | SortOrder
     guestInfo?: SortOrderInput | SortOrder
     staffId?: SortOrderInput | SortOrder
+    channel?: SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
     _max?: OrderMaxOrderByAggregateInput
@@ -18410,6 +18486,7 @@ export namespace Prisma {
     customerId?: StringNullableWithAggregatesFilter<"Order"> | string | null
     guestInfo?: JsonNullableWithAggregatesFilter<"Order">
     staffId?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    channel?: EnumOrderChannelWithAggregatesFilter<"Order"> | $Enums.OrderChannel
   }
 
   export type OrderItemWhereInput = {
@@ -18427,6 +18504,8 @@ export namespace Prisma {
     lineTotal?: FloatFilter<"OrderItem"> | number
     color?: StringFilter<"OrderItem"> | string
     size?: StringFilter<"OrderItem"> | string
+    hasSizeMod?: BoolFilter<"OrderItem"> | boolean
+    sizeModFee?: FloatFilter<"OrderItem"> | number
     order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
     variant?: XOR<VariantScalarRelationFilter, VariantWhereInput>
   }
@@ -18443,6 +18522,8 @@ export namespace Prisma {
     lineTotal?: SortOrder
     color?: SortOrder
     size?: SortOrder
+    hasSizeMod?: SortOrder
+    sizeModFee?: SortOrder
     order?: OrderOrderByWithRelationInput
     variant?: VariantOrderByWithRelationInput
   }
@@ -18462,6 +18543,8 @@ export namespace Prisma {
     lineTotal?: FloatFilter<"OrderItem"> | number
     color?: StringFilter<"OrderItem"> | string
     size?: StringFilter<"OrderItem"> | string
+    hasSizeMod?: BoolFilter<"OrderItem"> | boolean
+    sizeModFee?: FloatFilter<"OrderItem"> | number
     order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
     variant?: XOR<VariantScalarRelationFilter, VariantWhereInput>
   }, "id">
@@ -18478,6 +18561,8 @@ export namespace Prisma {
     lineTotal?: SortOrder
     color?: SortOrder
     size?: SortOrder
+    hasSizeMod?: SortOrder
+    sizeModFee?: SortOrder
     _count?: OrderItemCountOrderByAggregateInput
     _avg?: OrderItemAvgOrderByAggregateInput
     _max?: OrderItemMaxOrderByAggregateInput
@@ -18500,6 +18585,8 @@ export namespace Prisma {
     lineTotal?: FloatWithAggregatesFilter<"OrderItem"> | number
     color?: StringWithAggregatesFilter<"OrderItem"> | string
     size?: StringWithAggregatesFilter<"OrderItem"> | string
+    hasSizeMod?: BoolWithAggregatesFilter<"OrderItem"> | boolean
+    sizeModFee?: FloatWithAggregatesFilter<"OrderItem"> | number
   }
 
   export type OfflineSaleWhereInput = {
@@ -18674,8 +18761,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
-    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
-    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMin?: IntFilter<"SizeChartEntry"> | number
+    hipMax?: IntFilter<"SizeChartEntry"> | number
     chartId?: StringFilter<"SizeChartEntry"> | string
     chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
   }
@@ -18687,8 +18774,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
-    hipMin?: SortOrderInput | SortOrder
-    hipMax?: SortOrderInput | SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
     chartId?: SortOrder
     chart?: SizeChartOrderByWithRelationInput
   }
@@ -18703,8 +18790,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
-    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
-    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMin?: IntFilter<"SizeChartEntry"> | number
+    hipMax?: IntFilter<"SizeChartEntry"> | number
     chartId?: StringFilter<"SizeChartEntry"> | string
     chart?: XOR<SizeChartScalarRelationFilter, SizeChartWhereInput>
   }, "id">
@@ -18716,8 +18803,8 @@ export namespace Prisma {
     chestMax?: SortOrder
     waistMin?: SortOrder
     waistMax?: SortOrder
-    hipMin?: SortOrderInput | SortOrder
-    hipMax?: SortOrderInput | SortOrder
+    hipMin?: SortOrder
+    hipMax?: SortOrder
     chartId?: SortOrder
     _count?: SizeChartEntryCountOrderByAggregateInput
     _avg?: SizeChartEntryAvgOrderByAggregateInput
@@ -18736,8 +18823,8 @@ export namespace Prisma {
     chestMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
     waistMin?: IntWithAggregatesFilter<"SizeChartEntry"> | number
     waistMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
-    hipMin?: IntNullableWithAggregatesFilter<"SizeChartEntry"> | number | null
-    hipMax?: IntNullableWithAggregatesFilter<"SizeChartEntry"> | number | null
+    hipMin?: IntWithAggregatesFilter<"SizeChartEntry"> | number
+    hipMax?: IntWithAggregatesFilter<"SizeChartEntry"> | number
     chartId?: StringWithAggregatesFilter<"SizeChartEntry"> | string
   }
 
@@ -19463,6 +19550,7 @@ export namespace Prisma {
     paymentMethod: string
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -19480,6 +19568,7 @@ export namespace Prisma {
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -19493,6 +19582,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -19510,6 +19600,7 @@ export namespace Prisma {
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -19525,6 +19616,7 @@ export namespace Prisma {
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -19536,6 +19628,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -19549,6 +19642,7 @@ export namespace Prisma {
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
   }
 
   export type OrderItemCreateInput = {
@@ -19561,6 +19655,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
     order: OrderCreateNestedOneWithoutItemsInput
     variant: VariantCreateNestedOneWithoutOrderItemsInput
   }
@@ -19577,6 +19673,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemUpdateInput = {
@@ -19589,6 +19687,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
     order?: OrderUpdateOneRequiredWithoutItemsNestedInput
     variant?: VariantUpdateOneRequiredWithoutOrderItemsNestedInput
   }
@@ -19605,6 +19705,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OrderItemCreateManyInput = {
@@ -19619,6 +19721,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemUpdateManyMutationInput = {
@@ -19631,6 +19735,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OrderItemUncheckedUpdateManyInput = {
@@ -19645,6 +19751,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OfflineSaleCreateInput = {
@@ -19817,8 +19925,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
     chart: SizeChartCreateNestedOneWithoutEntriesInput
   }
 
@@ -19829,8 +19937,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
     chartId: string
   }
 
@@ -19841,8 +19949,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
     chart?: SizeChartUpdateOneRequiredWithoutEntriesNestedInput
   }
 
@@ -19853,8 +19961,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
     chartId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -19865,8 +19973,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
     chartId: string
   }
 
@@ -19877,8 +19985,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
   }
 
   export type SizeChartEntryUncheckedUpdateManyInput = {
@@ -19888,8 +19996,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
     chartId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -20637,6 +20745,13 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type EnumOrderChannelFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderChannel | EnumOrderChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderChannelFilter<$PrismaModel> | $Enums.OrderChannel
+  }
+
   export type CustomerNullableScalarRelationFilter = {
     is?: CustomerWhereInput | null
     isNot?: CustomerWhereInput | null
@@ -20663,6 +20778,7 @@ export namespace Prisma {
     customerId?: SortOrder
     guestInfo?: SortOrder
     staffId?: SortOrder
+    channel?: SortOrder
   }
 
   export type OrderAvgOrderByAggregateInput = {
@@ -20680,6 +20796,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
+    channel?: SortOrder
   }
 
   export type OrderMinOrderByAggregateInput = {
@@ -20692,6 +20809,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
+    channel?: SortOrder
   }
 
   export type OrderSumOrderByAggregateInput = {
@@ -20745,6 +20863,16 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type EnumOrderChannelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderChannel | EnumOrderChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderChannelWithAggregatesFilter<$PrismaModel> | $Enums.OrderChannel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrderChannelFilter<$PrismaModel>
+    _max?: NestedEnumOrderChannelFilter<$PrismaModel>
+  }
+
   export type OrderScalarRelationFilter = {
     is?: OrderWhereInput
     isNot?: OrderWhereInput
@@ -20767,11 +20895,14 @@ export namespace Prisma {
     lineTotal?: SortOrder
     color?: SortOrder
     size?: SortOrder
+    hasSizeMod?: SortOrder
+    sizeModFee?: SortOrder
   }
 
   export type OrderItemAvgOrderByAggregateInput = {
     quantity?: SortOrder
     lineTotal?: SortOrder
+    sizeModFee?: SortOrder
   }
 
   export type OrderItemMaxOrderByAggregateInput = {
@@ -20786,6 +20917,8 @@ export namespace Prisma {
     lineTotal?: SortOrder
     color?: SortOrder
     size?: SortOrder
+    hasSizeMod?: SortOrder
+    sizeModFee?: SortOrder
   }
 
   export type OrderItemMinOrderByAggregateInput = {
@@ -20800,11 +20933,14 @@ export namespace Prisma {
     lineTotal?: SortOrder
     color?: SortOrder
     size?: SortOrder
+    hasSizeMod?: SortOrder
+    sizeModFee?: SortOrder
   }
 
   export type OrderItemSumOrderByAggregateInput = {
     quantity?: SortOrder
     lineTotal?: SortOrder
+    sizeModFee?: SortOrder
   }
 
   export type StaffScalarRelationFilter = {
@@ -20899,17 +21035,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type SizeChartScalarRelationFilter = {
     is?: SizeChartWhereInput
     isNot?: SizeChartWhereInput
@@ -20967,22 +21092,6 @@ export namespace Prisma {
     waistMax?: SortOrder
     hipMin?: SortOrder
     hipMax?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type WishlistItemCustomerIdProductIdCompoundUniqueInput = {
@@ -21603,6 +21712,10 @@ export namespace Prisma {
     set?: $Enums.Currency
   }
 
+  export type EnumOrderChannelFieldUpdateOperationsInput = {
+    set?: $Enums.OrderChannel
+  }
+
   export type CustomerUpdateOneWithoutOrdersNestedInput = {
     create?: XOR<CustomerCreateWithoutOrdersInput, CustomerUncheckedCreateWithoutOrdersInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutOrdersInput
@@ -21773,14 +21886,6 @@ export namespace Prisma {
     create?: XOR<SizeChartCreateWithoutEntriesInput, SizeChartUncheckedCreateWithoutEntriesInput>
     connectOrCreate?: SizeChartCreateOrConnectWithoutEntriesInput
     connect?: SizeChartWhereUniqueInput
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type SizeChartUpdateOneRequiredWithoutEntriesNestedInput = {
@@ -22084,6 +22189,13 @@ export namespace Prisma {
     not?: NestedEnumCurrencyFilter<$PrismaModel> | $Enums.Currency
   }
 
+  export type NestedEnumOrderChannelFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderChannel | EnumOrderChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderChannelFilter<$PrismaModel> | $Enums.OrderChannel
+  }
+
   export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
     in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
@@ -22127,20 +22239,14 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
+  export type NestedEnumOrderChannelWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderChannel | EnumOrderChannelFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderChannel[] | ListEnumOrderChannelFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderChannelWithAggregatesFilter<$PrismaModel> | $Enums.OrderChannel
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrderChannelFilter<$PrismaModel>
+    _max?: NestedEnumOrderChannelFilter<$PrismaModel>
   }
 
   export type OrderCreateWithoutCustomerInput = {
@@ -22152,6 +22258,7 @@ export namespace Prisma {
     paymentMethod: string
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -22167,6 +22274,7 @@ export namespace Prisma {
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -22261,6 +22369,7 @@ export namespace Prisma {
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
     staffId?: StringNullableFilter<"Order"> | string | null
+    channel?: EnumOrderChannelFilter<"Order"> | $Enums.OrderChannel
   }
 
   export type WishlistItemUpsertWithWhereUniqueWithoutCustomerInput = {
@@ -22327,6 +22436,7 @@ export namespace Prisma {
     paymentMethod: string
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -22342,6 +22452,7 @@ export namespace Prisma {
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -22743,6 +22854,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
     order: OrderCreateNestedOneWithoutItemsInput
   }
 
@@ -22757,6 +22870,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemCreateOrConnectWithoutVariantInput = {
@@ -22851,6 +22966,8 @@ export namespace Prisma {
     lineTotal?: FloatFilter<"OrderItem"> | number
     color?: StringFilter<"OrderItem"> | string
     size?: StringFilter<"OrderItem"> | string
+    hasSizeMod?: BoolFilter<"OrderItem"> | boolean
+    sizeModFee?: FloatFilter<"OrderItem"> | number
   }
 
   export type ProductCreateWithoutReviewsInput = {
@@ -23169,6 +23286,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
     variant: VariantCreateNestedOneWithoutOrderItemsInput
   }
 
@@ -23183,6 +23302,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemCreateOrConnectWithoutOrderInput = {
@@ -23378,6 +23499,7 @@ export namespace Prisma {
     paymentMethod: string
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -23394,6 +23516,7 @@ export namespace Prisma {
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
 
@@ -23447,6 +23570,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -23463,6 +23587,7 @@ export namespace Prisma {
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
 
@@ -23506,6 +23631,7 @@ export namespace Prisma {
     paymentMethod: string
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -23522,6 +23648,7 @@ export namespace Prisma {
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
   }
 
@@ -23607,6 +23734,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -23623,6 +23751,7 @@ export namespace Prisma {
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   }
 
@@ -23696,8 +23825,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
   }
 
   export type SizeChartEntryUncheckedCreateWithoutChartInput = {
@@ -23707,8 +23836,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
   }
 
   export type SizeChartEntryCreateOrConnectWithoutChartInput = {
@@ -23747,8 +23876,8 @@ export namespace Prisma {
     chestMax?: IntFilter<"SizeChartEntry"> | number
     waistMin?: IntFilter<"SizeChartEntry"> | number
     waistMax?: IntFilter<"SizeChartEntry"> | number
-    hipMin?: IntNullableFilter<"SizeChartEntry"> | number | null
-    hipMax?: IntNullableFilter<"SizeChartEntry"> | number | null
+    hipMin?: IntFilter<"SizeChartEntry"> | number
+    hipMax?: IntFilter<"SizeChartEntry"> | number
     chartId?: StringFilter<"SizeChartEntry"> | string
   }
 
@@ -24002,6 +24131,7 @@ export namespace Prisma {
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
+    channel?: $Enums.OrderChannel
   }
 
   export type WishlistItemCreateManyCustomerInput = {
@@ -24028,6 +24158,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -24043,6 +24174,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -24057,6 +24189,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
   }
 
   export type WishlistItemUpdateWithoutCustomerInput = {
@@ -24114,6 +24247,7 @@ export namespace Prisma {
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
   }
 
   export type OfflineSaleCreateManyStaffInput = {
@@ -24131,6 +24265,7 @@ export namespace Prisma {
     paymentMethod?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -24146,6 +24281,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -24160,6 +24296,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
   }
 
   export type OfflineSaleUpdateWithoutStaffInput = {
@@ -24363,6 +24500,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemUpdateWithoutVariantInput = {
@@ -24375,6 +24514,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
     order?: OrderUpdateOneRequiredWithoutItemsNestedInput
   }
 
@@ -24389,6 +24530,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OrderItemUncheckedUpdateManyWithoutVariantInput = {
@@ -24402,6 +24545,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OrderItemCreateManyOrderInput = {
@@ -24415,6 +24560,8 @@ export namespace Prisma {
     lineTotal: number
     color: string
     size: string
+    hasSizeMod?: boolean
+    sizeModFee?: number
   }
 
   export type OrderItemUpdateWithoutOrderInput = {
@@ -24427,6 +24574,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
     variant?: VariantUpdateOneRequiredWithoutOrderItemsNestedInput
   }
 
@@ -24441,6 +24590,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type OrderItemUncheckedUpdateManyWithoutOrderInput = {
@@ -24454,6 +24605,8 @@ export namespace Prisma {
     lineTotal?: FloatFieldUpdateOperationsInput | number
     color?: StringFieldUpdateOperationsInput | string
     size?: StringFieldUpdateOperationsInput | string
+    hasSizeMod?: BoolFieldUpdateOperationsInput | boolean
+    sizeModFee?: FloatFieldUpdateOperationsInput | number
   }
 
   export type SizeChartEntryCreateManyChartInput = {
@@ -24463,8 +24616,8 @@ export namespace Prisma {
     chestMax: number
     waistMin: number
     waistMax: number
-    hipMin?: number | null
-    hipMax?: number | null
+    hipMin: number
+    hipMax: number
   }
 
   export type SizeChartEntryUpdateWithoutChartInput = {
@@ -24474,8 +24627,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
   }
 
   export type SizeChartEntryUncheckedUpdateWithoutChartInput = {
@@ -24485,8 +24638,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
   }
 
   export type SizeChartEntryUncheckedUpdateManyWithoutChartInput = {
@@ -24496,8 +24649,8 @@ export namespace Prisma {
     chestMax?: IntFieldUpdateOperationsInput | number
     waistMin?: IntFieldUpdateOperationsInput | number
     waistMax?: IntFieldUpdateOperationsInput | number
-    hipMin?: NullableIntFieldUpdateOperationsInput | number | null
-    hipMax?: NullableIntFieldUpdateOperationsInput | number | null
+    hipMin?: IntFieldUpdateOperationsInput | number
+    hipMax?: IntFieldUpdateOperationsInput | number
   }
 
 

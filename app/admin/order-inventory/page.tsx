@@ -30,6 +30,8 @@ async function fetchOrders(): Promise<OrderRow[]> {
           size: true,
           quantity: true,
           lineTotal: true,
+          hasSizeMod: true,
+          sizeModFee: true,
           variant: {
             select: {
               product: {
@@ -41,7 +43,7 @@ async function fetchOrders(): Promise<OrderRow[]> {
           },
         },
       },
-      // guestInfo is a scalar JSON field — it's returned automatically
+      offlineSale: true,
     },
   });
 
@@ -92,6 +94,8 @@ async function fetchOrders(): Promise<OrderRow[]> {
       quantity:  it.quantity,
       lineTotal: it.lineTotal,
       priceNGN:  it.variant.product.priceNGN ?? 0,
+      hasSizeMod: it.hasSizeMod,
+      sizeModFee: it.sizeModFee,
     }));
 
     return {
@@ -99,11 +103,12 @@ async function fetchOrders(): Promise<OrderRow[]> {
       status:        o.status,
       currency:      o.currency,
       totalAmount:   o.totalAmount,
-      totalNGN,                               // ◀ freshly computed
+      totalNGN, 
       paymentMethod: o.paymentMethod,
       createdAt:     o.createdAt.toISOString(),
       products,
       customer:      customerObj,
+      channel:       o.channel,
     };
   });
 }

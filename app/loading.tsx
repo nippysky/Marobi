@@ -4,7 +4,7 @@ export default function GlobalLoadingDots() {
       className="
         fixed inset-0 z-[9999]
         flex flex-col items-center justify-center
-        bg-brand
+        bg-gradient-to-r from-brand to-green-900
       "
       aria-live="polite"
       aria-busy="true"

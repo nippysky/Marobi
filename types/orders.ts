@@ -1,9 +1,11 @@
-// types/orders.ts
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
+
+export type OrderChannel = "ONLINE" | "OFFLINE";
 
 export interface OrderRow {
   id:            string;
   status:        OrderStatus;
+  channel:       OrderChannel;
   currency:      Currency;
   totalAmount:   number;
   totalNGN:      number;
@@ -18,6 +20,9 @@ export interface OrderRow {
     size:      string;
     quantity:  number;
     lineTotal: number;
+    priceNGN: number;
+    hasSizeMod: boolean;
+    sizeModFee: number;
   }[];
   customer: {
     id:      string | null;

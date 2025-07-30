@@ -3,12 +3,7 @@
 import useSWR from "swr";
 import Link from "next/link";
 import { X } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
@@ -19,8 +14,9 @@ interface WishlistItem {
   product: {
     id: string;
     name: string;
-    images: string[]; 
-    category: string;
+    images: string[];
+    // now correctly typed as an object
+    category: { slug: string; name: string; description: string | null };
     priceNGN: number | null;
     priceUSD: number | null;
     priceEUR: number | null;
@@ -50,7 +46,7 @@ export default function WishlistSection() {
   }
 
   return (
-    <Card>
+    <Card className="backdrop-blur-sm bg-white/60">
       <CardHeader>
         <CardTitle>Your Wishlist</CardTitle>
       </CardHeader>
@@ -58,39 +54,36 @@ export default function WishlistSection() {
         {items!.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {items!.map((item) => {
-              const p = item.product;
-              const priceNum =
-                {
-                  NGN: p.priceNGN,
-                  USD: p.priceUSD,
-                  EUR: p.priceEUR,
-                  GBP: p.priceGBP,
-                }[currency] ?? 0;
-              const priceStr = formatAmount(priceNum, currency);
-
-              // take the first image, or fallback to a gray box
-              const imgSrc = p.images[0] ?? "";
+              const { product: p } = item;
+              // pick the correct price
+              const price =
+                (currency === "NGN" ? p.priceNGN :
+                 currency === "USD" ? p.priceUSD :
+                 currency === "EUR" ? p.priceEUR :
+                 p.priceGBP) ?? 0;
+              // extract the category's name
+              const categoryName = p.category.name;
 
               return (
                 <div
                   key={item.id}
-                  className="relative border rounded-lg overflow-hidden"
+                  className="relative group overflow-hidden rounded-2xl shadow-lg"
                 >
                   {/* Remove button */}
                   <button
                     onClick={() => remove(item.id)}
-                    className="absolute top-2 right-2 z-10 rounded-full bg-white p-1 shadow hover:bg-red-50"
+                    className="absolute top-2 right-2 z-10 rounded-full bg-white p-1 opacity-0 group-hover:opacity-100 transition"
                     aria-label="Remove from wishlist"
                   >
-                    <X className="w-4 h-4 text-gray-500 hover:text-red-600" />
+                    <X className="w-4 h-4 text-gray-600" />
                   </button>
 
-                  <Link href={`/product/${p.id}`} className="block">
+                  <Link href={`/product/${p.id}`}>
                     {/* Image */}
                     <div className="h-48 bg-gray-100 flex items-center justify-center">
-                      {imgSrc ? (
+                      {p.images[0] ? (
                         <img
-                          src={imgSrc}
+                          src={p.images[0]}
                           alt={p.name}
                           className="max-h-full"
                         />
@@ -100,11 +93,15 @@ export default function WishlistSection() {
                     </div>
                     {/* Details */}
                     <div className="p-4 space-y-1">
-                      <h3 className="text-sm font-medium">{p.name}</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        {p.name}
+                      </h3>
                       <p className="text-xs text-gray-500">
-                        {p.category}
+                        {categoryName}
                       </p>
-                      <p className="mt-2 font-semibold">{priceStr}</p>
+                      <p className="mt-2 font-bold">
+                        {formatAmount(price, currency)}
+                      </p>
                     </div>
                   </Link>
                 </div>
@@ -117,7 +114,9 @@ export default function WishlistSection() {
               Your wishlist is empty.
             </p>
             <Link href="/all-products">
-              <Button>Start Shopping</Button>
+              <Button className="bg-gradient-to-r from-brand to-green-700">
+                Start Shopping
+              </Button>
             </Link>
           </div>
         )}

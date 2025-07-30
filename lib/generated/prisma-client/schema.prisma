@@ -1,5 +1,3 @@
-// schema.prisma
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -29,7 +27,11 @@ enum Currency {
   GBP
 }
 
-/// Day‑to‑day role within the business
+enum OrderChannel {
+  ONLINE
+  OFFLINE
+}
+
 enum JobRole {
   SystemAdministrator
   DispatchCoordinator
@@ -38,7 +40,6 @@ enum JobRole {
   CustomerSupportRep
 }
 
-/// UI‑level permissions / access scope
 enum UserRole {
   SuperAdmin
   ProductAdmin
@@ -159,43 +160,39 @@ model Review {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  status        OrderStatus @default(Processing)
+  id            String       @id @default(uuid())
+  status        OrderStatus  @default(Processing)
   currency      Currency
   totalAmount   Float
   totalNGN      Int
   paymentMethod String
-  createdAt     DateTime    @default(now())
-
-  customer   Customer? @relation(fields: [customerId], references: [id])
-  customerId String?
-
-  guestInfo Json?
-
-  staff   Staff?  @relation(fields: [staffId], references: [id])
-  staffId String?
-
-  items       OrderItem[]
-  offlineSale OfflineSale?
+  createdAt     DateTime     @default(now())
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+  customerId    String?
+  guestInfo     Json?
+  staff         Staff?       @relation(fields: [staffId], references: [id])
+  staffId       String?
+  items         OrderItem[]
+  offlineSale   OfflineSale?
+  channel       OrderChannel @default(ONLINE)
 }
 
 model OrderItem {
-  id String @id @default(cuid())
-
-  order   Order  @relation(fields: [orderId], references: [id])
-  orderId String
-
-  variant   Variant @relation(fields: [variantId], references: [id])
-  variantId String
-
-  name      String
-  image     String?
-  category  String
-  quantity  Int
-  currency  Currency
-  lineTotal Float
-  color     String
-  size      String
+  id         String   @id @default(cuid())
+  order      Order    @relation(fields: [orderId], references: [id])
+  orderId    String
+  variant    Variant  @relation(fields: [variantId], references: [id])
+  variantId  String
+  name       String
+  image      String?
+  category   String
+  quantity   Int
+  currency   Currency
+  lineTotal  Float
+  color      String
+  size       String
+  hasSizeMod Boolean  @default(false)
+  sizeModFee Float    @default(0)
 }
 
 model OfflineSale {
@@ -231,8 +228,8 @@ model SizeChartEntry {
   chestMax  Int
   waistMin  Int
   waistMax  Int
-  hipMin    Int?
-  hipMax    Int?
+  hipMin    Int
+  hipMax    Int
   chart     SizeChart @relation(fields: [chartId], references: [id])
   chartId   String
 }

@@ -2,20 +2,18 @@
 
 import React from "react";
 import { useCartStore } from "@/lib/store/cartStore";
-
-import type { User } from "@/lib/session";
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import CheckoutSection from "./CheckOutSection";
+import { CheckoutUser } from "./page";
 
 interface Props {
-  user: User | null;
+  user: CheckoutUser | null;
 }
 
 export default function CheckoutContent({ user }: Props) {
   const items = useCartStore((s) => s.items);
-
   if (items.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-5">

@@ -1,5 +1,3 @@
-// schema.prisma
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -29,7 +27,11 @@ enum Currency {
   GBP
 }
 
-/// Day‑to‑day role within the business
+enum OrderChannel {
+  ONLINE 
+  OFFLINE 
+}
+
 enum JobRole {
   SystemAdministrator
   DispatchCoordinator
@@ -38,7 +40,6 @@ enum JobRole {
   CustomerSupportRep
 }
 
-/// UI‑level permissions / access scope
 enum UserRole {
   SuperAdmin
   ProductAdmin
@@ -173,6 +174,7 @@ model Order {
   staffId       String?
   items         OrderItem[]
   offlineSale   OfflineSale?
+  channel       OrderChannel @default(ONLINE)
 }
 
 model OrderItem {
@@ -189,6 +191,8 @@ model OrderItem {
   lineTotal  Float
   color      String
   size       String
+  hasSizeMod   Boolean  @default(false)
+  sizeModFee   Float    @default(0) 
 }
 
 model OfflineSale {

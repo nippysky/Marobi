@@ -1,9 +1,9 @@
-import { ReactNode }     from "react";
-import { redirect }      from "next/navigation";
+import { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
-import { authOptions }     from "@/app/api/auth/[...nextauth]/route";
-import AccountSidebar      from "@/components/account/AccountSidebar";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Header } from "@/components/shared/header";
+import AccountSidebar from "./AccountSidebar";
 
 export default async function AccountLayout({
   children,
@@ -14,10 +14,10 @@ export default async function AccountLayout({
   if (!session) redirect("/auth/login");
 
   return (
-    <section className="min-h-screen bg-background">
+    <section className="min-h-screen bg-gradient-to-b from-gray-100 to-white">
       <Header />
-      <div className="xl:px-40 lg:px-20 md:px-10 px-5 py-10 flex flex-col lg:flex-row gap-10">
-        <aside className="w-full lg:w-1/4 pb-6 lg:pb-0">
+      <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col lg:flex-row gap-8">
+        <aside className="w-full lg:w-1/4 sticky top-24 self-start">
           <AccountSidebar />
         </aside>
         <main className="w-full lg:w-3/4 space-y-8">{children}</main>

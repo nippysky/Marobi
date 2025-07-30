@@ -1,50 +1,57 @@
 import React from "react";
-import { Truck, Award, Info } from "lucide-react";
+import { Truck, Scissors, Headphones } from "lucide-react";
 
 const features = [
   {
     icon: Truck,
-    title: "International Delivery",
-    description: "Marobi ships worldwide using trusted courier services.",
+    title: "Worldwide Shipping",
+    description:
+      "Enjoy fast, reliable delivery to every corner of the globe—so your Marobi wardrobe arrives just when you need it.",
   },
   {
-    icon: Award,
-    title: "Bespoke Quality",
-    description: "Hand-picked, crafted materials for premium, tailored style.",
+    icon: Scissors,
+    title: "Tailored Elegance",
+    description:
+      "Handcrafted female silhouettes—expertly tailored to your measurements for the perfect, confidence‑boosting fit.",
   },
   {
-    icon: Info,
-    title: "Get in Touch",
-    description: "Reach out via email or social media for more information.",
+    icon: Headphones,
+    title: "24/7 Style Support",
+    description:
+      "Need a second opinion? Our fashion concierges are here day and night to help you curate your next standout look.",
   },
 ];
 
 const FeatureHighlights: React.FC = () => (
-  <section className=" lg:py-20 py-10 bg-background lg:px-20 md:px-10 px-5">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-      {features.map(({ icon: Icon, title, description }) => (
-        <div
-          key={title}
-          className="
-            flex flex-col 
-            items-start 
-            gap-5 
-            w-full         /* full width on mobile so all start at same edge */
-            md:w-fit       /* shrink-to-fit on md+ */
-            md:mx-auto     /* center on md+ */
-          "
-        >
-          {/* fixed 10×10 container to center the actual SVG */}
-          <div className="w-10 h-10 flex items-center justify-center text-muted-foreground">
-            <Icon className="w-10 h-10" />
+  <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <div className="max-w-7xl mx-auto px-4">
+      <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+        Why Marobi?
+      </h2>
+      <div className="grid gap-8 md:grid-cols-3">
+        {features.map(({ icon: Icon, title, description }) => (
+          <div
+            key={title}
+            className="
+              bg-white bg-opacity-70 backdrop-blur-md
+              p-8 rounded-3xl shadow-lg
+              hover:shadow-2xl transition
+              transform hover:-translate-y-2
+              flex flex-col items-center text-center
+            "
+          >
+            <div className="w-16 h-16 flex items-center justify-center mb-6
+                            bg-gradient-to-br from-green-500 to-brand
+                            rounded-full">
+              <Icon className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {title}
+            </h3>
+            <p className="text-gray-600">{description}</p>
           </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   </section>
 );

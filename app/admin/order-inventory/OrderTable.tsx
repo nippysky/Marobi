@@ -44,7 +44,7 @@ import toast from "react-hot-toast";
 
 import Papa from "papaparse";
 
-import type { OrderRow } from "@/types/orders";
+import type { OrderChannel, OrderRow } from "@/types/orders";
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
 import { receiptCSS } from "@/lib/utils";
 
@@ -236,6 +236,7 @@ export default function OrderTable({ initialData }: Props) {
       "Amount (NGN)": o.totalNGN,
       Amount: o.totalAmount,
       Currency: o.currency,
+      "Channel":       o.channel === "OFFLINE" ? "Offline Sale" : "Online Store",
       "Payment Method": o.paymentMethod,
       "Customer Name": o.customer.name,
       "Customer Email": o.customer.email,
@@ -371,6 +372,15 @@ export default function OrderTable({ initialData }: Props) {
       accessorKey: "currency",
       header: "Currency",
     },
+    {
+  accessorKey: "channel",
+  header:      "Channel",
+  cell:        ({ getValue }) => {
+    const v = getValue<OrderChannel>();
+    return v === "OFFLINE" ? "Offline Sale" : "Online Store";
+  },
+},
+
     {
       id: "customer",
       header: "Customer",

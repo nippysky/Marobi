@@ -1,4 +1,3 @@
-// components/HeroSlider.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -74,7 +73,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides }) => {
                   className="
                     mt-6
                     inline-block
-                    bg-brand hover:bg-brand/90
+                    bg-gradient-to-r from-brand to-green-700 hover:bg-brand/90
                     text-white font-semibold
                     px-8 py-3
                     rounded-full
