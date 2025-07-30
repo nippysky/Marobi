@@ -3,9 +3,9 @@ import { prisma } from '@/lib/db'
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
+  const { id } = await context.params
 
   if (!id) {
     return NextResponse.json(
