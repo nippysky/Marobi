@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import OrdersTable from "./OrdersTable";
+import { authOptions } from "@/lib/authOptions";
 
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);

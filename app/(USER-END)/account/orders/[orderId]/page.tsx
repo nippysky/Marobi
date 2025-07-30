@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 import { prisma } from "@/lib/db";
 import OrderDetail from "./OrderDetail";
+import { authOptions } from "@/lib/authOptions";
 
 
 

@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import AdminSignInClient from "@/components/admin/AdminSignInClient";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
+
 
 export default async function AdminLoginPage() {
   // server‑side: check for an existing session

@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 import PasswordChangeForm from "@/components/admin/PasswordChangeForm";
 import {
@@ -9,6 +8,7 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
+import { authOptions } from "@/lib/authOptions";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);

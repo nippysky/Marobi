@@ -4,7 +4,6 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getCategoryBySlug } from "@/lib/categories";
 import {
   getProductById,
@@ -25,6 +24,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { authOptions } from "@/lib/authOptions";
 
 export default async function ProductPage({
   params,

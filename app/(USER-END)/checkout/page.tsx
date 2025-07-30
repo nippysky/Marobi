@@ -1,11 +1,11 @@
-// app/(USER-END)/checkout/page.tsx
+
 import React from "react";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 import Header from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
 import CheckoutContent from "./CheckOutContent";
+import { authOptions } from "@/lib/authOptions";
 
 export interface CheckoutUser {
   id: string;
