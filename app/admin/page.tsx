@@ -37,7 +37,7 @@ async function fetchTopProducts(limit = 5) {
       sold:     soldQty,
       revenue:  revenueNGN,
       image:    prod.images[0],
-      category: prod.category,
+      category: prod.categorySlug,
     };
   });
 }
