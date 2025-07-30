@@ -6,16 +6,14 @@ import { prisma } from "@/lib/db";
 import OrderDetail from "./OrderDetail";
 
 
-interface Params {
-  orderId: string;
-}
 
-export default async function OrderPage({ params }: { params: Params }) {
+export default async function OrderPage({ params }: { params: Promise<{ orderId: string }> }) {
+    const { orderId } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/auth/login");
 
   const order = await prisma.order.findUnique({
-    where: { id: params.orderId },
+    where: { id: orderId },
     include: {
       items: {
         select: {
