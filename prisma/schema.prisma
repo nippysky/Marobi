@@ -175,6 +175,7 @@ model Order {
   items         OrderItem[]
   offlineSale   OfflineSale?
   channel       OrderChannel @default(ONLINE)
+  receiptEmailStatus ReceiptEmailStatus?
 }
 
 model OrderItem {
@@ -243,4 +244,16 @@ model WishlistItem {
   addedAt     DateTime  @default(now())
 
   @@unique([customerId, productId])
+}
+
+
+model ReceiptEmailStatus {
+  order        Order     @relation(fields: [orderId], references: [id])
+  orderId      String    @id
+  attempts     Int       @default(0)
+  lastError    String?
+  nextRetryAt  DateTime?
+  sent         Boolean   @default(false)
+  deliveryFee  Float? 
+  updatedAt    DateTime  @updatedAt
 }

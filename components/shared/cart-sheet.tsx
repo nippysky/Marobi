@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, TrashIcon, Plus, Minus } from "lucide-react";
@@ -17,20 +17,60 @@ import { BsBag } from "react-icons/bs";
 import { useCurrency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 
 export function CartSheet() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const items = useCartStore((s) => s.items);
+  const items = useCartStore((s) => s.items) as CartItem[];
   const removeFromCart = useCartStore((s) => s.removeFromCart);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const clearCart = useCartStore((s) => s.clearCart);
   const totalItemsCount = useCartStore((s) => s.totalItems());
+  const distinctCount = useCartStore((s) => s.totalDistinctItems());
   const { currency } = useCurrency();
 
-  // compute total
+  const [pendingMap, setPendingMap] = useState<Record<string, boolean>>({});
+
+  const setPending = useCallback((key: string, v: boolean) => {
+    setPendingMap((prev) => ({ ...prev, [key]: v }));
+  }, []);
+
+  const handleDecrease = useCallback(
+    (item: CartItem, stock: number, key: string) => {
+      // optimistic
+      updateQuantity(
+        item.product.id,
+        item.color,
+        item.size,
+        item.quantity - 1,
+        item.customMods,
+        item.hasSizeMod
+      );
+      setPending(key, true);
+      setTimeout(() => setPending(key, false), 250);
+    },
+    [updateQuantity, setPending]
+  );
+
+  const handleIncrease = useCallback(
+    (item: CartItem, stock: number, key: string) => {
+      updateQuantity(
+        item.product.id,
+        item.color,
+        item.size,
+        item.quantity + 1,
+        item.customMods,
+        item.hasSizeMod
+      );
+      setPending(key, true);
+      setTimeout(() => setPending(key, false), 250);
+    },
+    [updateQuantity, setPending]
+  );
+
   const totalPriceValue = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -42,9 +82,9 @@ export function CartSheet() {
       <SheetTrigger asChild>
         <button className="relative p-2 text-gray-600 hover:text-gray-800">
           <BsBag className="w-5 h-5" />
-          {mounted && totalItemsCount > 0 && (
+          {mounted && distinctCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-brand text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-              {totalItemsCount}
+              {distinctCount}
             </span>
           )}
         </button>
@@ -85,27 +125,39 @@ export function CartSheet() {
                   sizeModFee,
                 } = item;
                 const formattedUnit = formatAmount(price, currency);
+                const variant = product.variants.find(
+                  (v: any) => v.color === color && v.size === size
+                ) as any | undefined;
                 const stock =
-                  product.variants.find(
-                    (v) => v.color === color && v.size === size
-                  )?.inStock ?? Infinity;
+                  variant && typeof variant.inStock === "number"
+                    ? variant.inStock
+                    : variant && typeof variant.stock === "number"
+                    ? variant.stock
+                    : Infinity;
+
+                const key = `${product.id}-${color}-${size}-${idx}`;
+                const isPending = Boolean(pendingMap[key]);
 
                 return (
                   <div
-                    key={`${product.id}-${color}-${size}-${idx}`}
+                    key={key}
                     className="py-4"
+                    aria-busy={isPending}
+                    aria-label={`Cart item ${product.name}`}
                   >
                     <div className="flex items-start gap-3">
                       <Link
                         href={`/product/${product.id}`}
                         className="w-16 h-16 relative flex-shrink-0 rounded overflow-hidden bg-gray-100"
                       >
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                        />
+                        {product.images[0] && (
+                          <Image
+                            src={product.images[0]}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                          />
+                        )}
                       </Link>
                       <div className="flex-1">
                         <Link
@@ -124,48 +176,48 @@ export function CartSheet() {
                               size="icon"
                               variant="outline"
                               onClick={() =>
-                                updateQuantity(
-                                  product.id,
-                                  color,
-                                  size,
-                                  quantity - 1,
-                                  customMods,
-                                  hasSizeMod
-                                )
+                                handleDecrease(item, stock, key)
                               }
-                              disabled={quantity <= 1}
+                              disabled={isPending}
+                              aria-label="Decrease quantity"
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
-                            <span className="text-sm w-6 text-center">
-                              {quantity}
-                            </span>
+                            <div className="relative w-8 flex justify-center">
+                              <span
+                                className={clsx(
+                                  "text-sm font-medium w-full text-center",
+                                  isPending && "opacity-50"
+                                )}
+                              >
+                                {quantity}
+                              </span>
+                              {isPending && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-4 h-4 animate-spin border border-gray-300 border-t-transparent rounded-full" />
+                                </div>
+                              )}
+                            </div>
                             <Button
                               size="icon"
                               variant="outline"
                               onClick={() =>
-                                updateQuantity(
-                                  product.id,
-                                  color,
-                                  size,
-                                  quantity + 1,
-                                  customMods,
-                                  hasSizeMod
-                                )
+                                handleIncrease(item, stock, key)
                               }
-                              disabled={quantity >= stock}
+                              disabled={quantity >= stock || isPending}
+                              aria-label="Increase quantity"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
-                          Color: <span className="font-medium">{color}</span> | Size:{" "}
-                          <span className="font-medium">{size}</span>
+                          Color: <span className="font-medium">{color}</span> |{" "}
+                          Size: <span className="font-medium">{size}</span>
                         </div>
                         {hasSizeMod && (
                           <div className="text-xs text-yellow-600 mt-1">
-                            +5% size‑mod fee:{" "}
+                            +5% size-mod fee:{" "}
                             <span className="font-medium">
                               {formatAmount(sizeModFee, currency)}
                             </span>
@@ -176,9 +228,9 @@ export function CartSheet() {
                             {Object.entries(customMods).map(([k, v]) => (
                               <div key={k} className="flex">
                                 <span className="font-medium capitalize mr-1">
-                                  {k.replace(/([A-Z])/g, " $1").replace(/^./, (c) =>
-                                    c.toUpperCase()
-                                  )}
+                                  {k
+                                    .replace(/([A-Z])/g, " $1")
+                                    .replace(/^./, (c) => c.toUpperCase())}
                                   :
                                 </span>
                                 <span>{v}</span>
@@ -213,7 +265,9 @@ export function CartSheet() {
 
             <div className="sticky bottom-0 left-0 p-4 border-t border-gray-200 bg-white">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-900">Total:</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Total:
+                </span>
                 <span className="text-lg font-bold text-gray-900">
                   {formattedTotal}
                 </span>

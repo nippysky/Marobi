@@ -78,6 +78,11 @@ export type SizeChartEntry = $Result.DefaultSelection<Prisma.$SizeChartEntryPayl
  * 
  */
 export type WishlistItem = $Result.DefaultSelection<Prisma.$WishlistItemPayload>
+/**
+ * Model ReceiptEmailStatus
+ * 
+ */
+export type ReceiptEmailStatus = $Result.DefaultSelection<Prisma.$ReceiptEmailStatusPayload>
 
 /**
  * Enums
@@ -182,7 +187,7 @@ export const UserRole: typeof $Enums.UserRole
  */
 export class PrismaClient<
   ClientOptions extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
-  U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
+  const U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
   ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs
 > {
   [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
@@ -420,6 +425,16 @@ export class PrismaClient<
     * ```
     */
   get wishlistItem(): Prisma.WishlistItemDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.receiptEmailStatus`: Exposes CRUD operations for the **ReceiptEmailStatus** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReceiptEmailStatuses
+    * const receiptEmailStatuses = await prisma.receiptEmailStatus.findMany()
+    * ```
+    */
+  get receiptEmailStatus(): Prisma.ReceiptEmailStatusDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -478,8 +493,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.12.0
-   * Query Engine version: 8047c96bbd92db98a2abc7c9323ce77c02c89dbc
+   * Prisma Client JS version: 6.13.0
+   * Query Engine version: 361e86d0ea4987e9f53a565309b3eed797a6bcbd
    */
   export type PrismaVersion = {
     client: string
@@ -872,7 +887,8 @@ export namespace Prisma {
     HeroSlide: 'HeroSlide',
     SizeChart: 'SizeChart',
     SizeChartEntry: 'SizeChartEntry',
-    WishlistItem: 'WishlistItem'
+    WishlistItem: 'WishlistItem',
+    ReceiptEmailStatus: 'ReceiptEmailStatus'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -891,7 +907,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "customer" | "staff" | "category" | "product" | "variant" | "review" | "order" | "orderItem" | "offlineSale" | "heroSlide" | "sizeChart" | "sizeChartEntry" | "wishlistItem"
+      modelProps: "customer" | "staff" | "category" | "product" | "variant" | "review" | "order" | "orderItem" | "offlineSale" | "heroSlide" | "sizeChart" | "sizeChartEntry" | "wishlistItem" | "receiptEmailStatus"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1857,6 +1873,80 @@ export namespace Prisma {
           }
         }
       }
+      ReceiptEmailStatus: {
+        payload: Prisma.$ReceiptEmailStatusPayload<ExtArgs>
+        fields: Prisma.ReceiptEmailStatusFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReceiptEmailStatusFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReceiptEmailStatusFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          findFirst: {
+            args: Prisma.ReceiptEmailStatusFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReceiptEmailStatusFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          findMany: {
+            args: Prisma.ReceiptEmailStatusFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>[]
+          }
+          create: {
+            args: Prisma.ReceiptEmailStatusCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          createMany: {
+            args: Prisma.ReceiptEmailStatusCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReceiptEmailStatusCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>[]
+          }
+          delete: {
+            args: Prisma.ReceiptEmailStatusDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          update: {
+            args: Prisma.ReceiptEmailStatusUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReceiptEmailStatusDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReceiptEmailStatusUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReceiptEmailStatusUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReceiptEmailStatusUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReceiptEmailStatusPayload>
+          }
+          aggregate: {
+            args: Prisma.ReceiptEmailStatusAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReceiptEmailStatus>
+          }
+          groupBy: {
+            args: Prisma.ReceiptEmailStatusGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReceiptEmailStatusGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReceiptEmailStatusCountArgs<ExtArgs>
+            result: $Utils.Optional<ReceiptEmailStatusCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1900,16 +1990,24 @@ export namespace Prisma {
     /**
      * @example
      * ```
-     * // Defaults to stdout
+     * // Shorthand for `emit: 'stdout'`
      * log: ['query', 'info', 'warn', 'error']
      * 
-     * // Emit as events
+     * // Emit as events only
      * log: [
-     *   { emit: 'stdout', level: 'query' },
-     *   { emit: 'stdout', level: 'info' },
-     *   { emit: 'stdout', level: 'warn' }
-     *   { emit: 'stdout', level: 'error' }
+     *   { emit: 'event', level: 'query' },
+     *   { emit: 'event', level: 'info' },
+     *   { emit: 'event', level: 'warn' }
+     *   { emit: 'event', level: 'error' }
      * ]
+     * 
+     * / Emit as events and log to stdout
+     * og: [
+     *  { emit: 'stdout', level: 'query' },
+     *  { emit: 'stdout', level: 'info' },
+     *  { emit: 'stdout', level: 'warn' }
+     *  { emit: 'stdout', level: 'error' }
+     * 
      * ```
      * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/logging#the-log-option).
      */
@@ -1954,6 +2052,7 @@ export namespace Prisma {
     sizeChart?: SizeChartOmit
     sizeChartEntry?: SizeChartEntryOmit
     wishlistItem?: WishlistItemOmit
+    receiptEmailStatus?: ReceiptEmailStatusOmit
   }
 
   /* Types for Logging */
@@ -1963,10 +2062,15 @@ export namespace Prisma {
     emit: 'stdout' | 'event'
   }
 
-  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition ? T['emit'] extends 'event' ? T['level'] : never : never
-  export type GetEvents<T extends any> = T extends Array<LogLevel | LogDefinition> ?
-    GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
-    : never
+  export type CheckIsLogLevel<T> = T extends LogLevel ? T : never;
+
+  export type GetLogType<T> = CheckIsLogLevel<
+    T extends LogDefinition ? T['level'] : T
+  >;
+
+  export type GetEvents<T extends any[]> = T extends Array<LogLevel | LogDefinition>
+    ? GetLogType<T[number]>
+    : never;
 
   export type QueryEvent = {
     timestamp: Date
@@ -9802,6 +9906,7 @@ export namespace Prisma {
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     offlineSale?: boolean | Order$offlineSaleArgs<ExtArgs>
+    receiptEmailStatus?: boolean | Order$receiptEmailStatusArgs<ExtArgs>
     _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -9857,6 +9962,7 @@ export namespace Prisma {
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     offlineSale?: boolean | Order$offlineSaleArgs<ExtArgs>
+    receiptEmailStatus?: boolean | Order$receiptEmailStatusArgs<ExtArgs>
     _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9875,6 +9981,7 @@ export namespace Prisma {
       staff: Prisma.$StaffPayload<ExtArgs> | null
       items: Prisma.$OrderItemPayload<ExtArgs>[]
       offlineSale: Prisma.$OfflineSalePayload<ExtArgs> | null
+      receiptEmailStatus: Prisma.$ReceiptEmailStatusPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -10286,6 +10393,7 @@ export namespace Prisma {
     staff<T extends Order$staffArgs<ExtArgs> = {}>(args?: Subset<T, Order$staffArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     items<T extends Order$itemsArgs<ExtArgs> = {}>(args?: Subset<T, Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     offlineSale<T extends Order$offlineSaleArgs<ExtArgs> = {}>(args?: Subset<T, Order$offlineSaleArgs<ExtArgs>>): Prisma__OfflineSaleClient<$Result.GetResult<Prisma.$OfflineSalePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    receiptEmailStatus<T extends Order$receiptEmailStatusArgs<ExtArgs> = {}>(args?: Subset<T, Order$receiptEmailStatusArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10800,6 +10908,25 @@ export namespace Prisma {
      */
     include?: OfflineSaleInclude<ExtArgs> | null
     where?: OfflineSaleWhereInput
+  }
+
+  /**
+   * Order.receiptEmailStatus
+   */
+  export type Order$receiptEmailStatusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    where?: ReceiptEmailStatusWhereInput
   }
 
   /**
@@ -17403,6 +17530,1128 @@ export namespace Prisma {
 
 
   /**
+   * Model ReceiptEmailStatus
+   */
+
+  export type AggregateReceiptEmailStatus = {
+    _count: ReceiptEmailStatusCountAggregateOutputType | null
+    _avg: ReceiptEmailStatusAvgAggregateOutputType | null
+    _sum: ReceiptEmailStatusSumAggregateOutputType | null
+    _min: ReceiptEmailStatusMinAggregateOutputType | null
+    _max: ReceiptEmailStatusMaxAggregateOutputType | null
+  }
+
+  export type ReceiptEmailStatusAvgAggregateOutputType = {
+    attempts: number | null
+    deliveryFee: number | null
+  }
+
+  export type ReceiptEmailStatusSumAggregateOutputType = {
+    attempts: number | null
+    deliveryFee: number | null
+  }
+
+  export type ReceiptEmailStatusMinAggregateOutputType = {
+    orderId: string | null
+    attempts: number | null
+    lastError: string | null
+    nextRetryAt: Date | null
+    sent: boolean | null
+    deliveryFee: number | null
+    updatedAt: Date | null
+  }
+
+  export type ReceiptEmailStatusMaxAggregateOutputType = {
+    orderId: string | null
+    attempts: number | null
+    lastError: string | null
+    nextRetryAt: Date | null
+    sent: boolean | null
+    deliveryFee: number | null
+    updatedAt: Date | null
+  }
+
+  export type ReceiptEmailStatusCountAggregateOutputType = {
+    orderId: number
+    attempts: number
+    lastError: number
+    nextRetryAt: number
+    sent: number
+    deliveryFee: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ReceiptEmailStatusAvgAggregateInputType = {
+    attempts?: true
+    deliveryFee?: true
+  }
+
+  export type ReceiptEmailStatusSumAggregateInputType = {
+    attempts?: true
+    deliveryFee?: true
+  }
+
+  export type ReceiptEmailStatusMinAggregateInputType = {
+    orderId?: true
+    attempts?: true
+    lastError?: true
+    nextRetryAt?: true
+    sent?: true
+    deliveryFee?: true
+    updatedAt?: true
+  }
+
+  export type ReceiptEmailStatusMaxAggregateInputType = {
+    orderId?: true
+    attempts?: true
+    lastError?: true
+    nextRetryAt?: true
+    sent?: true
+    deliveryFee?: true
+    updatedAt?: true
+  }
+
+  export type ReceiptEmailStatusCountAggregateInputType = {
+    orderId?: true
+    attempts?: true
+    lastError?: true
+    nextRetryAt?: true
+    sent?: true
+    deliveryFee?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ReceiptEmailStatusAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReceiptEmailStatus to aggregate.
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReceiptEmailStatuses to fetch.
+     */
+    orderBy?: ReceiptEmailStatusOrderByWithRelationInput | ReceiptEmailStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReceiptEmailStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReceiptEmailStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReceiptEmailStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReceiptEmailStatuses
+    **/
+    _count?: true | ReceiptEmailStatusCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ReceiptEmailStatusAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ReceiptEmailStatusSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReceiptEmailStatusMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReceiptEmailStatusMaxAggregateInputType
+  }
+
+  export type GetReceiptEmailStatusAggregateType<T extends ReceiptEmailStatusAggregateArgs> = {
+        [P in keyof T & keyof AggregateReceiptEmailStatus]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReceiptEmailStatus[P]>
+      : GetScalarType<T[P], AggregateReceiptEmailStatus[P]>
+  }
+
+
+
+
+  export type ReceiptEmailStatusGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReceiptEmailStatusWhereInput
+    orderBy?: ReceiptEmailStatusOrderByWithAggregationInput | ReceiptEmailStatusOrderByWithAggregationInput[]
+    by: ReceiptEmailStatusScalarFieldEnum[] | ReceiptEmailStatusScalarFieldEnum
+    having?: ReceiptEmailStatusScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReceiptEmailStatusCountAggregateInputType | true
+    _avg?: ReceiptEmailStatusAvgAggregateInputType
+    _sum?: ReceiptEmailStatusSumAggregateInputType
+    _min?: ReceiptEmailStatusMinAggregateInputType
+    _max?: ReceiptEmailStatusMaxAggregateInputType
+  }
+
+  export type ReceiptEmailStatusGroupByOutputType = {
+    orderId: string
+    attempts: number
+    lastError: string | null
+    nextRetryAt: Date | null
+    sent: boolean
+    deliveryFee: number | null
+    updatedAt: Date
+    _count: ReceiptEmailStatusCountAggregateOutputType | null
+    _avg: ReceiptEmailStatusAvgAggregateOutputType | null
+    _sum: ReceiptEmailStatusSumAggregateOutputType | null
+    _min: ReceiptEmailStatusMinAggregateOutputType | null
+    _max: ReceiptEmailStatusMaxAggregateOutputType | null
+  }
+
+  type GetReceiptEmailStatusGroupByPayload<T extends ReceiptEmailStatusGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReceiptEmailStatusGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReceiptEmailStatusGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReceiptEmailStatusGroupByOutputType[P]>
+            : GetScalarType<T[P], ReceiptEmailStatusGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReceiptEmailStatusSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    orderId?: boolean
+    attempts?: boolean
+    lastError?: boolean
+    nextRetryAt?: boolean
+    sent?: boolean
+    deliveryFee?: boolean
+    updatedAt?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["receiptEmailStatus"]>
+
+  export type ReceiptEmailStatusSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    orderId?: boolean
+    attempts?: boolean
+    lastError?: boolean
+    nextRetryAt?: boolean
+    sent?: boolean
+    deliveryFee?: boolean
+    updatedAt?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["receiptEmailStatus"]>
+
+  export type ReceiptEmailStatusSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    orderId?: boolean
+    attempts?: boolean
+    lastError?: boolean
+    nextRetryAt?: boolean
+    sent?: boolean
+    deliveryFee?: boolean
+    updatedAt?: boolean
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["receiptEmailStatus"]>
+
+  export type ReceiptEmailStatusSelectScalar = {
+    orderId?: boolean
+    attempts?: boolean
+    lastError?: boolean
+    nextRetryAt?: boolean
+    sent?: boolean
+    deliveryFee?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ReceiptEmailStatusOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"orderId" | "attempts" | "lastError" | "nextRetryAt" | "sent" | "deliveryFee" | "updatedAt", ExtArgs["result"]["receiptEmailStatus"]>
+  export type ReceiptEmailStatusInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }
+  export type ReceiptEmailStatusIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }
+  export type ReceiptEmailStatusIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    order?: boolean | OrderDefaultArgs<ExtArgs>
+  }
+
+  export type $ReceiptEmailStatusPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReceiptEmailStatus"
+    objects: {
+      order: Prisma.$OrderPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      orderId: string
+      attempts: number
+      lastError: string | null
+      nextRetryAt: Date | null
+      sent: boolean
+      deliveryFee: number | null
+      updatedAt: Date
+    }, ExtArgs["result"]["receiptEmailStatus"]>
+    composites: {}
+  }
+
+  type ReceiptEmailStatusGetPayload<S extends boolean | null | undefined | ReceiptEmailStatusDefaultArgs> = $Result.GetResult<Prisma.$ReceiptEmailStatusPayload, S>
+
+  type ReceiptEmailStatusCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReceiptEmailStatusFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReceiptEmailStatusCountAggregateInputType | true
+    }
+
+  export interface ReceiptEmailStatusDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReceiptEmailStatus'], meta: { name: 'ReceiptEmailStatus' } }
+    /**
+     * Find zero or one ReceiptEmailStatus that matches the filter.
+     * @param {ReceiptEmailStatusFindUniqueArgs} args - Arguments to find a ReceiptEmailStatus
+     * @example
+     * // Get one ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReceiptEmailStatusFindUniqueArgs>(args: SelectSubset<T, ReceiptEmailStatusFindUniqueArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReceiptEmailStatus that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReceiptEmailStatusFindUniqueOrThrowArgs} args - Arguments to find a ReceiptEmailStatus
+     * @example
+     * // Get one ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReceiptEmailStatusFindUniqueOrThrowArgs>(args: SelectSubset<T, ReceiptEmailStatusFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReceiptEmailStatus that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusFindFirstArgs} args - Arguments to find a ReceiptEmailStatus
+     * @example
+     * // Get one ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReceiptEmailStatusFindFirstArgs>(args?: SelectSubset<T, ReceiptEmailStatusFindFirstArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReceiptEmailStatus that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusFindFirstOrThrowArgs} args - Arguments to find a ReceiptEmailStatus
+     * @example
+     * // Get one ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReceiptEmailStatusFindFirstOrThrowArgs>(args?: SelectSubset<T, ReceiptEmailStatusFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReceiptEmailStatuses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReceiptEmailStatuses
+     * const receiptEmailStatuses = await prisma.receiptEmailStatus.findMany()
+     * 
+     * // Get first 10 ReceiptEmailStatuses
+     * const receiptEmailStatuses = await prisma.receiptEmailStatus.findMany({ take: 10 })
+     * 
+     * // Only select the `orderId`
+     * const receiptEmailStatusWithOrderIdOnly = await prisma.receiptEmailStatus.findMany({ select: { orderId: true } })
+     * 
+     */
+    findMany<T extends ReceiptEmailStatusFindManyArgs>(args?: SelectSubset<T, ReceiptEmailStatusFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReceiptEmailStatus.
+     * @param {ReceiptEmailStatusCreateArgs} args - Arguments to create a ReceiptEmailStatus.
+     * @example
+     * // Create one ReceiptEmailStatus
+     * const ReceiptEmailStatus = await prisma.receiptEmailStatus.create({
+     *   data: {
+     *     // ... data to create a ReceiptEmailStatus
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReceiptEmailStatusCreateArgs>(args: SelectSubset<T, ReceiptEmailStatusCreateArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReceiptEmailStatuses.
+     * @param {ReceiptEmailStatusCreateManyArgs} args - Arguments to create many ReceiptEmailStatuses.
+     * @example
+     * // Create many ReceiptEmailStatuses
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReceiptEmailStatusCreateManyArgs>(args?: SelectSubset<T, ReceiptEmailStatusCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReceiptEmailStatuses and returns the data saved in the database.
+     * @param {ReceiptEmailStatusCreateManyAndReturnArgs} args - Arguments to create many ReceiptEmailStatuses.
+     * @example
+     * // Create many ReceiptEmailStatuses
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReceiptEmailStatuses and only return the `orderId`
+     * const receiptEmailStatusWithOrderIdOnly = await prisma.receiptEmailStatus.createManyAndReturn({
+     *   select: { orderId: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReceiptEmailStatusCreateManyAndReturnArgs>(args?: SelectSubset<T, ReceiptEmailStatusCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReceiptEmailStatus.
+     * @param {ReceiptEmailStatusDeleteArgs} args - Arguments to delete one ReceiptEmailStatus.
+     * @example
+     * // Delete one ReceiptEmailStatus
+     * const ReceiptEmailStatus = await prisma.receiptEmailStatus.delete({
+     *   where: {
+     *     // ... filter to delete one ReceiptEmailStatus
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReceiptEmailStatusDeleteArgs>(args: SelectSubset<T, ReceiptEmailStatusDeleteArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReceiptEmailStatus.
+     * @param {ReceiptEmailStatusUpdateArgs} args - Arguments to update one ReceiptEmailStatus.
+     * @example
+     * // Update one ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReceiptEmailStatusUpdateArgs>(args: SelectSubset<T, ReceiptEmailStatusUpdateArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReceiptEmailStatuses.
+     * @param {ReceiptEmailStatusDeleteManyArgs} args - Arguments to filter ReceiptEmailStatuses to delete.
+     * @example
+     * // Delete a few ReceiptEmailStatuses
+     * const { count } = await prisma.receiptEmailStatus.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReceiptEmailStatusDeleteManyArgs>(args?: SelectSubset<T, ReceiptEmailStatusDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReceiptEmailStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReceiptEmailStatuses
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReceiptEmailStatusUpdateManyArgs>(args: SelectSubset<T, ReceiptEmailStatusUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReceiptEmailStatuses and returns the data updated in the database.
+     * @param {ReceiptEmailStatusUpdateManyAndReturnArgs} args - Arguments to update many ReceiptEmailStatuses.
+     * @example
+     * // Update many ReceiptEmailStatuses
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReceiptEmailStatuses and only return the `orderId`
+     * const receiptEmailStatusWithOrderIdOnly = await prisma.receiptEmailStatus.updateManyAndReturn({
+     *   select: { orderId: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReceiptEmailStatusUpdateManyAndReturnArgs>(args: SelectSubset<T, ReceiptEmailStatusUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReceiptEmailStatus.
+     * @param {ReceiptEmailStatusUpsertArgs} args - Arguments to update or create a ReceiptEmailStatus.
+     * @example
+     * // Update or create a ReceiptEmailStatus
+     * const receiptEmailStatus = await prisma.receiptEmailStatus.upsert({
+     *   create: {
+     *     // ... data to create a ReceiptEmailStatus
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReceiptEmailStatus we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReceiptEmailStatusUpsertArgs>(args: SelectSubset<T, ReceiptEmailStatusUpsertArgs<ExtArgs>>): Prisma__ReceiptEmailStatusClient<$Result.GetResult<Prisma.$ReceiptEmailStatusPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReceiptEmailStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusCountArgs} args - Arguments to filter ReceiptEmailStatuses to count.
+     * @example
+     * // Count the number of ReceiptEmailStatuses
+     * const count = await prisma.receiptEmailStatus.count({
+     *   where: {
+     *     // ... the filter for the ReceiptEmailStatuses we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReceiptEmailStatusCountArgs>(
+      args?: Subset<T, ReceiptEmailStatusCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReceiptEmailStatusCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReceiptEmailStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReceiptEmailStatusAggregateArgs>(args: Subset<T, ReceiptEmailStatusAggregateArgs>): Prisma.PrismaPromise<GetReceiptEmailStatusAggregateType<T>>
+
+    /**
+     * Group by ReceiptEmailStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReceiptEmailStatusGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReceiptEmailStatusGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReceiptEmailStatusGroupByArgs['orderBy'] }
+        : { orderBy?: ReceiptEmailStatusGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReceiptEmailStatusGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReceiptEmailStatusGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReceiptEmailStatus model
+   */
+  readonly fields: ReceiptEmailStatusFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReceiptEmailStatus.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReceiptEmailStatusClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    order<T extends OrderDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrderDefaultArgs<ExtArgs>>): Prisma__OrderClient<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReceiptEmailStatus model
+   */
+  interface ReceiptEmailStatusFieldRefs {
+    readonly orderId: FieldRef<"ReceiptEmailStatus", 'String'>
+    readonly attempts: FieldRef<"ReceiptEmailStatus", 'Int'>
+    readonly lastError: FieldRef<"ReceiptEmailStatus", 'String'>
+    readonly nextRetryAt: FieldRef<"ReceiptEmailStatus", 'DateTime'>
+    readonly sent: FieldRef<"ReceiptEmailStatus", 'Boolean'>
+    readonly deliveryFee: FieldRef<"ReceiptEmailStatus", 'Float'>
+    readonly updatedAt: FieldRef<"ReceiptEmailStatus", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReceiptEmailStatus findUnique
+   */
+  export type ReceiptEmailStatusFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which ReceiptEmailStatus to fetch.
+     */
+    where: ReceiptEmailStatusWhereUniqueInput
+  }
+
+  /**
+   * ReceiptEmailStatus findUniqueOrThrow
+   */
+  export type ReceiptEmailStatusFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which ReceiptEmailStatus to fetch.
+     */
+    where: ReceiptEmailStatusWhereUniqueInput
+  }
+
+  /**
+   * ReceiptEmailStatus findFirst
+   */
+  export type ReceiptEmailStatusFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which ReceiptEmailStatus to fetch.
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReceiptEmailStatuses to fetch.
+     */
+    orderBy?: ReceiptEmailStatusOrderByWithRelationInput | ReceiptEmailStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReceiptEmailStatuses.
+     */
+    cursor?: ReceiptEmailStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReceiptEmailStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReceiptEmailStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReceiptEmailStatuses.
+     */
+    distinct?: ReceiptEmailStatusScalarFieldEnum | ReceiptEmailStatusScalarFieldEnum[]
+  }
+
+  /**
+   * ReceiptEmailStatus findFirstOrThrow
+   */
+  export type ReceiptEmailStatusFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which ReceiptEmailStatus to fetch.
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReceiptEmailStatuses to fetch.
+     */
+    orderBy?: ReceiptEmailStatusOrderByWithRelationInput | ReceiptEmailStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReceiptEmailStatuses.
+     */
+    cursor?: ReceiptEmailStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReceiptEmailStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReceiptEmailStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReceiptEmailStatuses.
+     */
+    distinct?: ReceiptEmailStatusScalarFieldEnum | ReceiptEmailStatusScalarFieldEnum[]
+  }
+
+  /**
+   * ReceiptEmailStatus findMany
+   */
+  export type ReceiptEmailStatusFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which ReceiptEmailStatuses to fetch.
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReceiptEmailStatuses to fetch.
+     */
+    orderBy?: ReceiptEmailStatusOrderByWithRelationInput | ReceiptEmailStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReceiptEmailStatuses.
+     */
+    cursor?: ReceiptEmailStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReceiptEmailStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReceiptEmailStatuses.
+     */
+    skip?: number
+    distinct?: ReceiptEmailStatusScalarFieldEnum | ReceiptEmailStatusScalarFieldEnum[]
+  }
+
+  /**
+   * ReceiptEmailStatus create
+   */
+  export type ReceiptEmailStatusCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReceiptEmailStatus.
+     */
+    data: XOR<ReceiptEmailStatusCreateInput, ReceiptEmailStatusUncheckedCreateInput>
+  }
+
+  /**
+   * ReceiptEmailStatus createMany
+   */
+  export type ReceiptEmailStatusCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReceiptEmailStatuses.
+     */
+    data: ReceiptEmailStatusCreateManyInput | ReceiptEmailStatusCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ReceiptEmailStatus createManyAndReturn
+   */
+  export type ReceiptEmailStatusCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReceiptEmailStatuses.
+     */
+    data: ReceiptEmailStatusCreateManyInput | ReceiptEmailStatusCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReceiptEmailStatus update
+   */
+  export type ReceiptEmailStatusUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReceiptEmailStatus.
+     */
+    data: XOR<ReceiptEmailStatusUpdateInput, ReceiptEmailStatusUncheckedUpdateInput>
+    /**
+     * Choose, which ReceiptEmailStatus to update.
+     */
+    where: ReceiptEmailStatusWhereUniqueInput
+  }
+
+  /**
+   * ReceiptEmailStatus updateMany
+   */
+  export type ReceiptEmailStatusUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReceiptEmailStatuses.
+     */
+    data: XOR<ReceiptEmailStatusUpdateManyMutationInput, ReceiptEmailStatusUncheckedUpdateManyInput>
+    /**
+     * Filter which ReceiptEmailStatuses to update
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * Limit how many ReceiptEmailStatuses to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReceiptEmailStatus updateManyAndReturn
+   */
+  export type ReceiptEmailStatusUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * The data used to update ReceiptEmailStatuses.
+     */
+    data: XOR<ReceiptEmailStatusUpdateManyMutationInput, ReceiptEmailStatusUncheckedUpdateManyInput>
+    /**
+     * Filter which ReceiptEmailStatuses to update
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * Limit how many ReceiptEmailStatuses to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReceiptEmailStatus upsert
+   */
+  export type ReceiptEmailStatusUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReceiptEmailStatus to update in case it exists.
+     */
+    where: ReceiptEmailStatusWhereUniqueInput
+    /**
+     * In case the ReceiptEmailStatus found by the `where` argument doesn't exist, create a new ReceiptEmailStatus with this data.
+     */
+    create: XOR<ReceiptEmailStatusCreateInput, ReceiptEmailStatusUncheckedCreateInput>
+    /**
+     * In case the ReceiptEmailStatus was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReceiptEmailStatusUpdateInput, ReceiptEmailStatusUncheckedUpdateInput>
+  }
+
+  /**
+   * ReceiptEmailStatus delete
+   */
+  export type ReceiptEmailStatusDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+    /**
+     * Filter which ReceiptEmailStatus to delete.
+     */
+    where: ReceiptEmailStatusWhereUniqueInput
+  }
+
+  /**
+   * ReceiptEmailStatus deleteMany
+   */
+  export type ReceiptEmailStatusDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReceiptEmailStatuses to delete
+     */
+    where?: ReceiptEmailStatusWhereInput
+    /**
+     * Limit how many ReceiptEmailStatuses to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReceiptEmailStatus without action
+   */
+  export type ReceiptEmailStatusDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReceiptEmailStatus
+     */
+    select?: ReceiptEmailStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReceiptEmailStatus
+     */
+    omit?: ReceiptEmailStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReceiptEmailStatusInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -17614,6 +18863,19 @@ export namespace Prisma {
   };
 
   export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
+
+
+  export const ReceiptEmailStatusScalarFieldEnum: {
+    orderId: 'orderId',
+    attempts: 'attempts',
+    lastError: 'lastError',
+    nextRetryAt: 'nextRetryAt',
+    sent: 'sent',
+    deliveryFee: 'deliveryFee',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ReceiptEmailStatusScalarFieldEnum = (typeof ReceiptEmailStatusScalarFieldEnum)[keyof typeof ReceiptEmailStatusScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18412,6 +19674,7 @@ export namespace Prisma {
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
     offlineSale?: XOR<OfflineSaleNullableScalarRelationFilter, OfflineSaleWhereInput> | null
+    receiptEmailStatus?: XOR<ReceiptEmailStatusNullableScalarRelationFilter, ReceiptEmailStatusWhereInput> | null
   }
 
   export type OrderOrderByWithRelationInput = {
@@ -18430,6 +19693,7 @@ export namespace Prisma {
     staff?: StaffOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
     offlineSale?: OfflineSaleOrderByWithRelationInput
+    receiptEmailStatus?: ReceiptEmailStatusOrderByWithRelationInput
   }
 
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
@@ -18451,6 +19715,7 @@ export namespace Prisma {
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
     offlineSale?: XOR<OfflineSaleNullableScalarRelationFilter, OfflineSaleWhereInput> | null
+    receiptEmailStatus?: XOR<ReceiptEmailStatusNullableScalarRelationFilter, ReceiptEmailStatusWhereInput> | null
   }, "id">
 
   export type OrderOrderByWithAggregationInput = {
@@ -18880,6 +20145,73 @@ export namespace Prisma {
     customerId?: StringWithAggregatesFilter<"WishlistItem"> | string
     productId?: StringWithAggregatesFilter<"WishlistItem"> | string
     addedAt?: DateTimeWithAggregatesFilter<"WishlistItem"> | Date | string
+  }
+
+  export type ReceiptEmailStatusWhereInput = {
+    AND?: ReceiptEmailStatusWhereInput | ReceiptEmailStatusWhereInput[]
+    OR?: ReceiptEmailStatusWhereInput[]
+    NOT?: ReceiptEmailStatusWhereInput | ReceiptEmailStatusWhereInput[]
+    orderId?: StringFilter<"ReceiptEmailStatus"> | string
+    attempts?: IntFilter<"ReceiptEmailStatus"> | number
+    lastError?: StringNullableFilter<"ReceiptEmailStatus"> | string | null
+    nextRetryAt?: DateTimeNullableFilter<"ReceiptEmailStatus"> | Date | string | null
+    sent?: BoolFilter<"ReceiptEmailStatus"> | boolean
+    deliveryFee?: FloatNullableFilter<"ReceiptEmailStatus"> | number | null
+    updatedAt?: DateTimeFilter<"ReceiptEmailStatus"> | Date | string
+    order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
+  }
+
+  export type ReceiptEmailStatusOrderByWithRelationInput = {
+    orderId?: SortOrder
+    attempts?: SortOrder
+    lastError?: SortOrderInput | SortOrder
+    nextRetryAt?: SortOrderInput | SortOrder
+    sent?: SortOrder
+    deliveryFee?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    order?: OrderOrderByWithRelationInput
+  }
+
+  export type ReceiptEmailStatusWhereUniqueInput = Prisma.AtLeast<{
+    orderId?: string
+    AND?: ReceiptEmailStatusWhereInput | ReceiptEmailStatusWhereInput[]
+    OR?: ReceiptEmailStatusWhereInput[]
+    NOT?: ReceiptEmailStatusWhereInput | ReceiptEmailStatusWhereInput[]
+    attempts?: IntFilter<"ReceiptEmailStatus"> | number
+    lastError?: StringNullableFilter<"ReceiptEmailStatus"> | string | null
+    nextRetryAt?: DateTimeNullableFilter<"ReceiptEmailStatus"> | Date | string | null
+    sent?: BoolFilter<"ReceiptEmailStatus"> | boolean
+    deliveryFee?: FloatNullableFilter<"ReceiptEmailStatus"> | number | null
+    updatedAt?: DateTimeFilter<"ReceiptEmailStatus"> | Date | string
+    order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
+  }, "orderId">
+
+  export type ReceiptEmailStatusOrderByWithAggregationInput = {
+    orderId?: SortOrder
+    attempts?: SortOrder
+    lastError?: SortOrderInput | SortOrder
+    nextRetryAt?: SortOrderInput | SortOrder
+    sent?: SortOrder
+    deliveryFee?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: ReceiptEmailStatusCountOrderByAggregateInput
+    _avg?: ReceiptEmailStatusAvgOrderByAggregateInput
+    _max?: ReceiptEmailStatusMaxOrderByAggregateInput
+    _min?: ReceiptEmailStatusMinOrderByAggregateInput
+    _sum?: ReceiptEmailStatusSumOrderByAggregateInput
+  }
+
+  export type ReceiptEmailStatusScalarWhereWithAggregatesInput = {
+    AND?: ReceiptEmailStatusScalarWhereWithAggregatesInput | ReceiptEmailStatusScalarWhereWithAggregatesInput[]
+    OR?: ReceiptEmailStatusScalarWhereWithAggregatesInput[]
+    NOT?: ReceiptEmailStatusScalarWhereWithAggregatesInput | ReceiptEmailStatusScalarWhereWithAggregatesInput[]
+    orderId?: StringWithAggregatesFilter<"ReceiptEmailStatus"> | string
+    attempts?: IntWithAggregatesFilter<"ReceiptEmailStatus"> | number
+    lastError?: StringNullableWithAggregatesFilter<"ReceiptEmailStatus"> | string | null
+    nextRetryAt?: DateTimeNullableWithAggregatesFilter<"ReceiptEmailStatus"> | Date | string | null
+    sent?: BoolWithAggregatesFilter<"ReceiptEmailStatus"> | boolean
+    deliveryFee?: FloatNullableWithAggregatesFilter<"ReceiptEmailStatus"> | number | null
+    updatedAt?: DateTimeWithAggregatesFilter<"ReceiptEmailStatus"> | Date | string
   }
 
   export type CustomerCreateInput = {
@@ -19555,6 +20887,7 @@ export namespace Prisma {
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateInput = {
@@ -19571,6 +20904,7 @@ export namespace Prisma {
     channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUpdateInput = {
@@ -19587,6 +20921,7 @@ export namespace Prisma {
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateInput = {
@@ -19603,6 +20938,7 @@ export namespace Prisma {
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderCreateManyInput = {
@@ -20046,6 +21382,75 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     addedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReceiptEmailStatusCreateInput = {
+    attempts?: number
+    lastError?: string | null
+    nextRetryAt?: Date | string | null
+    sent?: boolean
+    deliveryFee?: number | null
+    updatedAt?: Date | string
+    order: OrderCreateNestedOneWithoutReceiptEmailStatusInput
+  }
+
+  export type ReceiptEmailStatusUncheckedCreateInput = {
+    orderId: string
+    attempts?: number
+    lastError?: string | null
+    nextRetryAt?: Date | string | null
+    sent?: boolean
+    deliveryFee?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type ReceiptEmailStatusUpdateInput = {
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    order?: OrderUpdateOneRequiredWithoutReceiptEmailStatusNestedInput
+  }
+
+  export type ReceiptEmailStatusUncheckedUpdateInput = {
+    orderId?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReceiptEmailStatusCreateManyInput = {
+    orderId: string
+    attempts?: number
+    lastError?: string | null
+    nextRetryAt?: Date | string | null
+    sent?: boolean
+    deliveryFee?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type ReceiptEmailStatusUpdateManyMutationInput = {
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReceiptEmailStatusUncheckedUpdateManyInput = {
+    orderId?: StringFieldUpdateOperationsInput | string
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -20767,6 +22172,11 @@ export namespace Prisma {
     isNot?: OfflineSaleWhereInput | null
   }
 
+  export type ReceiptEmailStatusNullableScalarRelationFilter = {
+    is?: ReceiptEmailStatusWhereInput | null
+    isNot?: ReceiptEmailStatusWhereInput | null
+  }
+
   export type OrderCountOrderByAggregateInput = {
     id?: SortOrder
     status?: SortOrder
@@ -21118,6 +22528,46 @@ export namespace Prisma {
     customerId?: SortOrder
     productId?: SortOrder
     addedAt?: SortOrder
+  }
+
+  export type ReceiptEmailStatusCountOrderByAggregateInput = {
+    orderId?: SortOrder
+    attempts?: SortOrder
+    lastError?: SortOrder
+    nextRetryAt?: SortOrder
+    sent?: SortOrder
+    deliveryFee?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReceiptEmailStatusAvgOrderByAggregateInput = {
+    attempts?: SortOrder
+    deliveryFee?: SortOrder
+  }
+
+  export type ReceiptEmailStatusMaxOrderByAggregateInput = {
+    orderId?: SortOrder
+    attempts?: SortOrder
+    lastError?: SortOrder
+    nextRetryAt?: SortOrder
+    sent?: SortOrder
+    deliveryFee?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReceiptEmailStatusMinOrderByAggregateInput = {
+    orderId?: SortOrder
+    attempts?: SortOrder
+    lastError?: SortOrder
+    nextRetryAt?: SortOrder
+    sent?: SortOrder
+    deliveryFee?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReceiptEmailStatusSumOrderByAggregateInput = {
+    attempts?: SortOrder
+    deliveryFee?: SortOrder
   }
 
   export type OrderCreateNestedManyWithoutCustomerInput = {
@@ -21691,6 +23141,12 @@ export namespace Prisma {
     connect?: OfflineSaleWhereUniqueInput
   }
 
+  export type ReceiptEmailStatusCreateNestedOneWithoutOrderInput = {
+    create?: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: ReceiptEmailStatusCreateOrConnectWithoutOrderInput
+    connect?: ReceiptEmailStatusWhereUniqueInput
+  }
+
   export type OrderItemUncheckedCreateNestedManyWithoutOrderInput = {
     create?: XOR<OrderItemCreateWithoutOrderInput, OrderItemUncheckedCreateWithoutOrderInput> | OrderItemCreateWithoutOrderInput[] | OrderItemUncheckedCreateWithoutOrderInput[]
     connectOrCreate?: OrderItemCreateOrConnectWithoutOrderInput | OrderItemCreateOrConnectWithoutOrderInput[]
@@ -21702,6 +23158,12 @@ export namespace Prisma {
     create?: XOR<OfflineSaleCreateWithoutOrderInput, OfflineSaleUncheckedCreateWithoutOrderInput>
     connectOrCreate?: OfflineSaleCreateOrConnectWithoutOrderInput
     connect?: OfflineSaleWhereUniqueInput
+  }
+
+  export type ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput = {
+    create?: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: ReceiptEmailStatusCreateOrConnectWithoutOrderInput
+    connect?: ReceiptEmailStatusWhereUniqueInput
   }
 
   export type EnumOrderStatusFieldUpdateOperationsInput = {
@@ -21760,6 +23222,16 @@ export namespace Prisma {
     update?: XOR<XOR<OfflineSaleUpdateToOneWithWhereWithoutOrderInput, OfflineSaleUpdateWithoutOrderInput>, OfflineSaleUncheckedUpdateWithoutOrderInput>
   }
 
+  export type ReceiptEmailStatusUpdateOneWithoutOrderNestedInput = {
+    create?: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: ReceiptEmailStatusCreateOrConnectWithoutOrderInput
+    upsert?: ReceiptEmailStatusUpsertWithoutOrderInput
+    disconnect?: ReceiptEmailStatusWhereInput | boolean
+    delete?: ReceiptEmailStatusWhereInput | boolean
+    connect?: ReceiptEmailStatusWhereUniqueInput
+    update?: XOR<XOR<ReceiptEmailStatusUpdateToOneWithWhereWithoutOrderInput, ReceiptEmailStatusUpdateWithoutOrderInput>, ReceiptEmailStatusUncheckedUpdateWithoutOrderInput>
+  }
+
   export type OrderItemUncheckedUpdateManyWithoutOrderNestedInput = {
     create?: XOR<OrderItemCreateWithoutOrderInput, OrderItemUncheckedCreateWithoutOrderInput> | OrderItemCreateWithoutOrderInput[] | OrderItemUncheckedCreateWithoutOrderInput[]
     connectOrCreate?: OrderItemCreateOrConnectWithoutOrderInput | OrderItemCreateOrConnectWithoutOrderInput[]
@@ -21782,6 +23254,16 @@ export namespace Prisma {
     delete?: OfflineSaleWhereInput | boolean
     connect?: OfflineSaleWhereUniqueInput
     update?: XOR<XOR<OfflineSaleUpdateToOneWithWhereWithoutOrderInput, OfflineSaleUpdateWithoutOrderInput>, OfflineSaleUncheckedUpdateWithoutOrderInput>
+  }
+
+  export type ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput = {
+    create?: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+    connectOrCreate?: ReceiptEmailStatusCreateOrConnectWithoutOrderInput
+    upsert?: ReceiptEmailStatusUpsertWithoutOrderInput
+    disconnect?: ReceiptEmailStatusWhereInput | boolean
+    delete?: ReceiptEmailStatusWhereInput | boolean
+    connect?: ReceiptEmailStatusWhereUniqueInput
+    update?: XOR<XOR<ReceiptEmailStatusUpdateToOneWithWhereWithoutOrderInput, ReceiptEmailStatusUpdateWithoutOrderInput>, ReceiptEmailStatusUncheckedUpdateWithoutOrderInput>
   }
 
   export type OrderCreateNestedOneWithoutItemsInput = {
@@ -21922,6 +23404,20 @@ export namespace Prisma {
     upsert?: ProductUpsertWithoutWishlistItemsInput
     connect?: ProductWhereUniqueInput
     update?: XOR<XOR<ProductUpdateToOneWithWhereWithoutWishlistItemsInput, ProductUpdateWithoutWishlistItemsInput>, ProductUncheckedUpdateWithoutWishlistItemsInput>
+  }
+
+  export type OrderCreateNestedOneWithoutReceiptEmailStatusInput = {
+    create?: XOR<OrderCreateWithoutReceiptEmailStatusInput, OrderUncheckedCreateWithoutReceiptEmailStatusInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutReceiptEmailStatusInput
+    connect?: OrderWhereUniqueInput
+  }
+
+  export type OrderUpdateOneRequiredWithoutReceiptEmailStatusNestedInput = {
+    create?: XOR<OrderCreateWithoutReceiptEmailStatusInput, OrderUncheckedCreateWithoutReceiptEmailStatusInput>
+    connectOrCreate?: OrderCreateOrConnectWithoutReceiptEmailStatusInput
+    upsert?: OrderUpsertWithoutReceiptEmailStatusInput
+    connect?: OrderWhereUniqueInput
+    update?: XOR<XOR<OrderUpdateToOneWithWhereWithoutReceiptEmailStatusInput, OrderUpdateWithoutReceiptEmailStatusInput>, OrderUncheckedUpdateWithoutReceiptEmailStatusInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -22262,6 +23758,7 @@ export namespace Prisma {
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutCustomerInput = {
@@ -22277,6 +23774,7 @@ export namespace Prisma {
     channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutCustomerInput = {
@@ -22440,6 +23938,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutStaffInput = {
@@ -22455,6 +23954,7 @@ export namespace Prisma {
     channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutStaffInput = {
@@ -23333,6 +24833,29 @@ export namespace Prisma {
     create: XOR<OfflineSaleCreateWithoutOrderInput, OfflineSaleUncheckedCreateWithoutOrderInput>
   }
 
+  export type ReceiptEmailStatusCreateWithoutOrderInput = {
+    attempts?: number
+    lastError?: string | null
+    nextRetryAt?: Date | string | null
+    sent?: boolean
+    deliveryFee?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type ReceiptEmailStatusUncheckedCreateWithoutOrderInput = {
+    attempts?: number
+    lastError?: string | null
+    nextRetryAt?: Date | string | null
+    sent?: boolean
+    deliveryFee?: number | null
+    updatedAt?: Date | string
+  }
+
+  export type ReceiptEmailStatusCreateOrConnectWithoutOrderInput = {
+    where: ReceiptEmailStatusWhereUniqueInput
+    create: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+  }
+
   export type CustomerUpsertWithoutOrdersInput = {
     update: XOR<CustomerUpdateWithoutOrdersInput, CustomerUncheckedUpdateWithoutOrdersInput>
     create: XOR<CustomerCreateWithoutOrdersInput, CustomerUncheckedCreateWithoutOrdersInput>
@@ -23490,6 +25013,35 @@ export namespace Prisma {
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ReceiptEmailStatusUpsertWithoutOrderInput = {
+    update: XOR<ReceiptEmailStatusUpdateWithoutOrderInput, ReceiptEmailStatusUncheckedUpdateWithoutOrderInput>
+    create: XOR<ReceiptEmailStatusCreateWithoutOrderInput, ReceiptEmailStatusUncheckedCreateWithoutOrderInput>
+    where?: ReceiptEmailStatusWhereInput
+  }
+
+  export type ReceiptEmailStatusUpdateToOneWithWhereWithoutOrderInput = {
+    where?: ReceiptEmailStatusWhereInput
+    data: XOR<ReceiptEmailStatusUpdateWithoutOrderInput, ReceiptEmailStatusUncheckedUpdateWithoutOrderInput>
+  }
+
+  export type ReceiptEmailStatusUpdateWithoutOrderInput = {
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReceiptEmailStatusUncheckedUpdateWithoutOrderInput = {
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    nextRetryAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sent?: BoolFieldUpdateOperationsInput | boolean
+    deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrderCreateWithoutItemsInput = {
     id?: string
     status?: $Enums.OrderStatus
@@ -23503,6 +25055,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutItemsInput = {
@@ -23518,6 +25071,7 @@ export namespace Prisma {
     staffId?: string | null
     channel?: $Enums.OrderChannel
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutItemsInput = {
@@ -23574,6 +25128,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutItemsInput = {
@@ -23589,6 +25144,7 @@ export namespace Prisma {
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type VariantUpsertWithoutOrderItemsInput = {
@@ -23635,6 +25191,7 @@ export namespace Prisma {
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusCreateNestedOneWithoutOrderInput
   }
 
   export type OrderUncheckedCreateWithoutOfflineSaleInput = {
@@ -23650,6 +25207,7 @@ export namespace Prisma {
     staffId?: string | null
     channel?: $Enums.OrderChannel
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
 
   export type OrderCreateOrConnectWithoutOfflineSaleInput = {
@@ -23738,6 +25296,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutOfflineSaleInput = {
@@ -23753,6 +25312,7 @@ export namespace Prisma {
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type StaffUpsertWithoutOfflineSalesInput = {
@@ -24121,6 +25681,86 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutProductNestedInput
   }
 
+  export type OrderCreateWithoutReceiptEmailStatusInput = {
+    id?: string
+    status?: $Enums.OrderStatus
+    currency: $Enums.Currency
+    totalAmount: number
+    totalNGN: number
+    paymentMethod: string
+    createdAt?: Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: $Enums.OrderChannel
+    customer?: CustomerCreateNestedOneWithoutOrdersInput
+    staff?: StaffCreateNestedOneWithoutOrdersInput
+    items?: OrderItemCreateNestedManyWithoutOrderInput
+    offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
+  }
+
+  export type OrderUncheckedCreateWithoutReceiptEmailStatusInput = {
+    id?: string
+    status?: $Enums.OrderStatus
+    currency: $Enums.Currency
+    totalAmount: number
+    totalNGN: number
+    paymentMethod: string
+    createdAt?: Date | string
+    customerId?: string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    staffId?: string | null
+    channel?: $Enums.OrderChannel
+    items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
+    offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
+  }
+
+  export type OrderCreateOrConnectWithoutReceiptEmailStatusInput = {
+    where: OrderWhereUniqueInput
+    create: XOR<OrderCreateWithoutReceiptEmailStatusInput, OrderUncheckedCreateWithoutReceiptEmailStatusInput>
+  }
+
+  export type OrderUpsertWithoutReceiptEmailStatusInput = {
+    update: XOR<OrderUpdateWithoutReceiptEmailStatusInput, OrderUncheckedUpdateWithoutReceiptEmailStatusInput>
+    create: XOR<OrderCreateWithoutReceiptEmailStatusInput, OrderUncheckedCreateWithoutReceiptEmailStatusInput>
+    where?: OrderWhereInput
+  }
+
+  export type OrderUpdateToOneWithWhereWithoutReceiptEmailStatusInput = {
+    where?: OrderWhereInput
+    data: XOR<OrderUpdateWithoutReceiptEmailStatusInput, OrderUncheckedUpdateWithoutReceiptEmailStatusInput>
+  }
+
+  export type OrderUpdateWithoutReceiptEmailStatusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalAmount?: FloatFieldUpdateOperationsInput | number
+    totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
+    customer?: CustomerUpdateOneWithoutOrdersNestedInput
+    staff?: StaffUpdateOneWithoutOrdersNestedInput
+    items?: OrderItemUpdateManyWithoutOrderNestedInput
+    offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
+  }
+
+  export type OrderUncheckedUpdateWithoutReceiptEmailStatusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    currency?: EnumCurrencyFieldUpdateOperationsInput | $Enums.Currency
+    totalAmount?: FloatFieldUpdateOperationsInput | number
+    totalNGN?: IntFieldUpdateOperationsInput | number
+    paymentMethod?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    guestInfo?: NullableJsonNullValueInput | InputJsonValue
+    staffId?: NullableStringFieldUpdateOperationsInput | string | null
+    channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
+    items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+    offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
+  }
+
   export type OrderCreateManyCustomerInput = {
     id?: string
     status?: $Enums.OrderStatus
@@ -24162,6 +25802,7 @@ export namespace Prisma {
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutCustomerInput = {
@@ -24177,6 +25818,7 @@ export namespace Prisma {
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutCustomerInput = {
@@ -24269,6 +25911,7 @@ export namespace Prisma {
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateWithoutStaffInput = {
@@ -24284,6 +25927,7 @@ export namespace Prisma {
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
+    receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
 
   export type OrderUncheckedUpdateManyWithoutStaffInput = {

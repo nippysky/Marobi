@@ -5,7 +5,7 @@ import { z } from "zod";
 const ProductPayload = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
-  category: z.string().min(1),     // this is the slug now
+  category: z.string().min(1),
   description: z.string().optional().nullable(),
   price: z.object({
     NGN: z.number(),
@@ -29,6 +29,65 @@ function generateBrandedId(len = 10) {
     s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
   }
   return s;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const products = await prisma.product.findMany({
+      where: { status: "Published" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        images: true,
+        priceNGN: true,
+        priceUSD: true,
+        priceEUR: true,
+        priceGBP: true,
+        sizeMods: true,
+        status: true,
+        videoUrl: true,
+        categorySlug: true,
+        variants: { select: { color: true, size: true, stock: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    const shaped = products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description ?? "",
+      images: p.images,
+      prices: {
+        NGN: p.priceNGN ?? 0,
+        USD: p.priceUSD ?? 0,
+        EUR: p.priceEUR ?? 0,
+        GBP: p.priceGBP ?? 0,
+      },
+      sizeMods: p.sizeMods,
+      status: p.status,
+      videoUrl: p.videoUrl ?? null,
+      category: p.categorySlug,
+      variants: p.variants.map((v) => ({
+        color: v.color,
+        size: v.size,
+        inStock: v.stock,
+      })),
+    }));
+
+    return NextResponse.json(shaped, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    });
+  } catch (err) {
+    console.error("GET /api/products error:", err);
+    return NextResponse.json(
+      { error: "Failed to load products" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -96,7 +155,7 @@ export async function POST(request: NextRequest) {
         priceGBP: price.GBP,
         sizeMods,
         status,
-        videoUrl,                      // ← include the new field
+        videoUrl,
         category: { connect: { slug } },
         variants: variants.length
           ? {
@@ -119,13 +178,36 @@ export async function POST(request: NextRequest) {
         priceGBP: true,
         sizeMods: true,
         status: true,
-        videoUrl: true,               // ← select it back
+        videoUrl: true,
         categorySlug: true,
         variants: { select: { color: true, size: true, stock: true } },
       },
     });
 
-    return NextResponse.json(product, { status: 201 });
+    // reshape to match frontend `Product` interface
+    const shaped = {
+      id: product.id,
+      name: product.name,
+      description: product.description ?? "",
+      images: product.images,
+      prices: {
+        NGN: product.priceNGN ?? 0,
+        USD: product.priceUSD ?? 0,
+        EUR: product.priceEUR ?? 0,
+        GBP: product.priceGBP ?? 0,
+      },
+      sizeMods: product.sizeMods,
+      status: product.status,
+      videoUrl: product.videoUrl ?? null,
+      category: product.categorySlug,
+      variants: product.variants.map((v) => ({
+        color: v.color,
+        size: v.size,
+        inStock: v.stock,
+      })),
+    };
+
+    return NextResponse.json(shaped, { status: 201 });
   } catch (err) {
     console.error("POST /api/products error:", err);
     return NextResponse.json(

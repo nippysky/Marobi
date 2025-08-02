@@ -1,13 +1,14 @@
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/db";
 
 /* ---------- Brand Tokens ---------- */
-const BRAND_NAME    = "Marobi";
-const BRAND_COLOR   = "#043927";  // primary deep emerald
-const BRAND_ACCENT  = "#FFC300";  // gold accent
-const BG_OUTER      = "#f3f4f6";
-const CARD_BG       = "#ffffff";
-const TEXT_COLOR    = "#111827";
-const MUTED_COLOR   = "#6b7280";
+const BRAND_NAME = "Marobi";
+const BRAND_COLOR = "#043927"; // primary deep emerald
+const BRAND_ACCENT = "#FFC300"; // gold accent
+const BG_OUTER = "#f3f4f6";
+const CARD_BG = "#ffffff";
+const TEXT_COLOR = "#111827";
+const MUTED_COLOR = "#6b7280";
 const BORDER_RADIUS = "8px";
 
 /* ---------- Transporter ---------- */
@@ -19,7 +20,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-transporter.verify().catch(err => {
+transporter.verify().catch((err) => {
   console.warn("⚠️ Email transporter verification failed:", err);
 });
 
@@ -53,7 +54,7 @@ function renderEmail(opts: RenderEmailOptions): string {
     preheader,
   } = opts;
 
-  const year     = new Date().getFullYear();
+  const year = new Date().getFullYear();
   const headerBg = headerColor || BRAND_COLOR;
 
   const buttonHtml = button
@@ -91,7 +92,6 @@ function renderEmail(opts: RenderEmailOptions): string {
       </p>`
     : "";
 
-  // Hidden preheader (improves inbox preview text)
   const preheaderHtml = preheader
     ? `<span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all;">${preheader}</span>`
     : "";
@@ -109,15 +109,13 @@ function renderEmail(opts: RenderEmailOptions): string {
     <tr>
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background:${CARD_BG};border-collapse:separate;border-radius:${BORDER_RADIUS};overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-          <!-- Header -->
-            <tr>
-              <td style="background:${headerBg};padding:20px 24px;text-align:center;">
-                <div style="font-size:24px;font-weight:700;color:#ffffff;margin:0;font-family:Arial,Helvetica,sans-serif;">
-                  ${BRAND_NAME}
-                </div>
-              </td>
-            </tr>
-          <!-- Body -->
+          <tr>
+            <td style="background:${headerBg};padding:20px 24px;text-align:center;">
+              <div style="font-size:24px;font-weight:700;color:#ffffff;margin:0;font-family:Arial,Helvetica,sans-serif;">
+                ${BRAND_NAME}
+              </div>
+            </td>
+          </tr>
           <tr>
             <td style="padding:32px 32px 28px;color:${TEXT_COLOR};font-size:15px;line-height:1.55;font-family:Arial,Helvetica,sans-serif;">
               <h1 style="font-size:20px;margin:0 0 16px;color:${TEXT_COLOR};font-weight:600;letter-spacing:.5px;font-family:Arial,Helvetica,sans-serif;">
@@ -125,11 +123,7 @@ function renderEmail(opts: RenderEmailOptions): string {
               </h1>
               ${intro ? `<p style="margin:0 0 18px;color:${TEXT_COLOR};">${intro}</p>` : ""}
               ${highlightHtml}
-              ${
-                bodyHtml
-                  ? `<div style="margin:0 0 4px;">${bodyHtml}</div>`
-                  : ""
-              }
+              ${bodyHtml ? `<div style="margin:0 0 4px;">${bodyHtml}</div>` : ""}
               ${note ? `<p style="margin:24px 0 0;font-size:13px;color:${MUTED_COLOR};">${note}</p>` : ""}
               ${buttonHtml}
             </td>
@@ -139,7 +133,6 @@ function renderEmail(opts: RenderEmailOptions): string {
               ? `<tr><td style="padding:0 32px 8px;font-size:12px;color:${MUTED_COLOR};font-family:Arial,Helvetica,sans-serif;">${footerNote}</td></tr>`
               : ""
           }
-          <!-- Footer -->
           <tr>
             <td style="background:#f9fafb;padding:20px 24px;text-align:center;font-size:12px;color:#9ca3af;font-family:Arial,Helvetica,sans-serif;">
               &copy; ${year} ${BRAND_NAME}. All rights reserved.<br/>
@@ -159,8 +152,10 @@ function renderEmail(opts: RenderEmailOptions): string {
 
 /** Email verification (code + link) */
 export async function sendVerificationEmail(email: string, token: string) {
-  const base      = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const verifyUrl = `${base}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+  const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const verifyUrl = `${base}/auth/verify-email?token=${token}&email=${encodeURIComponent(
+    email
+  )}`;
 
   const html = renderEmail({
     title: "Verify Your Email",
@@ -205,7 +200,7 @@ export async function sendResetPasswordEmail(
     button: {
       label: "Reset Password",
       url: resetUrl,
-      color: BRAND_ACCENT, // accent color
+      color: BRAND_ACCENT,
     },
     preheader: "Reset your Marobi password securely.",
   });
@@ -229,16 +224,8 @@ export async function sendGenericEmail(args: {
   footerNote?: string;
   preheader?: string;
 }) {
-  const {
-    to,
-    subject,
-    title,
-    intro,
-    bodyHtml,
-    button,
-    footerNote,
-    preheader,
-  } = args;
+  const { to, subject, title, intro, bodyHtml, button, footerNote, preheader } =
+    args;
 
   const html = renderEmail({
     title,
@@ -257,9 +244,184 @@ export async function sendGenericEmail(args: {
   });
 }
 
+/** Helper to compute exponential backoff in seconds (capped at 1h) */
+function computeBackoffSeconds(attempts: number) {
+  const base = 60; // 1 minute
+  const max = 3600; // 1 hour
+  const val = base * Math.pow(2, attempts - 1);
+  return Math.min(val, max);
+}
 
-export {
-  BRAND_NAME,
-  BRAND_COLOR,
-  BRAND_ACCENT,
-};
+/** Unified receipt email sender with retry metadata management */
+export async function sendReceiptEmailWithRetry({
+  order,
+  recipient,
+  currency,
+  deliveryFee,
+}: {
+  order: any;
+  recipient: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    deliveryAddress?: string;
+    billingAddress?: string;
+  };
+  currency: string;
+  deliveryFee: number;
+}) {
+  const to = recipient.email;
+  const name = `${recipient.firstName} ${recipient.lastName}`;
+
+  const vatRate = 0.075;
+  const subtotal = +order.totalAmount.toFixed(2);
+  const vat = +(subtotal * vatRate).toFixed(2);
+  const deliveryCharge = deliveryFee;
+  const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2);
+  const sym =
+    currency === "NGN"
+      ? "₦"
+      : currency === "USD"
+      ? "$"
+      : currency === "EUR"
+      ? "€"
+      : "£";
+
+  const lineRows = order.items
+    .map((p: any) => {
+      return `
+        <tr style="border-bottom:1px solid #e1e1e1">
+          <td style="padding:8px; vertical-align:top;">
+            <div style="display:flex; align-items:center;gap:8px;">
+              <img src="${p.image ?? ""}" width="50" style="border-radius:6px; object-fit:cover;" alt="${p.name}" />
+              <div>
+                <div style="font-weight:600;">${p.name} × ${p.quantity}</div>
+                <div style="font-size:12px;color:#555;">
+                  Color: ${p.color} • Size: ${p.size}
+                  ${
+                    p.hasSizeMod
+                      ? `<br/>Size Mod Fee: ${sym}${(
+                          p.sizeModFee * p.quantity
+                        ).toLocaleString()}`
+                      : ""
+                  }
+                </div>
+              </div>
+            </div>
+          </td>
+          <td align="right" style="font-family:monospace; padding:8px;">
+            ${sym}${p.lineTotal.toLocaleString()}
+          </td>
+        </tr>`;
+    })
+    .join("");
+
+  const addressHtml = recipient.deliveryAddress
+    ? `<p><strong>Address:</strong> ${recipient.deliveryAddress}</p>`
+    : "";
+
+  const bodyHtml = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#333">
+      <p style="margin:0 0 12px;">Order <strong>${order.id}</strong> confirmed.</p>
+      <p style="margin:0 0 4px;">Payment: <strong>${
+        order.paymentMethod
+      }</strong> — ${new Date(order.createdAt).toLocaleString()}</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:12px;">
+        ${lineRows}
+      </table>
+      <div style="margin-top:24px; font-family:monospace;">
+        <p style="margin:4px 0;">
+          Subtotal:&nbsp;<strong>${sym}${subtotal.toLocaleString()}</strong>
+        </p>
+        <p style="margin:4px 0;">
+          VAT (7.5%):&nbsp;<strong>${sym}${vat.toLocaleString()}</strong>
+        </p>
+        <p style="margin:4px 0;">
+          Delivery Fee:&nbsp;<strong>${sym}${deliveryCharge.toLocaleString()}</strong>
+        </p>
+        <p style="margin:8px 0; font-size:16px;">
+          <strong>Grand Total:&nbsp;${sym}${grandTotal.toLocaleString()}</strong>
+        </p>
+      </div>
+      <div style="margin-top:16px;font-size:14px;">
+        <p><strong>Customer:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${to}</p>
+        ${recipient.phone ? `<p><strong>Phone:</strong> ${recipient.phone}</p>` : ""}
+        ${addressHtml}
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendGenericEmail({
+      to,
+      subject: `Your Receipt — Order ${order.id}`,
+      title: `Payment Successful`,
+      intro: `Hi ${name}, thank you for your purchase! Your order <strong>${order.id}</strong> has been confirmed.`,
+      bodyHtml,
+      button: {
+        label: "Continue Shopping",
+        url: `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/all-products`,
+      },
+      preheader: `Receipt for order ${order.id}`,
+      footerNote: "If you have any questions, reply to this email.",
+    });
+
+    // mark as sent / upsert with deliveryFee
+    await prisma.receiptEmailStatus.upsert({
+      where: { orderId: order.id },
+      create: {
+        orderId: order.id,
+        attempts: 1,
+        sent: true,
+        deliveryFee: deliveryFee,
+      },
+      update: {
+        attempts: { increment: 1 },
+        sent: true,
+        lastError: null,
+        nextRetryAt: null,
+        deliveryFee: deliveryFee,
+      },
+    });
+  } catch (err: any) {
+    const errMsg = (err?.message || String(err)).slice(0, 1000);
+
+    const existing = await prisma.receiptEmailStatus.findUnique({
+      where: { orderId: order.id },
+    });
+    const previousAttempts = existing?.attempts ?? 0;
+    const newAttempts = previousAttempts + 1;
+    const backoffSec = computeBackoffSeconds(newAttempts);
+    const nextRetry = new Date(Date.now() + backoffSec * 1000);
+
+    await prisma.receiptEmailStatus.upsert({
+      where: { orderId: order.id },
+      create: {
+        orderId: order.id,
+        attempts: newAttempts,
+        lastError: errMsg,
+        nextRetryAt: nextRetry,
+        sent: false,
+        deliveryFee: deliveryFee,
+      },
+      update: {
+        attempts: newAttempts,
+        lastError: errMsg,
+        nextRetryAt: nextRetry,
+        sent: false,
+        deliveryFee: deliveryFee,
+      },
+    });
+
+    console.warn(
+      `Receipt email send failed for order ${order.id}, will retry at ${nextRetry.toISOString()}`,
+      err
+    );
+    // rethrow so caller can observe if needed
+    throw err;
+  }
+}
+
+export { BRAND_NAME, BRAND_COLOR, BRAND_ACCENT };

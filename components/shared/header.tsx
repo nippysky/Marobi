@@ -10,7 +10,7 @@ import {
   User as UserIcon,
   LogOut as LogoutIcon,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { SizeChartModal } from "../SizeChartModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
@@ -30,8 +30,12 @@ import type { Category } from "@/lib/categories";
 import { CurrencySelector } from "./currency-selector";
 import { CartSheet } from "./cart-sheet";
 
+import { useCategories } from "@/lib/hooks/useCategories";
+import { FuturisticSkeleton } from "../FuturisticSkeleton";
+
+
 const BrandIcon: React.FC = () => (
-  <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
+  <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold bg-gradient-to-tr from-brand to-green-600 text-white shadow-md">
     M!
   </div>
 );
@@ -44,19 +48,19 @@ export const Header: React.FC = () => {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // fetch categories on mount
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((cats: Category[]) => setCategories(cats))
-      .catch(console.error);
-  }, []);
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError,
+    error,
+  } = useCategories();
 
-  // build nav items
-  const navItems = useMemo(
+  // build nav items (memoized)
+  const navItems = useMemo<
+    { label: string; href: string }[]
+  >(
     () => [
       { label: "All Products", href: "/all-products" },
       ...categories.map((cat: Category) => ({
@@ -67,7 +71,7 @@ export const Header: React.FC = () => {
     [categories]
   );
 
-  // close user menu on outside click
+  // user menu outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -86,7 +90,7 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // framer‑motion variants...
+  // motion variants
   const headerVariants = {
     expanded: { height: "auto", backgroundColor: "#ffffff" },
     collapsed: { height: "4rem", backgroundColor: "#ffffff" },
@@ -154,29 +158,82 @@ export const Header: React.FC = () => {
         <button
           onClick={() => setMenuOpen((v) => !v)}
           className="p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+          aria-label="User menu"
         >
           <UserRound className="w-5 h-5" />
         </button>
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50">
-            <Link
-              href="/account"
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
-              onClick={() => setMenuOpen(false)}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
             >
-              <UserIcon className="w-4 h-4" />
-              <span>Profile</span>
-            </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
-            >
-              <LogoutIcon className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
-          </div>
-        )}
+              <Link
+                href="/account"
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                onClick={() => setMenuOpen(false)}
+              >
+                <UserIcon className="w-4 h-4" />
+                <span>Profile</span>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                <LogoutIcon className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+    );
+  };
+
+  const renderNavItems = (isCompact: boolean = false) => {
+    if (categoriesLoading) {
+      return <FuturisticSkeleton count={isCompact ? 3 : 5} height={28} />;
+    }
+    if (isError) {
+      return (
+        <div className="flex items-center space-x-2 text-sm text-red-500">
+          <span>Failed to load categories</span>
+        </div>
+      );
+    }
+    return (
+      <ul className="flex flex-wrap justify-center gap-x-12 gap-y-2">
+        {navItems.map((item, i) => {
+          const isActive = pathname === item.href;
+          return (
+            <motion.li
+              key={item.href}
+              className="list-none"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0, y: 6 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.25, delay: 0.04 * i },
+                },
+              }}
+            >
+              <Link
+                href={item.href}
+                className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
+                  isActive ? "bg-brand text-white" : ""
+                }`}
+              >
+                {item.label}
+              </Link>
+            </motion.li>
+          );
+        })}
+      </ul>
     );
   };
 
@@ -194,7 +251,9 @@ export const Header: React.FC = () => {
           <div className="hidden lg:block">
             {/* Collapsed */}
             <motion.div
-              className={`${isCollapsed ? "flex" : "hidden"} items-center justify-between h-16`}
+              className={`${
+                isCollapsed ? "flex" : "hidden"
+              } items-center justify-between h-16`}
               initial={false}
               animate={isCollapsed ? "collapsed" : "expanded"}
             >
@@ -210,20 +269,24 @@ export const Header: React.FC = () => {
                   </Link>
                 </motion.div>
                 <div className="flex items-center space-x-3">
-                  {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
-                          isActive ? "bg-brand text-white" : ""
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
+                  {categoriesLoading ? (
+                    <FuturisticSkeleton count={3} height={24} />
+                  ) : (
+                    navItems.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`${linkBaseClasses} text-[0.75rem] text-gray-700 hover:bg-brand hover:text-white ${
+                            isActive ? "bg-brand text-white" : ""
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -240,6 +303,7 @@ export const Header: React.FC = () => {
                         type="button"
                         onClick={openModal}
                         className="text-gray-600 hover:text-gray-800 p-2"
+                        aria-label="Search products"
                       >
                         <SearchIcon className="w-5 h-5" />
                       </button>
@@ -343,23 +407,9 @@ export const Header: React.FC = () => {
                 initial="expanded"
                 animate={isCollapsed ? "collapsed" : "expanded"}
               >
-                <ul className="flex justify-center space-x-28 py-5">
-                  {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <li key={item.href} className="list-none">
-                        <Link
-                          href={item.href}
-                          className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
-                            isActive ? "bg-brand text-white" : ""
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div className="py-5 flex justify-center">
+                  {renderNavItems(false)}
+                </div>
               </motion.nav>
             </motion.div>
           </div>
@@ -376,6 +426,7 @@ export const Header: React.FC = () => {
                   <button
                     onClick={openModal}
                     className="text-gray-600 hover:text-gray-800 p-2"
+                    aria-label="Search products"
                   >
                     <SearchIcon className="w-5 h-5" />
                   </button>

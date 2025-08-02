@@ -38,7 +38,7 @@ const CUSTOM_SIZE_FIELDS = [
   { name: "chest", label: "Chest/Bust (in)" },
   { name: "waist", label: "Waist (in)" },
   { name: "hip", label: "Hip (in)" },
-  { name: "length", label: "Length (in)" }, 
+  { name: "length", label: "Length (in)" },
 ];
 
 interface Props {
@@ -52,35 +52,36 @@ const ProductDetailHero: React.FC<Props> = ({
   user,
   categoryName,
 }) => {
-  // mounted flag for wishlist
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // featured image & loading
   const media = [...product.images];
   const [featuredImage, setFeaturedImage] = useState(media[0]);
   const [imgLoading, setImgLoading] = useState(true);
 
-  // slider ref
   const thumbsRef = useRef<HTMLDivElement>(null);
   const scrollThumbs = (dir: "left" | "right") => {
     if (thumbsRef.current) {
       const w = thumbsRef.current.clientWidth;
-      thumbsRef.current.scrollBy({ left: dir === "left" ? -w : w, behavior: "smooth" });
+      thumbsRef.current.scrollBy({
+        left: dir === "left" ? -w : w,
+        behavior: "smooth",
+      });
     }
   };
 
-  // video modal
   const hasVideo = !!product.videoUrl;
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  // stock & link
   const totalStock = useMemo(
-    () => product.variants.reduce((sum, v) => sum + (v.inStock || 0), 0),
+    () =>
+      product.variants.reduce(
+        (sum, v) => sum + (typeof v.inStock === "number" ? v.inStock : 0),
+        0
+      ),
     [product.variants]
   );
 
-  // color/size selectors
   const colors = useMemo(
     () => Array.from(new Set(product.variants.map((v) => v.color))),
     [product.variants]
@@ -108,60 +109,49 @@ const ProductDetailHero: React.FC<Props> = ({
         : sizes,
     [hasColor, product.variants, selectedColor, sizes]
   );
-  const [selectedSize, setSelectedSize] = useState(
-    availableSizes[0] || ""
-  );
+  const [selectedSize, setSelectedSize] = useState(availableSizes[0] || "");
   useEffect(() => {
     setSelectedSize(availableSizes[0] || "");
   }, [availableSizes]);
 
-  // custom mods
   const enableSizeMod = product.sizeMods;
   const [customSizeEnabled, setCustomSizeEnabled] = useState(false);
   const [customMods, setCustomMods] = useState<Record<string, string>>({});
 
-  // find variant & stock
   const selectedVariant = product.variants.find(
     (v) =>
       (!hasColor || v.color === selectedColor) &&
       (!hasSize || v.size === selectedSize)
   );
-  const inStock = selectedVariant?.inStock ?? totalStock;
+  const inStock = typeof selectedVariant?.inStock === "number"
+    ? selectedVariant.inStock
+    : totalStock;
   const outOfStock = inStock === 0;
 
-  // quantity
   const [quantity, setQuantity] = useState(1);
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), inStock || 1));
   }, [selectedColor, selectedSize, inStock]);
 
-  // size chart
   const { openSizeChart } = useSizeChart();
 
-  // pricing
   const { currency } = useCurrency();
-// 1) Determine the base price (in current currency)
-const basePrice =
-  product.prices[currency] ??
-  Object.values(product.prices)[0] ??
-  0;
+  const basePrice =
+    product.prices[currency] ??
+    Object.values(product.prices)[0] ??
+    0;
 
-// 2) Compute the 5% size‑mod fee (only if enabled)
-const sizeModFee = customSizeEnabled
-  ? parseFloat((basePrice * 0.05).toFixed(2))
-  : 0;
+  const sizeModFee = customSizeEnabled
+    ? parseFloat((basePrice * 0.05).toFixed(2))
+    : 0;
 
-// 3) Add it to the base price, then format for display
-const finalPrice = parseFloat(
-  (basePrice + sizeModFee).toFixed(2)
-);
-const currentPrice = formatAmount(finalPrice, currency);
+  const finalPrice = parseFloat(
+    (basePrice + sizeModFee).toFixed(2)
+  );
+  const currentPrice = formatAmount(finalPrice, currency);
 
-
-  // cart
   const addToCart = useCartStore((s) => s.addToCart);
 
-  // wishlist
   const [wishLoading, setWishLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   useEffect(() => {
@@ -191,58 +181,67 @@ const currentPrice = formatAmount(finalPrice, currency);
     setWishLoading(false);
   };
 
-  // router
   const router = useRouter();
 
-  // validation
   const validate = () => {
-    if (outOfStock) return toast.error("Out of stock"), false;
-    if (hasColor && !selectedColor)
-      return toast.error("Select a color"), false;
-    if (hasSize && !selectedSize)
-      return toast.error("Select a size"), false;
-    if (quantity < 1)
-      return toast.error("Quantity must be at least 1"), false;
+    if (outOfStock) {
+      toast.error("Out of stock");
+      return false;
+    }
+    if (hasColor && !selectedColor) {
+      toast.error("Select a color");
+      return false;
+    }
+    if (hasSize && !selectedSize) {
+      toast.error("Select a size");
+      return false;
+    }
+    if (quantity < 1) {
+      toast.error("Quantity must be at least 1");
+      return false;
+    }
     if (customSizeEnabled) {
       const any = CUSTOM_SIZE_FIELDS.some(
-        (f) => customMods[f.name]?.trim()
+        (f) => (customMods[f.name] ?? "").toString().trim()
       );
-      if (!any)
-        return toast.error("Enter at least one custom measurement"), false;
+      if (!any) {
+        toast.error("Enter at least one custom measurement");
+        return false;
+      }
     }
     return true;
   };
-const handleAddToCart = () => {
-  if (!validate()) return;
-  addToCart({
-    product,
-    color: selectedColor,
-    size: selectedSize,
-    quantity,
-    price:     finalPrice,
-    hasSizeMod: customSizeEnabled,
-    sizeModFee,
-    customMods: customSizeEnabled ? customMods : undefined,
-  });
-  toast.success("Added to cart");
-};
 
-const handleBuyNow = () => {
-  if (!validate()) return;
-  addToCart({
-    product,
-    color: selectedColor,
-    size: selectedSize,
-    quantity,
-    price:     finalPrice,
-    hasSizeMod: customSizeEnabled,
-    sizeModFee,
-    customMods: customSizeEnabled ? customMods : undefined,
-  });
-  router.push("/checkout");
-};
+  const handleAddToCart = () => {
+    if (!validate()) return;
+    addToCart({
+      product,
+      color: selectedColor,
+      size: selectedSize,
+      quantity,
+      price: finalPrice,
+      hasSizeMod: customSizeEnabled,
+      sizeModFee,
+      customMods: customSizeEnabled ? customMods : undefined,
+    });
+    toast.success("Added to cart");
+  };
 
-  // cycle featured
+  const handleBuyNow = () => {
+    if (!validate()) return;
+    addToCart({
+      product,
+      color: selectedColor,
+      size: selectedSize,
+      quantity,
+      price: finalPrice,
+      hasSizeMod: customSizeEnabled,
+      sizeModFee,
+      customMods: customSizeEnabled ? customMods : undefined,
+    });
+    router.push("/checkout");
+  };
+
   const idx = media.findIndex((m) => m === featuredImage);
   const prevMedia = () => {
     const i = (idx - 1 + media.length) % media.length;
@@ -320,18 +319,11 @@ const handleBuyNow = () => {
                       setImgLoading(true);
                     }}
                     className={`relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 border ${
-                      featuredImage === url
-                        ? "ring-2 ring-brand"
-                        : ""
+                      featuredImage === url ? "ring-2 ring-brand" : ""
                     }`}
                     aria-label={`View image ${i + 1}`}
                   >
-                    <Image
-                      src={url}
-                      alt=""
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={url} alt="" fill className="object-cover" />
                   </button>
                 ))}
               </div>
@@ -387,20 +379,15 @@ const handleBuyNow = () => {
         </div>
 
         {/* PRICE */}
-        <div className="text-3xl font-bold text-gray-900">
-          {currentPrice}
-        </div>
+        <div className="text-3xl font-bold text-gray-900">{currentPrice}</div>
         <div className="text-sm text-gray-500">
-  {customSizeEnabled && (
-    <>
-      <span>+5% custom‑size fee:</span>{" "}
-      <strong>
-        {formatAmount(sizeModFee, currency)}
-      </strong>
-    </>
-  )}
-</div>
-
+          {customSizeEnabled && (
+            <>
+              <span>+5% custom-size fee:</span>{" "}
+              <strong>{formatAmount(sizeModFee, currency)}</strong>
+            </>
+          )}
+        </div>
 
         {/* SELECTORS */}
         <div className="flex flex-col gap-4">
@@ -520,7 +507,11 @@ const handleBuyNow = () => {
 
         {/* ACTIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Button className="bg-gradient-to-r from-brand to-green-700" onClick={handleBuyNow} disabled={outOfStock}>
+          <Button
+            className="bg-gradient-to-r from-brand to-green-700"
+            onClick={handleBuyNow}
+            disabled={outOfStock}
+          >
             <Tag className="mr-2" /> Buy Now
           </Button>
           <Button

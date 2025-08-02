@@ -160,21 +160,22 @@ model Review {
 }
 
 model Order {
-  id            String       @id @default(uuid())
-  status        OrderStatus  @default(Processing)
-  currency      Currency
-  totalAmount   Float
-  totalNGN      Int
-  paymentMethod String
-  createdAt     DateTime     @default(now())
-  customer      Customer?    @relation(fields: [customerId], references: [id])
-  customerId    String?
-  guestInfo     Json?
-  staff         Staff?       @relation(fields: [staffId], references: [id])
-  staffId       String?
-  items         OrderItem[]
-  offlineSale   OfflineSale?
-  channel       OrderChannel @default(ONLINE)
+  id                 String              @id @default(uuid())
+  status             OrderStatus         @default(Processing)
+  currency           Currency
+  totalAmount        Float
+  totalNGN           Int
+  paymentMethod      String
+  createdAt          DateTime            @default(now())
+  customer           Customer?           @relation(fields: [customerId], references: [id])
+  customerId         String?
+  guestInfo          Json?
+  staff              Staff?              @relation(fields: [staffId], references: [id])
+  staffId            String?
+  items              OrderItem[]
+  offlineSale        OfflineSale?
+  channel            OrderChannel        @default(ONLINE)
+  receiptEmailStatus ReceiptEmailStatus?
 }
 
 model OrderItem {
@@ -243,4 +244,15 @@ model WishlistItem {
   addedAt    DateTime @default(now())
 
   @@unique([customerId, productId])
+}
+
+model ReceiptEmailStatus {
+  order       Order     @relation(fields: [orderId], references: [id])
+  orderId     String    @id
+  attempts    Int       @default(0)
+  lastError   String?
+  nextRetryAt DateTime?
+  sent        Boolean   @default(false)
+  deliveryFee Float?
+  updatedAt   DateTime  @updatedAt
 }

@@ -1,3 +1,4 @@
+// app/(USER-END)/checkout/CheckOutContent.tsx
 "use client";
 
 import React from "react";
@@ -13,8 +14,9 @@ interface Props {
 }
 
 export default function CheckoutContent({ user }: Props) {
-  const items = useCartStore((s) => s.items);
-  if (items.length === 0) {
+  const items = useCartStore((s) => s.items); // don't pass shallow here; avoids the getSnapshot noise
+
+  if (!items || items.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-5">
         <ShoppingCart className="w-16 h-16 text-gray-400 dark:text-gray-600" />

@@ -17,7 +17,6 @@ export async function getAllCategories(): Promise<Category[]> {
   return rows.map(({ slug, name, description }) => ({
     slug,
     name,
-    // convert null -> undefined
     description: description ?? undefined,
   }));
 }
