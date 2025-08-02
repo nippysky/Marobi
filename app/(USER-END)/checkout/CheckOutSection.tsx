@@ -235,23 +235,19 @@ export default function CheckoutSection({ user }: Props) {
         return;
       }
 
-      // clear cart only after confirmed
-      try {
-        clearCart();
-      } catch {}
-
+      // set email explicitly in case result hydrates slightly later
       setCustomerEmailForModal(order.email);
-      setShowSuccess(true);
       toast.success("Order created successfully.");
+      // note: we do NOT clear cart here; defer until modal close for smoother UX
     } catch (err) {
       console.error("Order creation after payment failed:", err);
       toast.error("Something went wrong creating your order.");
     }
   };
 
-  // If already confirmed (rehydrated), show success
+  // Show modal once we have a confirmed result with orderId
   useEffect(() => {
-    if (result) {
+    if (result?.orderId) {
       setCustomerEmailForModal(result.email);
       setShowSuccess(true);
     }
@@ -467,8 +463,12 @@ export default function CheckoutSection({ user }: Props) {
         email={customerEmailForModal || result?.email || email}
         onClose={() => {
           setShowSuccess(false);
-          router.push("/all-products");
+          // now clear cart after user has seen success
+          try {
+            clearCart();
+          } catch {}
           reset(); // clear snapshot
+          router.push("/all-products");
         }}
       />
     </>
