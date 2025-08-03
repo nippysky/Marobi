@@ -33,7 +33,6 @@ import {
 } from "./ui/select";
 import { Switch } from "./ui/switch";
 
-// ---- Custom size fields
 const CUSTOM_SIZE_FIELDS = [
   { name: "chest", label: "Chest/Bust (in)" },
   { name: "waist", label: "Waist (in)" },
@@ -55,19 +54,18 @@ const ProductDetailHero: React.FC<Props> = ({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const media = [...product.images];
-  const [featuredImage, setFeaturedImage] = useState(media[0]);
+  const media = useMemo(() => [...(product.images || [])], [product.images]);
+  const [featuredImage, setFeaturedImage] = useState(media[0] || "");
   const [imgLoading, setImgLoading] = useState(true);
 
   const thumbsRef = useRef<HTMLDivElement>(null);
   const scrollThumbs = (dir: "left" | "right") => {
-    if (thumbsRef.current) {
-      const w = thumbsRef.current.clientWidth;
-      thumbsRef.current.scrollBy({
-        left: dir === "left" ? -w : w,
-        behavior: "smooth",
-      });
-    }
+    if (!thumbsRef.current) return;
+    const w = thumbsRef.current.clientWidth;
+    thumbsRef.current.scrollBy({
+      left: dir === "left" ? -w : w,
+      behavior: "smooth",
+    });
   };
 
   const hasVideo = !!product.videoUrl;
@@ -90,12 +88,10 @@ const ProductDetailHero: React.FC<Props> = ({
     () => Array.from(new Set(product.variants.map((v) => v.size))),
     [product.variants]
   );
-  const hasColor = colors.length > 1 || colors[0] !== "";
-  const hasSize = sizes.length > 1 || sizes[0] !== "";
+  const hasColor = colors.length > 1 || (colors[0] ?? "") !== "";
+  const hasSize = sizes.length > 1 || (sizes[0] ?? "") !== "";
 
-  const [selectedColor, setSelectedColor] = useState(
-    hasColor ? colors[0] : ""
-  );
+  const [selectedColor, setSelectedColor] = useState(hasColor ? colors[0] : "");
   const availableSizes = useMemo(
     () =>
       hasColor
@@ -109,7 +105,9 @@ const ProductDetailHero: React.FC<Props> = ({
         : sizes,
     [hasColor, product.variants, selectedColor, sizes]
   );
-  const [selectedSize, setSelectedSize] = useState(availableSizes[0] || "");
+  const [selectedSize, setSelectedSize] = useState<string>(
+    availableSizes[0] || ""
+  );
   useEffect(() => {
     setSelectedSize(availableSizes[0] || "");
   }, [availableSizes]);
@@ -118,14 +116,23 @@ const ProductDetailHero: React.FC<Props> = ({
   const [customSizeEnabled, setCustomSizeEnabled] = useState(false);
   const [customMods, setCustomMods] = useState<Record<string, string>>({});
 
-  const selectedVariant = product.variants.find(
-    (v) =>
-      (!hasColor || v.color === selectedColor) &&
-      (!hasSize || v.size === selectedSize)
+  const selectedVariant = useMemo(
+    () =>
+      product.variants.find(
+        (v) =>
+          (!hasColor || v.color === selectedColor) &&
+          (!hasSize || v.size === selectedSize)
+      ),
+    [product.variants, hasColor, selectedColor, hasSize, selectedSize]
   );
-  const inStock = typeof selectedVariant?.inStock === "number"
-    ? selectedVariant.inStock
-    : totalStock;
+
+  const inStock = useMemo(
+    () =>
+      typeof selectedVariant?.inStock === "number"
+        ? selectedVariant.inStock
+        : totalStock,
+    [selectedVariant, totalStock]
+  );
   const outOfStock = inStock === 0;
 
   const [quantity, setQuantity] = useState(1);
@@ -134,20 +141,14 @@ const ProductDetailHero: React.FC<Props> = ({
   }, [selectedColor, selectedSize, inStock]);
 
   const { openSizeChart } = useSizeChart();
-
   const { currency } = useCurrency();
-  const basePrice =
-    product.prices[currency] ??
-    Object.values(product.prices)[0] ??
-    0;
 
+  const basePrice =
+    product.prices[currency] ?? Object.values(product.prices)[0] ?? 0;
   const sizeModFee = customSizeEnabled
     ? parseFloat((basePrice * 0.05).toFixed(2))
     : 0;
-
-  const finalPrice = parseFloat(
-    (basePrice + sizeModFee).toFixed(2)
-  );
+  const finalPrice = parseFloat((basePrice + sizeModFee).toFixed(2));
   const currentPrice = formatAmount(finalPrice, currency);
 
   const addToCart = useCartStore((s) => s.addToCart);
@@ -163,15 +164,22 @@ const ProductDetailHero: React.FC<Props> = ({
     }
   }, [user, product.id]);
   const toggleWishlist = async () => {
-    if (!user) return toast.error("Sign in to use wishlist");
+    if (!user) {
+      toast.error("Sign in to use wishlist");
+      return;
+    }
     setWishLoading(true);
     try {
       if (isWishlisted) {
-        await fetch(`/api/account/wishlist/${product.id}`, { method: "DELETE" });
+        await fetch(`/api/account/wishlist/${product.id}`, {
+          method: "DELETE",
+        });
         setIsWishlisted(false);
         toast("Removed from wishlist");
       } else {
-        await fetch(`/api/account/wishlist/${product.id}`, { method: "POST" });
+        await fetch(`/api/account/wishlist/${product.id}`, {
+          method: "POST",
+        });
         setIsWishlisted(true);
         toast.success("Added to wishlist");
       }
@@ -212,6 +220,13 @@ const ProductDetailHero: React.FC<Props> = ({
     return true;
   };
 
+  const unitWeight =
+    typeof selectedVariant?.weight === "number" ? selectedVariant.weight : 0;
+  const totalWeight = useMemo(
+    () => parseFloat((unitWeight * quantity).toFixed(3)),
+    [unitWeight, quantity]
+  );
+
   const handleAddToCart = () => {
     if (!validate()) return;
     addToCart({
@@ -223,6 +238,7 @@ const ProductDetailHero: React.FC<Props> = ({
       hasSizeMod: customSizeEnabled,
       sizeModFee,
       customMods: customSizeEnabled ? customMods : undefined,
+      unitWeight,
     });
     toast.success("Added to cart");
   };
@@ -238,17 +254,27 @@ const ProductDetailHero: React.FC<Props> = ({
       hasSizeMod: customSizeEnabled,
       sizeModFee,
       customMods: customSizeEnabled ? customMods : undefined,
+      unitWeight,
     });
     router.push("/checkout");
   };
 
+  useEffect(() => {
+    if (media[0]) {
+      setFeaturedImage(media[0]);
+      setImgLoading(true);
+    }
+  }, [media]);
+
   const idx = media.findIndex((m) => m === featuredImage);
   const prevMedia = () => {
+    if (media.length === 0) return;
     const i = (idx - 1 + media.length) % media.length;
     setFeaturedImage(media[i]);
     setImgLoading(true);
   };
   const nextMedia = () => {
+    if (media.length === 0) return;
     const i = (idx + 1) % media.length;
     setFeaturedImage(media[i]);
     setImgLoading(true);
@@ -256,12 +282,9 @@ const ProductDetailHero: React.FC<Props> = ({
 
   return (
     <section className="grid lg:grid-cols-2 gap-10 mt-10">
-      {/* MAIN IMAGE */}
       <div className="relative w-full max-w-xl mx-auto aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
-        <Skeleton
-          className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`}
-        />
-        {featuredImage && (
+        <Skeleton className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`} />
+        {featuredImage ? (
           <Image
             src={featuredImage}
             alt={product.name}
@@ -270,6 +293,10 @@ const ProductDetailHero: React.FC<Props> = ({
             onLoad={() => setImgLoading(false)}
             priority
           />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No image available
+          </div>
         )}
         {media.length > 1 && (
           <>
@@ -277,6 +304,7 @@ const ProductDetailHero: React.FC<Props> = ({
               onClick={prevMedia}
               className="absolute inset-y-0 left-0 px-2 bg-black/20 hover:bg-black/30 text-white flex items-center"
               aria-label="Previous image"
+              type="button"
             >
               <ChevronLeft size={24} />
             </button>
@@ -284,6 +312,7 @@ const ProductDetailHero: React.FC<Props> = ({
               onClick={nextMedia}
               className="absolute inset-y-0 right-0 px-2 bg-black/20 hover:bg-black/30 text-white flex items-center"
               aria-label="Next image"
+              type="button"
             >
               <ChevronRight size={24} />
             </button>
@@ -291,9 +320,7 @@ const ProductDetailHero: React.FC<Props> = ({
         )}
       </div>
 
-      {/* DETAILS */}
       <div className="space-y-6 w-full">
-        {/* MEDIA GRID */}
         {media.length > 0 && (
           <div className="space-y-2">
             <p className="font-medium text-gray-700">Media</p>
@@ -303,6 +330,7 @@ const ProductDetailHero: React.FC<Props> = ({
                   onClick={() => scrollThumbs("left")}
                   className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-white/80 hover:bg-white rounded-r"
                   aria-label="Scroll media left"
+                  type="button"
                 >
                   <ChevronLeft size={20} />
                 </button>
@@ -313,7 +341,7 @@ const ProductDetailHero: React.FC<Props> = ({
               >
                 {media.map((url, i) => (
                   <button
-                    key={url}
+                    key={`${url}-${i}`}
                     onClick={() => {
                       setFeaturedImage(url);
                       setImgLoading(true);
@@ -322,6 +350,7 @@ const ProductDetailHero: React.FC<Props> = ({
                       featuredImage === url ? "ring-2 ring-brand" : ""
                     }`}
                     aria-label={`View image ${i + 1}`}
+                    type="button"
                   >
                     <Image src={url} alt="" fill className="object-cover" />
                   </button>
@@ -332,24 +361,20 @@ const ProductDetailHero: React.FC<Props> = ({
                   onClick={() => scrollThumbs("right")}
                   className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-white/80 hover:bg-white rounded-l"
                   aria-label="Scroll media right"
+                  type="button"
                 >
                   <ChevronRight size={20} />
                 </button>
               )}
             </div>
             {hasVideo && (
-              <Button
-                variant="outline"
-                className="my-5 w-full"
-                onClick={() => setIsVideoOpen(true)}
-              >
+              <Button variant="outline" className="my-5 w-full" onClick={() => setIsVideoOpen(true)}>
                 <Play className="mr-2" /> Play Video
               </Button>
             )}
           </div>
         )}
 
-        {/* CATEGORY / SIZE CHART / STOCK */}
         <div className="flex flex-wrap lg:gap-20 gap-10 text-sm text-gray-700">
           <a
             href={`/categories/${product.category}`}
@@ -368,17 +393,24 @@ const ProductDetailHero: React.FC<Props> = ({
             <CheckCircle />
             <span className="font-semibold">{totalStock}</span> in stock
           </div>
+          {unitWeight > 0 && (
+            <div className="flex items-center gap-1">
+              <span className="font-medium">Weight:</span>
+              <span>{unitWeight.toFixed(3)}kg</span>
+              {quantity > 1 && (
+                <span className="text-gray-500">
+                  (Total: {totalWeight.toFixed(3)}kg)
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* NAME & DESC */}
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {product.name}
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
           <p className="text-gray-600">{product.description}</p>
         </div>
 
-        {/* PRICE */}
         <div className="text-3xl font-bold text-gray-900">{currentPrice}</div>
         <div className="text-sm text-gray-500">
           {customSizeEnabled && (
@@ -389,18 +421,12 @@ const ProductDetailHero: React.FC<Props> = ({
           )}
         </div>
 
-        {/* SELECTORS */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:gap-4 gap-4">
             {hasColor && (
               <div className="flex-1">
-                <label className="block text-sm text-gray-700 mb-1">
-                  Color
-                </label>
-                <Select
-                  value={selectedColor}
-                  onValueChange={setSelectedColor}
-                >
+                <label className="block text-sm text-gray-700 mb-1">Color</label>
+                <Select value={selectedColor} onValueChange={setSelectedColor} aria-label="Select color">
                   <SelectTrigger>
                     <SelectValue placeholder="Select color" />
                   </SelectTrigger>
@@ -416,13 +442,12 @@ const ProductDetailHero: React.FC<Props> = ({
             )}
             {hasSize && (
               <div className="flex-1">
-                <label className="block text-sm text-gray-700 mb-1">
-                  Size
-                </label>
+                <label className="block text-sm text-gray-700 mb-1">Size</label>
                 <Select
                   value={selectedSize}
                   onValueChange={setSelectedSize}
                   disabled={hasColor && !selectedColor}
+                  aria-label="Select size"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select size" />
@@ -439,15 +464,14 @@ const ProductDetailHero: React.FC<Props> = ({
             )}
             {enableSizeMod && (
               <div className="flex-1 flex flex-col justify-end">
-                <label className="block text-sm text-gray-700 mb-1">
-                  Custom Size Mods
-                </label>
+                <label className="block text-sm text-gray-700 mb-1">Custom Size Mods</label>
                 <Switch
                   checked={customSizeEnabled}
                   onCheckedChange={(v) => {
                     setCustomSizeEnabled(v);
                     if (!v) setCustomMods({});
                   }}
+                  aria-label="Toggle custom size modifications"
                 />
               </div>
             )}
@@ -457,9 +481,7 @@ const ProductDetailHero: React.FC<Props> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {CUSTOM_SIZE_FIELDS.map((f) => (
                 <div key={f.name} className="flex flex-col">
-                  <label className="text-xs text-gray-600 mb-1">
-                    {f.label}
-                  </label>
+                  <label className="text-xs text-gray-600 mb-1">{f.label}</label>
                   <input
                     type="number"
                     min={0}
@@ -473,13 +495,13 @@ const ProductDetailHero: React.FC<Props> = ({
                     }
                     placeholder={`Enter ${f.label.toLowerCase()}`}
                     className="w-full rounded border px-3 py-2 text-sm"
+                    aria-label={f.label}
                   />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Quantity */}
           <div className="flex items-center gap-2">
             <label className="block text-sm text-gray-700">Quantity</label>
             <Button
@@ -487,6 +509,7 @@ const ProductDetailHero: React.FC<Props> = ({
               size="icon"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
+              aria-label="Decrease quantity"
             >
               –
             </Button>
@@ -496,16 +519,14 @@ const ProductDetailHero: React.FC<Props> = ({
               size="icon"
               onClick={() => setQuantity((q) => Math.min(q + 1, inStock))}
               disabled={quantity >= inStock}
+              aria-label="Increase quantity"
             >
               +
             </Button>
-            <span className="ml-2 text-xs text-gray-500">
-              {inStock} left
-            </span>
+            <span className="ml-2 text-xs text-gray-500">{inStock} left</span>
           </div>
         </div>
 
-        {/* ACTIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Button
             className="bg-gradient-to-r from-brand to-green-700"
@@ -514,16 +535,11 @@ const ProductDetailHero: React.FC<Props> = ({
           >
             <Tag className="mr-2" /> Buy Now
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleAddToCart}
-            disabled={outOfStock}
-          >
+          <Button variant="outline" onClick={handleAddToCart} disabled={outOfStock}>
             <BsBag className="mr-2" /> Add to Cart
           </Button>
         </div>
 
-        {/* WISHLIST */}
         {user && mounted && (
           <Button
             variant={isWishlisted ? "outline" : "secondary"}
@@ -537,12 +553,8 @@ const ProductDetailHero: React.FC<Props> = ({
         )}
       </div>
 
-      {/* VIDEO MODAL */}
       {isVideoOpen && product.videoUrl && (
-        <VideoModal
-          onClose={() => setIsVideoOpen(false)}
-          videoUrl={product.videoUrl}
-        />
+        <VideoModal onClose={() => setIsVideoOpen(false)} videoUrl={product.videoUrl} />
       )}
     </section>
   );

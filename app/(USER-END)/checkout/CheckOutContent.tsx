@@ -1,4 +1,3 @@
-// app/(USER-END)/checkout/CheckOutContent.tsx
 "use client";
 
 import React from "react";
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export default function CheckoutContent({ user }: Props) {
-  const items = useCartStore((s) => s.items); // don't pass shallow here; avoids the getSnapshot noise
+  const items = useCartStore((s) => s.items); // no shallow to get latest
 
   if (!items || items.length === 0) {
     return (

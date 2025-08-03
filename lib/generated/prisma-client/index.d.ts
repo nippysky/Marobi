@@ -74,6 +74,16 @@ export type WishlistItem = $Result.DefaultSelection<Prisma.$WishlistItemPayload>
  */
 export type ReceiptEmailStatus = $Result.DefaultSelection<Prisma.$ReceiptEmailStatusPayload>
 /**
+ * Model WebhookEvent
+ * 
+ */
+export type WebhookEvent = $Result.DefaultSelection<Prisma.$WebhookEventPayload>
+/**
+ * Model OrphanPayment
+ * 
+ */
+export type OrphanPayment = $Result.DefaultSelection<Prisma.$OrphanPaymentPayload>
+/**
  * Model HeroSlide
  * 
  */
@@ -105,7 +115,8 @@ export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
 export const OrderStatus: {
   Processing: 'Processing',
   Shipped: 'Shipped',
-  Delivered: 'Delivered'
+  Delivered: 'Delivered',
+  Cancelled: 'Cancelled'
 };
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
@@ -158,6 +169,15 @@ export const DeliveryType: {
 
 export type DeliveryType = (typeof DeliveryType)[keyof typeof DeliveryType]
 
+
+export const RefundStatus: {
+  Pending: 'Pending',
+  Completed: 'Completed',
+  Failed: 'Failed'
+};
+
+export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]
+
 }
 
 export type ProductStatus = $Enums.ProductStatus
@@ -187,6 +207,10 @@ export const UserRole: typeof $Enums.UserRole
 export type DeliveryType = $Enums.DeliveryType
 
 export const DeliveryType: typeof $Enums.DeliveryType
+
+export type RefundStatus = $Enums.RefundStatus
+
+export const RefundStatus: typeof $Enums.RefundStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -432,6 +456,26 @@ export class PrismaClient<
     * ```
     */
   get receiptEmailStatus(): Prisma.ReceiptEmailStatusDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.webhookEvent`: Exposes CRUD operations for the **WebhookEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WebhookEvents
+    * const webhookEvents = await prisma.webhookEvent.findMany()
+    * ```
+    */
+  get webhookEvent(): Prisma.WebhookEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.orphanPayment`: Exposes CRUD operations for the **OrphanPayment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OrphanPayments
+    * const orphanPayments = await prisma.orphanPayment.findMany()
+    * ```
+    */
+  get orphanPayment(): Prisma.OrphanPaymentDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.heroSlide`: Exposes CRUD operations for the **HeroSlide** model.
@@ -914,6 +958,8 @@ export namespace Prisma {
     OfflineSale: 'OfflineSale',
     WishlistItem: 'WishlistItem',
     ReceiptEmailStatus: 'ReceiptEmailStatus',
+    WebhookEvent: 'WebhookEvent',
+    OrphanPayment: 'OrphanPayment',
     HeroSlide: 'HeroSlide',
     SizeChart: 'SizeChart',
     SizeChartEntry: 'SizeChartEntry'
@@ -935,7 +981,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "customer" | "staff" | "category" | "product" | "variant" | "review" | "deliveryOption" | "order" | "orderItem" | "offlineSale" | "wishlistItem" | "receiptEmailStatus" | "heroSlide" | "sizeChart" | "sizeChartEntry"
+      modelProps: "customer" | "staff" | "category" | "product" | "variant" | "review" | "deliveryOption" | "order" | "orderItem" | "offlineSale" | "wishlistItem" | "receiptEmailStatus" | "webhookEvent" | "orphanPayment" | "heroSlide" | "sizeChart" | "sizeChartEntry"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1827,6 +1873,154 @@ export namespace Prisma {
           }
         }
       }
+      WebhookEvent: {
+        payload: Prisma.$WebhookEventPayload<ExtArgs>
+        fields: Prisma.WebhookEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WebhookEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WebhookEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          findFirst: {
+            args: Prisma.WebhookEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WebhookEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          findMany: {
+            args: Prisma.WebhookEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>[]
+          }
+          create: {
+            args: Prisma.WebhookEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          createMany: {
+            args: Prisma.WebhookEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WebhookEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>[]
+          }
+          delete: {
+            args: Prisma.WebhookEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          update: {
+            args: Prisma.WebhookEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.WebhookEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WebhookEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WebhookEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.WebhookEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WebhookEventPayload>
+          }
+          aggregate: {
+            args: Prisma.WebhookEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWebhookEvent>
+          }
+          groupBy: {
+            args: Prisma.WebhookEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WebhookEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WebhookEventCountArgs<ExtArgs>
+            result: $Utils.Optional<WebhookEventCountAggregateOutputType> | number
+          }
+        }
+      }
+      OrphanPayment: {
+        payload: Prisma.$OrphanPaymentPayload<ExtArgs>
+        fields: Prisma.OrphanPaymentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OrphanPaymentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OrphanPaymentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          findFirst: {
+            args: Prisma.OrphanPaymentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OrphanPaymentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          findMany: {
+            args: Prisma.OrphanPaymentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>[]
+          }
+          create: {
+            args: Prisma.OrphanPaymentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          createMany: {
+            args: Prisma.OrphanPaymentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.OrphanPaymentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>[]
+          }
+          delete: {
+            args: Prisma.OrphanPaymentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          update: {
+            args: Prisma.OrphanPaymentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          deleteMany: {
+            args: Prisma.OrphanPaymentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OrphanPaymentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.OrphanPaymentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>[]
+          }
+          upsert: {
+            args: Prisma.OrphanPaymentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OrphanPaymentPayload>
+          }
+          aggregate: {
+            args: Prisma.OrphanPaymentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOrphanPayment>
+          }
+          groupBy: {
+            args: Prisma.OrphanPaymentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OrphanPaymentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.OrphanPaymentCountArgs<ExtArgs>
+            result: $Utils.Optional<OrphanPaymentCountAggregateOutputType> | number
+          }
+        }
+      }
       HeroSlide: {
         payload: Prisma.$HeroSlidePayload<ExtArgs>
         fields: Prisma.HeroSlideFieldRefs
@@ -2153,6 +2347,8 @@ export namespace Prisma {
     offlineSale?: OfflineSaleOmit
     wishlistItem?: WishlistItemOmit
     receiptEmailStatus?: ReceiptEmailStatusOmit
+    webhookEvent?: WebhookEventOmit
+    orphanPayment?: OrphanPaymentOmit
     heroSlide?: HeroSlideOmit
     sizeChart?: SizeChartOmit
     sizeChartEntry?: SizeChartEntryOmit
@@ -10973,12 +11169,19 @@ export namespace Prisma {
     totalAmount: number | null
     totalNGN: number | null
     paymentMethod: string | null
+    paymentReference: string | null
+    paymentProviderId: string | null
+    paymentVerified: boolean | null
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
     channel: $Enums.OrderChannel | null
     deliveryOptionId: string | null
     deliveryFee: number | null
+    refundedAt: Date | null
+    refundReason: string | null
+    refundTransactionId: string | null
+    refundStatus: $Enums.RefundStatus | null
   }
 
   export type OrderMaxAggregateOutputType = {
@@ -10988,12 +11191,19 @@ export namespace Prisma {
     totalAmount: number | null
     totalNGN: number | null
     paymentMethod: string | null
+    paymentReference: string | null
+    paymentProviderId: string | null
+    paymentVerified: boolean | null
     createdAt: Date | null
     customerId: string | null
     staffId: string | null
     channel: $Enums.OrderChannel | null
     deliveryOptionId: string | null
     deliveryFee: number | null
+    refundedAt: Date | null
+    refundReason: string | null
+    refundTransactionId: string | null
+    refundStatus: $Enums.RefundStatus | null
   }
 
   export type OrderCountAggregateOutputType = {
@@ -11003,6 +11213,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: number
+    paymentReference: number
+    paymentProviderId: number
+    paymentVerified: number
     createdAt: number
     customerId: number
     guestInfo: number
@@ -11011,6 +11224,10 @@ export namespace Prisma {
     deliveryOptionId: number
     deliveryFee: number
     deliveryDetails: number
+    refundedAt: number
+    refundReason: number
+    refundTransactionId: number
+    refundStatus: number
     _all: number
   }
 
@@ -11034,12 +11251,19 @@ export namespace Prisma {
     totalAmount?: true
     totalNGN?: true
     paymentMethod?: true
+    paymentReference?: true
+    paymentProviderId?: true
+    paymentVerified?: true
     createdAt?: true
     customerId?: true
     staffId?: true
     channel?: true
     deliveryOptionId?: true
     deliveryFee?: true
+    refundedAt?: true
+    refundReason?: true
+    refundTransactionId?: true
+    refundStatus?: true
   }
 
   export type OrderMaxAggregateInputType = {
@@ -11049,12 +11273,19 @@ export namespace Prisma {
     totalAmount?: true
     totalNGN?: true
     paymentMethod?: true
+    paymentReference?: true
+    paymentProviderId?: true
+    paymentVerified?: true
     createdAt?: true
     customerId?: true
     staffId?: true
     channel?: true
     deliveryOptionId?: true
     deliveryFee?: true
+    refundedAt?: true
+    refundReason?: true
+    refundTransactionId?: true
+    refundStatus?: true
   }
 
   export type OrderCountAggregateInputType = {
@@ -11064,6 +11295,9 @@ export namespace Prisma {
     totalAmount?: true
     totalNGN?: true
     paymentMethod?: true
+    paymentReference?: true
+    paymentProviderId?: true
+    paymentVerified?: true
     createdAt?: true
     customerId?: true
     guestInfo?: true
@@ -11072,6 +11306,10 @@ export namespace Prisma {
     deliveryOptionId?: true
     deliveryFee?: true
     deliveryDetails?: true
+    refundedAt?: true
+    refundReason?: true
+    refundTransactionId?: true
+    refundStatus?: true
     _all?: true
   }
 
@@ -11168,6 +11406,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference: string | null
+    paymentProviderId: string | null
+    paymentVerified: boolean
     createdAt: Date
     customerId: string | null
     guestInfo: JsonValue | null
@@ -11176,6 +11417,10 @@ export namespace Prisma {
     deliveryOptionId: string | null
     deliveryFee: number | null
     deliveryDetails: JsonValue | null
+    refundedAt: Date | null
+    refundReason: string | null
+    refundTransactionId: string | null
+    refundStatus: $Enums.RefundStatus | null
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
     _sum: OrderSumAggregateOutputType | null
@@ -11204,6 +11449,9 @@ export namespace Prisma {
     totalAmount?: boolean
     totalNGN?: boolean
     paymentMethod?: boolean
+    paymentReference?: boolean
+    paymentProviderId?: boolean
+    paymentVerified?: boolean
     createdAt?: boolean
     customerId?: boolean
     guestInfo?: boolean
@@ -11212,6 +11460,10 @@ export namespace Prisma {
     deliveryOptionId?: boolean
     deliveryFee?: boolean
     deliveryDetails?: boolean
+    refundedAt?: boolean
+    refundReason?: boolean
+    refundTransactionId?: boolean
+    refundStatus?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -11228,6 +11480,9 @@ export namespace Prisma {
     totalAmount?: boolean
     totalNGN?: boolean
     paymentMethod?: boolean
+    paymentReference?: boolean
+    paymentProviderId?: boolean
+    paymentVerified?: boolean
     createdAt?: boolean
     customerId?: boolean
     guestInfo?: boolean
@@ -11236,6 +11491,10 @@ export namespace Prisma {
     deliveryOptionId?: boolean
     deliveryFee?: boolean
     deliveryDetails?: boolean
+    refundedAt?: boolean
+    refundReason?: boolean
+    refundTransactionId?: boolean
+    refundStatus?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     deliveryOption?: boolean | Order$deliveryOptionArgs<ExtArgs>
@@ -11248,6 +11507,9 @@ export namespace Prisma {
     totalAmount?: boolean
     totalNGN?: boolean
     paymentMethod?: boolean
+    paymentReference?: boolean
+    paymentProviderId?: boolean
+    paymentVerified?: boolean
     createdAt?: boolean
     customerId?: boolean
     guestInfo?: boolean
@@ -11256,6 +11518,10 @@ export namespace Prisma {
     deliveryOptionId?: boolean
     deliveryFee?: boolean
     deliveryDetails?: boolean
+    refundedAt?: boolean
+    refundReason?: boolean
+    refundTransactionId?: boolean
+    refundStatus?: boolean
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
     deliveryOption?: boolean | Order$deliveryOptionArgs<ExtArgs>
@@ -11268,6 +11534,9 @@ export namespace Prisma {
     totalAmount?: boolean
     totalNGN?: boolean
     paymentMethod?: boolean
+    paymentReference?: boolean
+    paymentProviderId?: boolean
+    paymentVerified?: boolean
     createdAt?: boolean
     customerId?: boolean
     guestInfo?: boolean
@@ -11276,9 +11545,13 @@ export namespace Prisma {
     deliveryOptionId?: boolean
     deliveryFee?: boolean
     deliveryDetails?: boolean
+    refundedAt?: boolean
+    refundReason?: boolean
+    refundTransactionId?: boolean
+    refundStatus?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "createdAt" | "customerId" | "guestInfo" | "staffId" | "channel" | "deliveryOptionId" | "deliveryFee" | "deliveryDetails", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "currency" | "totalAmount" | "totalNGN" | "paymentMethod" | "paymentReference" | "paymentProviderId" | "paymentVerified" | "createdAt" | "customerId" | "guestInfo" | "staffId" | "channel" | "deliveryOptionId" | "deliveryFee" | "deliveryDetails" | "refundedAt" | "refundReason" | "refundTransactionId" | "refundStatus", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | Order$customerArgs<ExtArgs>
     staff?: boolean | Order$staffArgs<ExtArgs>
@@ -11316,6 +11589,9 @@ export namespace Prisma {
       totalAmount: number
       totalNGN: number
       paymentMethod: string
+      paymentReference: string | null
+      paymentProviderId: string | null
+      paymentVerified: boolean
       createdAt: Date
       customerId: string | null
       guestInfo: Prisma.JsonValue | null
@@ -11324,6 +11600,10 @@ export namespace Prisma {
       deliveryOptionId: string | null
       deliveryFee: number | null
       deliveryDetails: Prisma.JsonValue | null
+      refundedAt: Date | null
+      refundReason: string | null
+      refundTransactionId: string | null
+      refundStatus: $Enums.RefundStatus | null
     }, ExtArgs["result"]["order"]>
     composites: {}
   }
@@ -11759,6 +12039,9 @@ export namespace Prisma {
     readonly totalAmount: FieldRef<"Order", 'Float'>
     readonly totalNGN: FieldRef<"Order", 'Int'>
     readonly paymentMethod: FieldRef<"Order", 'String'>
+    readonly paymentReference: FieldRef<"Order", 'String'>
+    readonly paymentProviderId: FieldRef<"Order", 'String'>
+    readonly paymentVerified: FieldRef<"Order", 'Boolean'>
     readonly createdAt: FieldRef<"Order", 'DateTime'>
     readonly customerId: FieldRef<"Order", 'String'>
     readonly guestInfo: FieldRef<"Order", 'Json'>
@@ -11767,6 +12050,10 @@ export namespace Prisma {
     readonly deliveryOptionId: FieldRef<"Order", 'String'>
     readonly deliveryFee: FieldRef<"Order", 'Float'>
     readonly deliveryDetails: FieldRef<"Order", 'Json'>
+    readonly refundedAt: FieldRef<"Order", 'DateTime'>
+    readonly refundReason: FieldRef<"Order", 'String'>
+    readonly refundTransactionId: FieldRef<"Order", 'String'>
+    readonly refundStatus: FieldRef<"Order", 'RefundStatus'>
   }
     
 
@@ -16750,6 +17037,2074 @@ export namespace Prisma {
 
 
   /**
+   * Model WebhookEvent
+   */
+
+  export type AggregateWebhookEvent = {
+    _count: WebhookEventCountAggregateOutputType | null
+    _min: WebhookEventMinAggregateOutputType | null
+    _max: WebhookEventMaxAggregateOutputType | null
+  }
+
+  export type WebhookEventMinAggregateOutputType = {
+    id: string | null
+    provider: string | null
+    eventId: string | null
+    createdAt: Date | null
+  }
+
+  export type WebhookEventMaxAggregateOutputType = {
+    id: string | null
+    provider: string | null
+    eventId: string | null
+    createdAt: Date | null
+  }
+
+  export type WebhookEventCountAggregateOutputType = {
+    id: number
+    provider: number
+    eventId: number
+    payload: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type WebhookEventMinAggregateInputType = {
+    id?: true
+    provider?: true
+    eventId?: true
+    createdAt?: true
+  }
+
+  export type WebhookEventMaxAggregateInputType = {
+    id?: true
+    provider?: true
+    eventId?: true
+    createdAt?: true
+  }
+
+  export type WebhookEventCountAggregateInputType = {
+    id?: true
+    provider?: true
+    eventId?: true
+    payload?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type WebhookEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WebhookEvent to aggregate.
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebhookEvents to fetch.
+     */
+    orderBy?: WebhookEventOrderByWithRelationInput | WebhookEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WebhookEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebhookEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebhookEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WebhookEvents
+    **/
+    _count?: true | WebhookEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WebhookEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WebhookEventMaxAggregateInputType
+  }
+
+  export type GetWebhookEventAggregateType<T extends WebhookEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateWebhookEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWebhookEvent[P]>
+      : GetScalarType<T[P], AggregateWebhookEvent[P]>
+  }
+
+
+
+
+  export type WebhookEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WebhookEventWhereInput
+    orderBy?: WebhookEventOrderByWithAggregationInput | WebhookEventOrderByWithAggregationInput[]
+    by: WebhookEventScalarFieldEnum[] | WebhookEventScalarFieldEnum
+    having?: WebhookEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WebhookEventCountAggregateInputType | true
+    _min?: WebhookEventMinAggregateInputType
+    _max?: WebhookEventMaxAggregateInputType
+  }
+
+  export type WebhookEventGroupByOutputType = {
+    id: string
+    provider: string
+    eventId: string
+    payload: JsonValue
+    createdAt: Date
+    _count: WebhookEventCountAggregateOutputType | null
+    _min: WebhookEventMinAggregateOutputType | null
+    _max: WebhookEventMaxAggregateOutputType | null
+  }
+
+  type GetWebhookEventGroupByPayload<T extends WebhookEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WebhookEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WebhookEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WebhookEventGroupByOutputType[P]>
+            : GetScalarType<T[P], WebhookEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WebhookEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    provider?: boolean
+    eventId?: boolean
+    payload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["webhookEvent"]>
+
+  export type WebhookEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    provider?: boolean
+    eventId?: boolean
+    payload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["webhookEvent"]>
+
+  export type WebhookEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    provider?: boolean
+    eventId?: boolean
+    payload?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["webhookEvent"]>
+
+  export type WebhookEventSelectScalar = {
+    id?: boolean
+    provider?: boolean
+    eventId?: boolean
+    payload?: boolean
+    createdAt?: boolean
+  }
+
+  export type WebhookEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "provider" | "eventId" | "payload" | "createdAt", ExtArgs["result"]["webhookEvent"]>
+
+  export type $WebhookEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WebhookEvent"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      provider: string
+      eventId: string
+      payload: Prisma.JsonValue
+      createdAt: Date
+    }, ExtArgs["result"]["webhookEvent"]>
+    composites: {}
+  }
+
+  type WebhookEventGetPayload<S extends boolean | null | undefined | WebhookEventDefaultArgs> = $Result.GetResult<Prisma.$WebhookEventPayload, S>
+
+  type WebhookEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WebhookEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WebhookEventCountAggregateInputType | true
+    }
+
+  export interface WebhookEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WebhookEvent'], meta: { name: 'WebhookEvent' } }
+    /**
+     * Find zero or one WebhookEvent that matches the filter.
+     * @param {WebhookEventFindUniqueArgs} args - Arguments to find a WebhookEvent
+     * @example
+     * // Get one WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WebhookEventFindUniqueArgs>(args: SelectSubset<T, WebhookEventFindUniqueArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WebhookEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WebhookEventFindUniqueOrThrowArgs} args - Arguments to find a WebhookEvent
+     * @example
+     * // Get one WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WebhookEventFindUniqueOrThrowArgs>(args: SelectSubset<T, WebhookEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WebhookEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventFindFirstArgs} args - Arguments to find a WebhookEvent
+     * @example
+     * // Get one WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WebhookEventFindFirstArgs>(args?: SelectSubset<T, WebhookEventFindFirstArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WebhookEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventFindFirstOrThrowArgs} args - Arguments to find a WebhookEvent
+     * @example
+     * // Get one WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WebhookEventFindFirstOrThrowArgs>(args?: SelectSubset<T, WebhookEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WebhookEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WebhookEvents
+     * const webhookEvents = await prisma.webhookEvent.findMany()
+     * 
+     * // Get first 10 WebhookEvents
+     * const webhookEvents = await prisma.webhookEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const webhookEventWithIdOnly = await prisma.webhookEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WebhookEventFindManyArgs>(args?: SelectSubset<T, WebhookEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WebhookEvent.
+     * @param {WebhookEventCreateArgs} args - Arguments to create a WebhookEvent.
+     * @example
+     * // Create one WebhookEvent
+     * const WebhookEvent = await prisma.webhookEvent.create({
+     *   data: {
+     *     // ... data to create a WebhookEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends WebhookEventCreateArgs>(args: SelectSubset<T, WebhookEventCreateArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WebhookEvents.
+     * @param {WebhookEventCreateManyArgs} args - Arguments to create many WebhookEvents.
+     * @example
+     * // Create many WebhookEvents
+     * const webhookEvent = await prisma.webhookEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WebhookEventCreateManyArgs>(args?: SelectSubset<T, WebhookEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WebhookEvents and returns the data saved in the database.
+     * @param {WebhookEventCreateManyAndReturnArgs} args - Arguments to create many WebhookEvents.
+     * @example
+     * // Create many WebhookEvents
+     * const webhookEvent = await prisma.webhookEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WebhookEvents and only return the `id`
+     * const webhookEventWithIdOnly = await prisma.webhookEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WebhookEventCreateManyAndReturnArgs>(args?: SelectSubset<T, WebhookEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WebhookEvent.
+     * @param {WebhookEventDeleteArgs} args - Arguments to delete one WebhookEvent.
+     * @example
+     * // Delete one WebhookEvent
+     * const WebhookEvent = await prisma.webhookEvent.delete({
+     *   where: {
+     *     // ... filter to delete one WebhookEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WebhookEventDeleteArgs>(args: SelectSubset<T, WebhookEventDeleteArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WebhookEvent.
+     * @param {WebhookEventUpdateArgs} args - Arguments to update one WebhookEvent.
+     * @example
+     * // Update one WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WebhookEventUpdateArgs>(args: SelectSubset<T, WebhookEventUpdateArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WebhookEvents.
+     * @param {WebhookEventDeleteManyArgs} args - Arguments to filter WebhookEvents to delete.
+     * @example
+     * // Delete a few WebhookEvents
+     * const { count } = await prisma.webhookEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WebhookEventDeleteManyArgs>(args?: SelectSubset<T, WebhookEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WebhookEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WebhookEvents
+     * const webhookEvent = await prisma.webhookEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WebhookEventUpdateManyArgs>(args: SelectSubset<T, WebhookEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WebhookEvents and returns the data updated in the database.
+     * @param {WebhookEventUpdateManyAndReturnArgs} args - Arguments to update many WebhookEvents.
+     * @example
+     * // Update many WebhookEvents
+     * const webhookEvent = await prisma.webhookEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WebhookEvents and only return the `id`
+     * const webhookEventWithIdOnly = await prisma.webhookEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WebhookEventUpdateManyAndReturnArgs>(args: SelectSubset<T, WebhookEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WebhookEvent.
+     * @param {WebhookEventUpsertArgs} args - Arguments to update or create a WebhookEvent.
+     * @example
+     * // Update or create a WebhookEvent
+     * const webhookEvent = await prisma.webhookEvent.upsert({
+     *   create: {
+     *     // ... data to create a WebhookEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WebhookEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WebhookEventUpsertArgs>(args: SelectSubset<T, WebhookEventUpsertArgs<ExtArgs>>): Prisma__WebhookEventClient<$Result.GetResult<Prisma.$WebhookEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WebhookEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventCountArgs} args - Arguments to filter WebhookEvents to count.
+     * @example
+     * // Count the number of WebhookEvents
+     * const count = await prisma.webhookEvent.count({
+     *   where: {
+     *     // ... the filter for the WebhookEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends WebhookEventCountArgs>(
+      args?: Subset<T, WebhookEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WebhookEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WebhookEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WebhookEventAggregateArgs>(args: Subset<T, WebhookEventAggregateArgs>): Prisma.PrismaPromise<GetWebhookEventAggregateType<T>>
+
+    /**
+     * Group by WebhookEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WebhookEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WebhookEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WebhookEventGroupByArgs['orderBy'] }
+        : { orderBy?: WebhookEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WebhookEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWebhookEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WebhookEvent model
+   */
+  readonly fields: WebhookEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WebhookEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WebhookEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WebhookEvent model
+   */
+  interface WebhookEventFieldRefs {
+    readonly id: FieldRef<"WebhookEvent", 'String'>
+    readonly provider: FieldRef<"WebhookEvent", 'String'>
+    readonly eventId: FieldRef<"WebhookEvent", 'String'>
+    readonly payload: FieldRef<"WebhookEvent", 'Json'>
+    readonly createdAt: FieldRef<"WebhookEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WebhookEvent findUnique
+   */
+  export type WebhookEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter, which WebhookEvent to fetch.
+     */
+    where: WebhookEventWhereUniqueInput
+  }
+
+  /**
+   * WebhookEvent findUniqueOrThrow
+   */
+  export type WebhookEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter, which WebhookEvent to fetch.
+     */
+    where: WebhookEventWhereUniqueInput
+  }
+
+  /**
+   * WebhookEvent findFirst
+   */
+  export type WebhookEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter, which WebhookEvent to fetch.
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebhookEvents to fetch.
+     */
+    orderBy?: WebhookEventOrderByWithRelationInput | WebhookEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WebhookEvents.
+     */
+    cursor?: WebhookEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebhookEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebhookEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WebhookEvents.
+     */
+    distinct?: WebhookEventScalarFieldEnum | WebhookEventScalarFieldEnum[]
+  }
+
+  /**
+   * WebhookEvent findFirstOrThrow
+   */
+  export type WebhookEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter, which WebhookEvent to fetch.
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebhookEvents to fetch.
+     */
+    orderBy?: WebhookEventOrderByWithRelationInput | WebhookEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WebhookEvents.
+     */
+    cursor?: WebhookEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebhookEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebhookEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WebhookEvents.
+     */
+    distinct?: WebhookEventScalarFieldEnum | WebhookEventScalarFieldEnum[]
+  }
+
+  /**
+   * WebhookEvent findMany
+   */
+  export type WebhookEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter, which WebhookEvents to fetch.
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WebhookEvents to fetch.
+     */
+    orderBy?: WebhookEventOrderByWithRelationInput | WebhookEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WebhookEvents.
+     */
+    cursor?: WebhookEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WebhookEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WebhookEvents.
+     */
+    skip?: number
+    distinct?: WebhookEventScalarFieldEnum | WebhookEventScalarFieldEnum[]
+  }
+
+  /**
+   * WebhookEvent create
+   */
+  export type WebhookEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * The data needed to create a WebhookEvent.
+     */
+    data: XOR<WebhookEventCreateInput, WebhookEventUncheckedCreateInput>
+  }
+
+  /**
+   * WebhookEvent createMany
+   */
+  export type WebhookEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WebhookEvents.
+     */
+    data: WebhookEventCreateManyInput | WebhookEventCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WebhookEvent createManyAndReturn
+   */
+  export type WebhookEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many WebhookEvents.
+     */
+    data: WebhookEventCreateManyInput | WebhookEventCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WebhookEvent update
+   */
+  export type WebhookEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * The data needed to update a WebhookEvent.
+     */
+    data: XOR<WebhookEventUpdateInput, WebhookEventUncheckedUpdateInput>
+    /**
+     * Choose, which WebhookEvent to update.
+     */
+    where: WebhookEventWhereUniqueInput
+  }
+
+  /**
+   * WebhookEvent updateMany
+   */
+  export type WebhookEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WebhookEvents.
+     */
+    data: XOR<WebhookEventUpdateManyMutationInput, WebhookEventUncheckedUpdateManyInput>
+    /**
+     * Filter which WebhookEvents to update
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * Limit how many WebhookEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WebhookEvent updateManyAndReturn
+   */
+  export type WebhookEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * The data used to update WebhookEvents.
+     */
+    data: XOR<WebhookEventUpdateManyMutationInput, WebhookEventUncheckedUpdateManyInput>
+    /**
+     * Filter which WebhookEvents to update
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * Limit how many WebhookEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WebhookEvent upsert
+   */
+  export type WebhookEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * The filter to search for the WebhookEvent to update in case it exists.
+     */
+    where: WebhookEventWhereUniqueInput
+    /**
+     * In case the WebhookEvent found by the `where` argument doesn't exist, create a new WebhookEvent with this data.
+     */
+    create: XOR<WebhookEventCreateInput, WebhookEventUncheckedCreateInput>
+    /**
+     * In case the WebhookEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WebhookEventUpdateInput, WebhookEventUncheckedUpdateInput>
+  }
+
+  /**
+   * WebhookEvent delete
+   */
+  export type WebhookEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+    /**
+     * Filter which WebhookEvent to delete.
+     */
+    where: WebhookEventWhereUniqueInput
+  }
+
+  /**
+   * WebhookEvent deleteMany
+   */
+  export type WebhookEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WebhookEvents to delete
+     */
+    where?: WebhookEventWhereInput
+    /**
+     * Limit how many WebhookEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WebhookEvent without action
+   */
+  export type WebhookEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WebhookEvent
+     */
+    select?: WebhookEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WebhookEvent
+     */
+    omit?: WebhookEventOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model OrphanPayment
+   */
+
+  export type AggregateOrphanPayment = {
+    _count: OrphanPaymentCountAggregateOutputType | null
+    _avg: OrphanPaymentAvgAggregateOutputType | null
+    _sum: OrphanPaymentSumAggregateOutputType | null
+    _min: OrphanPaymentMinAggregateOutputType | null
+    _max: OrphanPaymentMaxAggregateOutputType | null
+  }
+
+  export type OrphanPaymentAvgAggregateOutputType = {
+    amount: number | null
+  }
+
+  export type OrphanPaymentSumAggregateOutputType = {
+    amount: number | null
+  }
+
+  export type OrphanPaymentMinAggregateOutputType = {
+    id: string | null
+    reference: string | null
+    amount: number | null
+    currency: string | null
+    firstSeenAt: Date | null
+    reconciled: boolean | null
+    reconciledAt: Date | null
+    resolutionNote: string | null
+  }
+
+  export type OrphanPaymentMaxAggregateOutputType = {
+    id: string | null
+    reference: string | null
+    amount: number | null
+    currency: string | null
+    firstSeenAt: Date | null
+    reconciled: boolean | null
+    reconciledAt: Date | null
+    resolutionNote: string | null
+  }
+
+  export type OrphanPaymentCountAggregateOutputType = {
+    id: number
+    reference: number
+    amount: number
+    currency: number
+    payload: number
+    firstSeenAt: number
+    reconciled: number
+    reconciledAt: number
+    resolutionNote: number
+    _all: number
+  }
+
+
+  export type OrphanPaymentAvgAggregateInputType = {
+    amount?: true
+  }
+
+  export type OrphanPaymentSumAggregateInputType = {
+    amount?: true
+  }
+
+  export type OrphanPaymentMinAggregateInputType = {
+    id?: true
+    reference?: true
+    amount?: true
+    currency?: true
+    firstSeenAt?: true
+    reconciled?: true
+    reconciledAt?: true
+    resolutionNote?: true
+  }
+
+  export type OrphanPaymentMaxAggregateInputType = {
+    id?: true
+    reference?: true
+    amount?: true
+    currency?: true
+    firstSeenAt?: true
+    reconciled?: true
+    reconciledAt?: true
+    resolutionNote?: true
+  }
+
+  export type OrphanPaymentCountAggregateInputType = {
+    id?: true
+    reference?: true
+    amount?: true
+    currency?: true
+    payload?: true
+    firstSeenAt?: true
+    reconciled?: true
+    reconciledAt?: true
+    resolutionNote?: true
+    _all?: true
+  }
+
+  export type OrphanPaymentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OrphanPayment to aggregate.
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrphanPayments to fetch.
+     */
+    orderBy?: OrphanPaymentOrderByWithRelationInput | OrphanPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OrphanPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrphanPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrphanPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OrphanPayments
+    **/
+    _count?: true | OrphanPaymentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: OrphanPaymentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: OrphanPaymentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OrphanPaymentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OrphanPaymentMaxAggregateInputType
+  }
+
+  export type GetOrphanPaymentAggregateType<T extends OrphanPaymentAggregateArgs> = {
+        [P in keyof T & keyof AggregateOrphanPayment]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOrphanPayment[P]>
+      : GetScalarType<T[P], AggregateOrphanPayment[P]>
+  }
+
+
+
+
+  export type OrphanPaymentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrphanPaymentWhereInput
+    orderBy?: OrphanPaymentOrderByWithAggregationInput | OrphanPaymentOrderByWithAggregationInput[]
+    by: OrphanPaymentScalarFieldEnum[] | OrphanPaymentScalarFieldEnum
+    having?: OrphanPaymentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OrphanPaymentCountAggregateInputType | true
+    _avg?: OrphanPaymentAvgAggregateInputType
+    _sum?: OrphanPaymentSumAggregateInputType
+    _min?: OrphanPaymentMinAggregateInputType
+    _max?: OrphanPaymentMaxAggregateInputType
+  }
+
+  export type OrphanPaymentGroupByOutputType = {
+    id: string
+    reference: string
+    amount: number
+    currency: string
+    payload: JsonValue
+    firstSeenAt: Date
+    reconciled: boolean
+    reconciledAt: Date | null
+    resolutionNote: string | null
+    _count: OrphanPaymentCountAggregateOutputType | null
+    _avg: OrphanPaymentAvgAggregateOutputType | null
+    _sum: OrphanPaymentSumAggregateOutputType | null
+    _min: OrphanPaymentMinAggregateOutputType | null
+    _max: OrphanPaymentMaxAggregateOutputType | null
+  }
+
+  type GetOrphanPaymentGroupByPayload<T extends OrphanPaymentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OrphanPaymentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OrphanPaymentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OrphanPaymentGroupByOutputType[P]>
+            : GetScalarType<T[P], OrphanPaymentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OrphanPaymentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    reference?: boolean
+    amount?: boolean
+    currency?: boolean
+    payload?: boolean
+    firstSeenAt?: boolean
+    reconciled?: boolean
+    reconciledAt?: boolean
+    resolutionNote?: boolean
+  }, ExtArgs["result"]["orphanPayment"]>
+
+  export type OrphanPaymentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    reference?: boolean
+    amount?: boolean
+    currency?: boolean
+    payload?: boolean
+    firstSeenAt?: boolean
+    reconciled?: boolean
+    reconciledAt?: boolean
+    resolutionNote?: boolean
+  }, ExtArgs["result"]["orphanPayment"]>
+
+  export type OrphanPaymentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    reference?: boolean
+    amount?: boolean
+    currency?: boolean
+    payload?: boolean
+    firstSeenAt?: boolean
+    reconciled?: boolean
+    reconciledAt?: boolean
+    resolutionNote?: boolean
+  }, ExtArgs["result"]["orphanPayment"]>
+
+  export type OrphanPaymentSelectScalar = {
+    id?: boolean
+    reference?: boolean
+    amount?: boolean
+    currency?: boolean
+    payload?: boolean
+    firstSeenAt?: boolean
+    reconciled?: boolean
+    reconciledAt?: boolean
+    resolutionNote?: boolean
+  }
+
+  export type OrphanPaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "reference" | "amount" | "currency" | "payload" | "firstSeenAt" | "reconciled" | "reconciledAt" | "resolutionNote", ExtArgs["result"]["orphanPayment"]>
+
+  export type $OrphanPaymentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OrphanPayment"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      reference: string
+      amount: number
+      currency: string
+      payload: Prisma.JsonValue
+      firstSeenAt: Date
+      reconciled: boolean
+      reconciledAt: Date | null
+      resolutionNote: string | null
+    }, ExtArgs["result"]["orphanPayment"]>
+    composites: {}
+  }
+
+  type OrphanPaymentGetPayload<S extends boolean | null | undefined | OrphanPaymentDefaultArgs> = $Result.GetResult<Prisma.$OrphanPaymentPayload, S>
+
+  type OrphanPaymentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OrphanPaymentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OrphanPaymentCountAggregateInputType | true
+    }
+
+  export interface OrphanPaymentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OrphanPayment'], meta: { name: 'OrphanPayment' } }
+    /**
+     * Find zero or one OrphanPayment that matches the filter.
+     * @param {OrphanPaymentFindUniqueArgs} args - Arguments to find a OrphanPayment
+     * @example
+     * // Get one OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OrphanPaymentFindUniqueArgs>(args: SelectSubset<T, OrphanPaymentFindUniqueArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OrphanPayment that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OrphanPaymentFindUniqueOrThrowArgs} args - Arguments to find a OrphanPayment
+     * @example
+     * // Get one OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OrphanPaymentFindUniqueOrThrowArgs>(args: SelectSubset<T, OrphanPaymentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OrphanPayment that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentFindFirstArgs} args - Arguments to find a OrphanPayment
+     * @example
+     * // Get one OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OrphanPaymentFindFirstArgs>(args?: SelectSubset<T, OrphanPaymentFindFirstArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OrphanPayment that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentFindFirstOrThrowArgs} args - Arguments to find a OrphanPayment
+     * @example
+     * // Get one OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OrphanPaymentFindFirstOrThrowArgs>(args?: SelectSubset<T, OrphanPaymentFindFirstOrThrowArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OrphanPayments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OrphanPayments
+     * const orphanPayments = await prisma.orphanPayment.findMany()
+     * 
+     * // Get first 10 OrphanPayments
+     * const orphanPayments = await prisma.orphanPayment.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const orphanPaymentWithIdOnly = await prisma.orphanPayment.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OrphanPaymentFindManyArgs>(args?: SelectSubset<T, OrphanPaymentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OrphanPayment.
+     * @param {OrphanPaymentCreateArgs} args - Arguments to create a OrphanPayment.
+     * @example
+     * // Create one OrphanPayment
+     * const OrphanPayment = await prisma.orphanPayment.create({
+     *   data: {
+     *     // ... data to create a OrphanPayment
+     *   }
+     * })
+     * 
+     */
+    create<T extends OrphanPaymentCreateArgs>(args: SelectSubset<T, OrphanPaymentCreateArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OrphanPayments.
+     * @param {OrphanPaymentCreateManyArgs} args - Arguments to create many OrphanPayments.
+     * @example
+     * // Create many OrphanPayments
+     * const orphanPayment = await prisma.orphanPayment.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OrphanPaymentCreateManyArgs>(args?: SelectSubset<T, OrphanPaymentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many OrphanPayments and returns the data saved in the database.
+     * @param {OrphanPaymentCreateManyAndReturnArgs} args - Arguments to create many OrphanPayments.
+     * @example
+     * // Create many OrphanPayments
+     * const orphanPayment = await prisma.orphanPayment.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many OrphanPayments and only return the `id`
+     * const orphanPaymentWithIdOnly = await prisma.orphanPayment.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends OrphanPaymentCreateManyAndReturnArgs>(args?: SelectSubset<T, OrphanPaymentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a OrphanPayment.
+     * @param {OrphanPaymentDeleteArgs} args - Arguments to delete one OrphanPayment.
+     * @example
+     * // Delete one OrphanPayment
+     * const OrphanPayment = await prisma.orphanPayment.delete({
+     *   where: {
+     *     // ... filter to delete one OrphanPayment
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OrphanPaymentDeleteArgs>(args: SelectSubset<T, OrphanPaymentDeleteArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OrphanPayment.
+     * @param {OrphanPaymentUpdateArgs} args - Arguments to update one OrphanPayment.
+     * @example
+     * // Update one OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OrphanPaymentUpdateArgs>(args: SelectSubset<T, OrphanPaymentUpdateArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OrphanPayments.
+     * @param {OrphanPaymentDeleteManyArgs} args - Arguments to filter OrphanPayments to delete.
+     * @example
+     * // Delete a few OrphanPayments
+     * const { count } = await prisma.orphanPayment.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OrphanPaymentDeleteManyArgs>(args?: SelectSubset<T, OrphanPaymentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OrphanPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OrphanPayments
+     * const orphanPayment = await prisma.orphanPayment.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OrphanPaymentUpdateManyArgs>(args: SelectSubset<T, OrphanPaymentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OrphanPayments and returns the data updated in the database.
+     * @param {OrphanPaymentUpdateManyAndReturnArgs} args - Arguments to update many OrphanPayments.
+     * @example
+     * // Update many OrphanPayments
+     * const orphanPayment = await prisma.orphanPayment.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more OrphanPayments and only return the `id`
+     * const orphanPaymentWithIdOnly = await prisma.orphanPayment.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends OrphanPaymentUpdateManyAndReturnArgs>(args: SelectSubset<T, OrphanPaymentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one OrphanPayment.
+     * @param {OrphanPaymentUpsertArgs} args - Arguments to update or create a OrphanPayment.
+     * @example
+     * // Update or create a OrphanPayment
+     * const orphanPayment = await prisma.orphanPayment.upsert({
+     *   create: {
+     *     // ... data to create a OrphanPayment
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OrphanPayment we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OrphanPaymentUpsertArgs>(args: SelectSubset<T, OrphanPaymentUpsertArgs<ExtArgs>>): Prisma__OrphanPaymentClient<$Result.GetResult<Prisma.$OrphanPaymentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of OrphanPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentCountArgs} args - Arguments to filter OrphanPayments to count.
+     * @example
+     * // Count the number of OrphanPayments
+     * const count = await prisma.orphanPayment.count({
+     *   where: {
+     *     // ... the filter for the OrphanPayments we want to count
+     *   }
+     * })
+    **/
+    count<T extends OrphanPaymentCountArgs>(
+      args?: Subset<T, OrphanPaymentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OrphanPaymentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OrphanPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OrphanPaymentAggregateArgs>(args: Subset<T, OrphanPaymentAggregateArgs>): Prisma.PrismaPromise<GetOrphanPaymentAggregateType<T>>
+
+    /**
+     * Group by OrphanPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OrphanPaymentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OrphanPaymentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OrphanPaymentGroupByArgs['orderBy'] }
+        : { orderBy?: OrphanPaymentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OrphanPaymentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOrphanPaymentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OrphanPayment model
+   */
+  readonly fields: OrphanPaymentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OrphanPayment.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OrphanPaymentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OrphanPayment model
+   */
+  interface OrphanPaymentFieldRefs {
+    readonly id: FieldRef<"OrphanPayment", 'String'>
+    readonly reference: FieldRef<"OrphanPayment", 'String'>
+    readonly amount: FieldRef<"OrphanPayment", 'Int'>
+    readonly currency: FieldRef<"OrphanPayment", 'String'>
+    readonly payload: FieldRef<"OrphanPayment", 'Json'>
+    readonly firstSeenAt: FieldRef<"OrphanPayment", 'DateTime'>
+    readonly reconciled: FieldRef<"OrphanPayment", 'Boolean'>
+    readonly reconciledAt: FieldRef<"OrphanPayment", 'DateTime'>
+    readonly resolutionNote: FieldRef<"OrphanPayment", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OrphanPayment findUnique
+   */
+  export type OrphanPaymentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter, which OrphanPayment to fetch.
+     */
+    where: OrphanPaymentWhereUniqueInput
+  }
+
+  /**
+   * OrphanPayment findUniqueOrThrow
+   */
+  export type OrphanPaymentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter, which OrphanPayment to fetch.
+     */
+    where: OrphanPaymentWhereUniqueInput
+  }
+
+  /**
+   * OrphanPayment findFirst
+   */
+  export type OrphanPaymentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter, which OrphanPayment to fetch.
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrphanPayments to fetch.
+     */
+    orderBy?: OrphanPaymentOrderByWithRelationInput | OrphanPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OrphanPayments.
+     */
+    cursor?: OrphanPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrphanPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrphanPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OrphanPayments.
+     */
+    distinct?: OrphanPaymentScalarFieldEnum | OrphanPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * OrphanPayment findFirstOrThrow
+   */
+  export type OrphanPaymentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter, which OrphanPayment to fetch.
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrphanPayments to fetch.
+     */
+    orderBy?: OrphanPaymentOrderByWithRelationInput | OrphanPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OrphanPayments.
+     */
+    cursor?: OrphanPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrphanPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrphanPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OrphanPayments.
+     */
+    distinct?: OrphanPaymentScalarFieldEnum | OrphanPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * OrphanPayment findMany
+   */
+  export type OrphanPaymentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter, which OrphanPayments to fetch.
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OrphanPayments to fetch.
+     */
+    orderBy?: OrphanPaymentOrderByWithRelationInput | OrphanPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OrphanPayments.
+     */
+    cursor?: OrphanPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OrphanPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OrphanPayments.
+     */
+    skip?: number
+    distinct?: OrphanPaymentScalarFieldEnum | OrphanPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * OrphanPayment create
+   */
+  export type OrphanPaymentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * The data needed to create a OrphanPayment.
+     */
+    data: XOR<OrphanPaymentCreateInput, OrphanPaymentUncheckedCreateInput>
+  }
+
+  /**
+   * OrphanPayment createMany
+   */
+  export type OrphanPaymentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OrphanPayments.
+     */
+    data: OrphanPaymentCreateManyInput | OrphanPaymentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OrphanPayment createManyAndReturn
+   */
+  export type OrphanPaymentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * The data used to create many OrphanPayments.
+     */
+    data: OrphanPaymentCreateManyInput | OrphanPaymentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * OrphanPayment update
+   */
+  export type OrphanPaymentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * The data needed to update a OrphanPayment.
+     */
+    data: XOR<OrphanPaymentUpdateInput, OrphanPaymentUncheckedUpdateInput>
+    /**
+     * Choose, which OrphanPayment to update.
+     */
+    where: OrphanPaymentWhereUniqueInput
+  }
+
+  /**
+   * OrphanPayment updateMany
+   */
+  export type OrphanPaymentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OrphanPayments.
+     */
+    data: XOR<OrphanPaymentUpdateManyMutationInput, OrphanPaymentUncheckedUpdateManyInput>
+    /**
+     * Filter which OrphanPayments to update
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * Limit how many OrphanPayments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OrphanPayment updateManyAndReturn
+   */
+  export type OrphanPaymentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * The data used to update OrphanPayments.
+     */
+    data: XOR<OrphanPaymentUpdateManyMutationInput, OrphanPaymentUncheckedUpdateManyInput>
+    /**
+     * Filter which OrphanPayments to update
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * Limit how many OrphanPayments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OrphanPayment upsert
+   */
+  export type OrphanPaymentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * The filter to search for the OrphanPayment to update in case it exists.
+     */
+    where: OrphanPaymentWhereUniqueInput
+    /**
+     * In case the OrphanPayment found by the `where` argument doesn't exist, create a new OrphanPayment with this data.
+     */
+    create: XOR<OrphanPaymentCreateInput, OrphanPaymentUncheckedCreateInput>
+    /**
+     * In case the OrphanPayment was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OrphanPaymentUpdateInput, OrphanPaymentUncheckedUpdateInput>
+  }
+
+  /**
+   * OrphanPayment delete
+   */
+  export type OrphanPaymentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+    /**
+     * Filter which OrphanPayment to delete.
+     */
+    where: OrphanPaymentWhereUniqueInput
+  }
+
+  /**
+   * OrphanPayment deleteMany
+   */
+  export type OrphanPaymentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OrphanPayments to delete
+     */
+    where?: OrphanPaymentWhereInput
+    /**
+     * Limit how many OrphanPayments to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OrphanPayment without action
+   */
+  export type OrphanPaymentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OrphanPayment
+     */
+    select?: OrphanPaymentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OrphanPayment
+     */
+    omit?: OrphanPaymentOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model HeroSlide
    */
 
@@ -20155,6 +22510,9 @@ export namespace Prisma {
     totalAmount: 'totalAmount',
     totalNGN: 'totalNGN',
     paymentMethod: 'paymentMethod',
+    paymentReference: 'paymentReference',
+    paymentProviderId: 'paymentProviderId',
+    paymentVerified: 'paymentVerified',
     createdAt: 'createdAt',
     customerId: 'customerId',
     guestInfo: 'guestInfo',
@@ -20162,7 +22520,11 @@ export namespace Prisma {
     channel: 'channel',
     deliveryOptionId: 'deliveryOptionId',
     deliveryFee: 'deliveryFee',
-    deliveryDetails: 'deliveryDetails'
+    deliveryDetails: 'deliveryDetails',
+    refundedAt: 'refundedAt',
+    refundReason: 'refundReason',
+    refundTransactionId: 'refundTransactionId',
+    refundStatus: 'refundStatus'
   };
 
   export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
@@ -20221,6 +22583,32 @@ export namespace Prisma {
   export type ReceiptEmailStatusScalarFieldEnum = (typeof ReceiptEmailStatusScalarFieldEnum)[keyof typeof ReceiptEmailStatusScalarFieldEnum]
 
 
+  export const WebhookEventScalarFieldEnum: {
+    id: 'id',
+    provider: 'provider',
+    eventId: 'eventId',
+    payload: 'payload',
+    createdAt: 'createdAt'
+  };
+
+  export type WebhookEventScalarFieldEnum = (typeof WebhookEventScalarFieldEnum)[keyof typeof WebhookEventScalarFieldEnum]
+
+
+  export const OrphanPaymentScalarFieldEnum: {
+    id: 'id',
+    reference: 'reference',
+    amount: 'amount',
+    currency: 'currency',
+    payload: 'payload',
+    firstSeenAt: 'firstSeenAt',
+    reconciled: 'reconciled',
+    reconciledAt: 'reconciledAt',
+    resolutionNote: 'resolutionNote'
+  };
+
+  export type OrphanPaymentScalarFieldEnum = (typeof OrphanPaymentScalarFieldEnum)[keyof typeof OrphanPaymentScalarFieldEnum]
+
+
   export const HeroSlideScalarFieldEnum: {
     id: 'id',
     imageUrl: 'imageUrl',
@@ -20272,6 +22660,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -20476,6 +22871,20 @@ export namespace Prisma {
    * Reference to a field of type 'OrderChannel[]'
    */
   export type ListEnumOrderChannelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderChannel[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'RefundStatus'
+   */
+  export type EnumRefundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'RefundStatus[]'
+   */
+  export type ListEnumRefundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundStatus[]'>
     
   /**
    * Deep Input Types
@@ -21136,6 +23545,9 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
+    paymentReference?: StringNullableFilter<"Order"> | string | null
+    paymentProviderId?: StringNullableFilter<"Order"> | string | null
+    paymentVerified?: BoolFilter<"Order"> | boolean
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
@@ -21144,6 +23556,10 @@ export namespace Prisma {
     deliveryOptionId?: StringNullableFilter<"Order"> | string | null
     deliveryFee?: FloatNullableFilter<"Order"> | number | null
     deliveryDetails?: JsonNullableFilter<"Order">
+    refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    refundReason?: StringNullableFilter<"Order"> | string | null
+    refundTransactionId?: StringNullableFilter<"Order"> | string | null
+    refundStatus?: EnumRefundStatusNullableFilter<"Order"> | $Enums.RefundStatus | null
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
@@ -21159,6 +23575,9 @@ export namespace Prisma {
     totalAmount?: SortOrder
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
+    paymentReference?: SortOrderInput | SortOrder
+    paymentProviderId?: SortOrderInput | SortOrder
+    paymentVerified?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrderInput | SortOrder
     guestInfo?: SortOrderInput | SortOrder
@@ -21167,6 +23586,10 @@ export namespace Prisma {
     deliveryOptionId?: SortOrderInput | SortOrder
     deliveryFee?: SortOrderInput | SortOrder
     deliveryDetails?: SortOrderInput | SortOrder
+    refundedAt?: SortOrderInput | SortOrder
+    refundReason?: SortOrderInput | SortOrder
+    refundTransactionId?: SortOrderInput | SortOrder
+    refundStatus?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
     staff?: StaffOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
@@ -21177,6 +23600,7 @@ export namespace Prisma {
 
   export type OrderWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    paymentReference?: string
     AND?: OrderWhereInput | OrderWhereInput[]
     OR?: OrderWhereInput[]
     NOT?: OrderWhereInput | OrderWhereInput[]
@@ -21185,6 +23609,8 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
+    paymentProviderId?: StringNullableFilter<"Order"> | string | null
+    paymentVerified?: BoolFilter<"Order"> | boolean
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
@@ -21193,13 +23619,17 @@ export namespace Prisma {
     deliveryOptionId?: StringNullableFilter<"Order"> | string | null
     deliveryFee?: FloatNullableFilter<"Order"> | number | null
     deliveryDetails?: JsonNullableFilter<"Order">
+    refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    refundReason?: StringNullableFilter<"Order"> | string | null
+    refundTransactionId?: StringNullableFilter<"Order"> | string | null
+    refundStatus?: EnumRefundStatusNullableFilter<"Order"> | $Enums.RefundStatus | null
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     staff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
     items?: OrderItemListRelationFilter
     offlineSale?: XOR<OfflineSaleNullableScalarRelationFilter, OfflineSaleWhereInput> | null
     receiptEmailStatus?: XOR<ReceiptEmailStatusNullableScalarRelationFilter, ReceiptEmailStatusWhereInput> | null
     deliveryOption?: XOR<DeliveryOptionNullableScalarRelationFilter, DeliveryOptionWhereInput> | null
-  }, "id">
+  }, "id" | "paymentReference">
 
   export type OrderOrderByWithAggregationInput = {
     id?: SortOrder
@@ -21208,6 +23638,9 @@ export namespace Prisma {
     totalAmount?: SortOrder
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
+    paymentReference?: SortOrderInput | SortOrder
+    paymentProviderId?: SortOrderInput | SortOrder
+    paymentVerified?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrderInput | SortOrder
     guestInfo?: SortOrderInput | SortOrder
@@ -21216,6 +23649,10 @@ export namespace Prisma {
     deliveryOptionId?: SortOrderInput | SortOrder
     deliveryFee?: SortOrderInput | SortOrder
     deliveryDetails?: SortOrderInput | SortOrder
+    refundedAt?: SortOrderInput | SortOrder
+    refundReason?: SortOrderInput | SortOrder
+    refundTransactionId?: SortOrderInput | SortOrder
+    refundStatus?: SortOrderInput | SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
     _max?: OrderMaxOrderByAggregateInput
@@ -21233,6 +23670,9 @@ export namespace Prisma {
     totalAmount?: FloatWithAggregatesFilter<"Order"> | number
     totalNGN?: IntWithAggregatesFilter<"Order"> | number
     paymentMethod?: StringWithAggregatesFilter<"Order"> | string
+    paymentReference?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    paymentProviderId?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    paymentVerified?: BoolWithAggregatesFilter<"Order"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
     customerId?: StringNullableWithAggregatesFilter<"Order"> | string | null
     guestInfo?: JsonNullableWithAggregatesFilter<"Order">
@@ -21241,6 +23681,10 @@ export namespace Prisma {
     deliveryOptionId?: StringNullableWithAggregatesFilter<"Order"> | string | null
     deliveryFee?: FloatNullableWithAggregatesFilter<"Order"> | number | null
     deliveryDetails?: JsonNullableWithAggregatesFilter<"Order">
+    refundedAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+    refundReason?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    refundTransactionId?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    refundStatus?: EnumRefundStatusNullableWithAggregatesFilter<"Order"> | $Enums.RefundStatus | null
   }
 
   export type OrderItemWhereInput = {
@@ -21520,6 +23964,132 @@ export namespace Prisma {
     sent?: BoolWithAggregatesFilter<"ReceiptEmailStatus"> | boolean
     deliveryFee?: FloatNullableWithAggregatesFilter<"ReceiptEmailStatus"> | number | null
     updatedAt?: DateTimeWithAggregatesFilter<"ReceiptEmailStatus"> | Date | string
+  }
+
+  export type WebhookEventWhereInput = {
+    AND?: WebhookEventWhereInput | WebhookEventWhereInput[]
+    OR?: WebhookEventWhereInput[]
+    NOT?: WebhookEventWhereInput | WebhookEventWhereInput[]
+    id?: StringFilter<"WebhookEvent"> | string
+    provider?: StringFilter<"WebhookEvent"> | string
+    eventId?: StringFilter<"WebhookEvent"> | string
+    payload?: JsonFilter<"WebhookEvent">
+    createdAt?: DateTimeFilter<"WebhookEvent"> | Date | string
+  }
+
+  export type WebhookEventOrderByWithRelationInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    eventId?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WebhookEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    eventId?: string
+    AND?: WebhookEventWhereInput | WebhookEventWhereInput[]
+    OR?: WebhookEventWhereInput[]
+    NOT?: WebhookEventWhereInput | WebhookEventWhereInput[]
+    provider?: StringFilter<"WebhookEvent"> | string
+    payload?: JsonFilter<"WebhookEvent">
+    createdAt?: DateTimeFilter<"WebhookEvent"> | Date | string
+  }, "id" | "eventId">
+
+  export type WebhookEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    eventId?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+    _count?: WebhookEventCountOrderByAggregateInput
+    _max?: WebhookEventMaxOrderByAggregateInput
+    _min?: WebhookEventMinOrderByAggregateInput
+  }
+
+  export type WebhookEventScalarWhereWithAggregatesInput = {
+    AND?: WebhookEventScalarWhereWithAggregatesInput | WebhookEventScalarWhereWithAggregatesInput[]
+    OR?: WebhookEventScalarWhereWithAggregatesInput[]
+    NOT?: WebhookEventScalarWhereWithAggregatesInput | WebhookEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WebhookEvent"> | string
+    provider?: StringWithAggregatesFilter<"WebhookEvent"> | string
+    eventId?: StringWithAggregatesFilter<"WebhookEvent"> | string
+    payload?: JsonWithAggregatesFilter<"WebhookEvent">
+    createdAt?: DateTimeWithAggregatesFilter<"WebhookEvent"> | Date | string
+  }
+
+  export type OrphanPaymentWhereInput = {
+    AND?: OrphanPaymentWhereInput | OrphanPaymentWhereInput[]
+    OR?: OrphanPaymentWhereInput[]
+    NOT?: OrphanPaymentWhereInput | OrphanPaymentWhereInput[]
+    id?: StringFilter<"OrphanPayment"> | string
+    reference?: StringFilter<"OrphanPayment"> | string
+    amount?: IntFilter<"OrphanPayment"> | number
+    currency?: StringFilter<"OrphanPayment"> | string
+    payload?: JsonFilter<"OrphanPayment">
+    firstSeenAt?: DateTimeFilter<"OrphanPayment"> | Date | string
+    reconciled?: BoolFilter<"OrphanPayment"> | boolean
+    reconciledAt?: DateTimeNullableFilter<"OrphanPayment"> | Date | string | null
+    resolutionNote?: StringNullableFilter<"OrphanPayment"> | string | null
+  }
+
+  export type OrphanPaymentOrderByWithRelationInput = {
+    id?: SortOrder
+    reference?: SortOrder
+    amount?: SortOrder
+    currency?: SortOrder
+    payload?: SortOrder
+    firstSeenAt?: SortOrder
+    reconciled?: SortOrder
+    reconciledAt?: SortOrderInput | SortOrder
+    resolutionNote?: SortOrderInput | SortOrder
+  }
+
+  export type OrphanPaymentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    reference?: string
+    AND?: OrphanPaymentWhereInput | OrphanPaymentWhereInput[]
+    OR?: OrphanPaymentWhereInput[]
+    NOT?: OrphanPaymentWhereInput | OrphanPaymentWhereInput[]
+    amount?: IntFilter<"OrphanPayment"> | number
+    currency?: StringFilter<"OrphanPayment"> | string
+    payload?: JsonFilter<"OrphanPayment">
+    firstSeenAt?: DateTimeFilter<"OrphanPayment"> | Date | string
+    reconciled?: BoolFilter<"OrphanPayment"> | boolean
+    reconciledAt?: DateTimeNullableFilter<"OrphanPayment"> | Date | string | null
+    resolutionNote?: StringNullableFilter<"OrphanPayment"> | string | null
+  }, "id" | "reference">
+
+  export type OrphanPaymentOrderByWithAggregationInput = {
+    id?: SortOrder
+    reference?: SortOrder
+    amount?: SortOrder
+    currency?: SortOrder
+    payload?: SortOrder
+    firstSeenAt?: SortOrder
+    reconciled?: SortOrder
+    reconciledAt?: SortOrderInput | SortOrder
+    resolutionNote?: SortOrderInput | SortOrder
+    _count?: OrphanPaymentCountOrderByAggregateInput
+    _avg?: OrphanPaymentAvgOrderByAggregateInput
+    _max?: OrphanPaymentMaxOrderByAggregateInput
+    _min?: OrphanPaymentMinOrderByAggregateInput
+    _sum?: OrphanPaymentSumOrderByAggregateInput
+  }
+
+  export type OrphanPaymentScalarWhereWithAggregatesInput = {
+    AND?: OrphanPaymentScalarWhereWithAggregatesInput | OrphanPaymentScalarWhereWithAggregatesInput[]
+    OR?: OrphanPaymentScalarWhereWithAggregatesInput[]
+    NOT?: OrphanPaymentScalarWhereWithAggregatesInput | OrphanPaymentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OrphanPayment"> | string
+    reference?: StringWithAggregatesFilter<"OrphanPayment"> | string
+    amount?: IntWithAggregatesFilter<"OrphanPayment"> | number
+    currency?: StringWithAggregatesFilter<"OrphanPayment"> | string
+    payload?: JsonWithAggregatesFilter<"OrphanPayment">
+    firstSeenAt?: DateTimeWithAggregatesFilter<"OrphanPayment"> | Date | string
+    reconciled?: BoolWithAggregatesFilter<"OrphanPayment"> | boolean
+    reconciledAt?: DateTimeNullableWithAggregatesFilter<"OrphanPayment"> | Date | string | null
+    resolutionNote?: StringNullableWithAggregatesFilter<"OrphanPayment"> | string | null
   }
 
   export type HeroSlideWhereInput = {
@@ -22462,11 +25032,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -22482,6 +25059,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -22490,6 +25070,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
@@ -22502,11 +25086,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -22522,6 +25113,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -22530,6 +25124,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
@@ -22542,6 +25140,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -22550,6 +25151,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -22559,11 +25164,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -22573,6 +25185,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -22581,6 +25196,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
   }
 
   export type OrderItemCreateInput = {
@@ -22861,6 +25480,146 @@ export namespace Prisma {
     sent?: BoolFieldUpdateOperationsInput | boolean
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebhookEventCreateInput = {
+    id?: string
+    provider: string
+    eventId: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type WebhookEventUncheckedCreateInput = {
+    id?: string
+    provider: string
+    eventId: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type WebhookEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebhookEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebhookEventCreateManyInput = {
+    id?: string
+    provider: string
+    eventId: string
+    payload: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type WebhookEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WebhookEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrphanPaymentCreateInput = {
+    id?: string
+    reference: string
+    amount: number
+    currency: string
+    payload: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: Date | string
+    reconciled?: boolean
+    reconciledAt?: Date | string | null
+    resolutionNote?: string | null
+  }
+
+  export type OrphanPaymentUncheckedCreateInput = {
+    id?: string
+    reference: string
+    amount: number
+    currency: string
+    payload: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: Date | string
+    reconciled?: boolean
+    reconciledAt?: Date | string | null
+    resolutionNote?: string | null
+  }
+
+  export type OrphanPaymentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reference?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reconciled?: BoolFieldUpdateOperationsInput | boolean
+    reconciledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resolutionNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OrphanPaymentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reference?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reconciled?: BoolFieldUpdateOperationsInput | boolean
+    reconciledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resolutionNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OrphanPaymentCreateManyInput = {
+    id?: string
+    reference: string
+    amount: number
+    currency: string
+    payload: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: Date | string
+    reconciled?: boolean
+    reconciledAt?: Date | string | null
+    resolutionNote?: string | null
+  }
+
+  export type OrphanPaymentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reference?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reconciled?: BoolFieldUpdateOperationsInput | boolean
+    reconciledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resolutionNote?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OrphanPaymentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reference?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    payload?: JsonNullValueInput | InputJsonValue
+    firstSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reconciled?: BoolFieldUpdateOperationsInput | boolean
+    reconciledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resolutionNote?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type HeroSlideCreateInput = {
@@ -23851,6 +26610,13 @@ export namespace Prisma {
     not?: NestedEnumOrderChannelFilter<$PrismaModel> | $Enums.OrderChannel
   }
 
+  export type EnumRefundStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RefundStatus | EnumRefundStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRefundStatusNullableFilter<$PrismaModel> | $Enums.RefundStatus | null
+  }
+
   export type CustomerNullableScalarRelationFilter = {
     is?: CustomerWhereInput | null
     isNot?: CustomerWhereInput | null
@@ -23883,6 +26649,9 @@ export namespace Prisma {
     totalAmount?: SortOrder
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
+    paymentReference?: SortOrder
+    paymentProviderId?: SortOrder
+    paymentVerified?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     guestInfo?: SortOrder
@@ -23891,6 +26660,10 @@ export namespace Prisma {
     deliveryOptionId?: SortOrder
     deliveryFee?: SortOrder
     deliveryDetails?: SortOrder
+    refundedAt?: SortOrder
+    refundReason?: SortOrder
+    refundTransactionId?: SortOrder
+    refundStatus?: SortOrder
   }
 
   export type OrderAvgOrderByAggregateInput = {
@@ -23906,12 +26679,19 @@ export namespace Prisma {
     totalAmount?: SortOrder
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
+    paymentReference?: SortOrder
+    paymentProviderId?: SortOrder
+    paymentVerified?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
     channel?: SortOrder
     deliveryOptionId?: SortOrder
     deliveryFee?: SortOrder
+    refundedAt?: SortOrder
+    refundReason?: SortOrder
+    refundTransactionId?: SortOrder
+    refundStatus?: SortOrder
   }
 
   export type OrderMinOrderByAggregateInput = {
@@ -23921,12 +26701,19 @@ export namespace Prisma {
     totalAmount?: SortOrder
     totalNGN?: SortOrder
     paymentMethod?: SortOrder
+    paymentReference?: SortOrder
+    paymentProviderId?: SortOrder
+    paymentVerified?: SortOrder
     createdAt?: SortOrder
     customerId?: SortOrder
     staffId?: SortOrder
     channel?: SortOrder
     deliveryOptionId?: SortOrder
     deliveryFee?: SortOrder
+    refundedAt?: SortOrder
+    refundReason?: SortOrder
+    refundTransactionId?: SortOrder
+    refundStatus?: SortOrder
   }
 
   export type OrderSumOrderByAggregateInput = {
@@ -23963,6 +26750,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOrderChannelFilter<$PrismaModel>
     _max?: NestedEnumOrderChannelFilter<$PrismaModel>
+  }
+
+  export type EnumRefundStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RefundStatus | EnumRefundStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRefundStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.RefundStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRefundStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumRefundStatusNullableFilter<$PrismaModel>
   }
 
   export type OrderScalarRelationFilter = {
@@ -24126,6 +26923,119 @@ export namespace Prisma {
   export type ReceiptEmailStatusSumOrderByAggregateInput = {
     attempts?: SortOrder
     deliveryFee?: SortOrder
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type WebhookEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    eventId?: SortOrder
+    payload?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WebhookEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    eventId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WebhookEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    eventId?: SortOrder
+    createdAt?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
+  export type OrphanPaymentCountOrderByAggregateInput = {
+    id?: SortOrder
+    reference?: SortOrder
+    amount?: SortOrder
+    currency?: SortOrder
+    payload?: SortOrder
+    firstSeenAt?: SortOrder
+    reconciled?: SortOrder
+    reconciledAt?: SortOrder
+    resolutionNote?: SortOrder
+  }
+
+  export type OrphanPaymentAvgOrderByAggregateInput = {
+    amount?: SortOrder
+  }
+
+  export type OrphanPaymentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    reference?: SortOrder
+    amount?: SortOrder
+    currency?: SortOrder
+    firstSeenAt?: SortOrder
+    reconciled?: SortOrder
+    reconciledAt?: SortOrder
+    resolutionNote?: SortOrder
+  }
+
+  export type OrphanPaymentMinOrderByAggregateInput = {
+    id?: SortOrder
+    reference?: SortOrder
+    amount?: SortOrder
+    currency?: SortOrder
+    firstSeenAt?: SortOrder
+    reconciled?: SortOrder
+    reconciledAt?: SortOrder
+    resolutionNote?: SortOrder
+  }
+
+  export type OrphanPaymentSumOrderByAggregateInput = {
+    amount?: SortOrder
   }
 
   export type HeroSlideCountOrderByAggregateInput = {
@@ -24913,6 +27823,10 @@ export namespace Prisma {
     set?: $Enums.OrderChannel
   }
 
+  export type NullableEnumRefundStatusFieldUpdateOperationsInput = {
+    set?: $Enums.RefundStatus | null
+  }
+
   export type CustomerUpdateOneWithoutOrdersNestedInput = {
     create?: XOR<CustomerCreateWithoutOrdersInput, CustomerUncheckedCreateWithoutOrdersInput>
     connectOrCreate?: CustomerCreateOrConnectWithoutOrdersInput
@@ -25477,6 +28391,13 @@ export namespace Prisma {
     not?: NestedEnumOrderChannelFilter<$PrismaModel> | $Enums.OrderChannel
   }
 
+  export type NestedEnumRefundStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.RefundStatus | EnumRefundStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRefundStatusNullableFilter<$PrismaModel> | $Enums.RefundStatus | null
+  }
+
   export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
     in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
@@ -25507,6 +28428,39 @@ export namespace Prisma {
     _max?: NestedEnumOrderChannelFilter<$PrismaModel>
   }
 
+  export type NestedEnumRefundStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RefundStatus | EnumRefundStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.RefundStatus[] | ListEnumRefundStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumRefundStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.RefundStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumRefundStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumRefundStatusNullableFilter<$PrismaModel>
+  }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
   export type OrderCreateWithoutCustomerInput = {
     id?: string
     status?: $Enums.OrderStatus
@@ -25514,11 +28468,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -25533,6 +28494,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
@@ -25540,6 +28504,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
@@ -25631,6 +28599,9 @@ export namespace Prisma {
     totalAmount?: FloatFilter<"Order"> | number
     totalNGN?: IntFilter<"Order"> | number
     paymentMethod?: StringFilter<"Order"> | string
+    paymentReference?: StringNullableFilter<"Order"> | string | null
+    paymentProviderId?: StringNullableFilter<"Order"> | string | null
+    paymentVerified?: BoolFilter<"Order"> | boolean
     createdAt?: DateTimeFilter<"Order"> | Date | string
     customerId?: StringNullableFilter<"Order"> | string | null
     guestInfo?: JsonNullableFilter<"Order">
@@ -25639,6 +28610,10 @@ export namespace Prisma {
     deliveryOptionId?: StringNullableFilter<"Order"> | string | null
     deliveryFee?: FloatNullableFilter<"Order"> | number | null
     deliveryDetails?: JsonNullableFilter<"Order">
+    refundedAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    refundReason?: StringNullableFilter<"Order"> | string | null
+    refundTransactionId?: StringNullableFilter<"Order"> | string | null
+    refundStatus?: EnumRefundStatusNullableFilter<"Order"> | $Enums.RefundStatus | null
   }
 
   export type WishlistItemUpsertWithWhereUniqueWithoutCustomerInput = {
@@ -25703,11 +28678,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -25722,6 +28704,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -25729,6 +28714,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
@@ -26457,11 +29446,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -26476,6 +29472,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -26483,6 +29482,10 @@ export namespace Prisma {
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
@@ -26959,11 +29962,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     offlineSale?: OfflineSaleCreateNestedOneWithoutOrderInput
@@ -26978,6 +29988,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -26986,6 +29999,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -27038,11 +30055,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -27057,6 +30081,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27065,6 +30092,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -27107,11 +30138,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -27126,6 +30164,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27134,6 +30175,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -27218,11 +30263,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -27237,6 +30289,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27245,6 +30300,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -27519,11 +30578,18 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     customer?: CustomerCreateNestedOneWithoutOrdersInput
     staff?: StaffCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -27538,6 +30604,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27546,6 +30615,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     offlineSale?: OfflineSaleUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -27573,11 +30646,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -27592,6 +30672,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27600,6 +30683,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -27714,6 +30801,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: string | null
@@ -27721,6 +30811,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
   }
 
   export type WishlistItemCreateManyCustomerInput = {
@@ -27745,11 +30839,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -27764,6 +30865,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27771,6 +30875,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
@@ -27783,6 +30891,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     staffId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27790,6 +30901,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
   }
 
   export type WishlistItemUpdateWithoutCustomerInput = {
@@ -27844,6 +30959,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27851,6 +30969,10 @@ export namespace Prisma {
     deliveryOptionId?: string | null
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
   }
 
   export type OfflineSaleCreateManyStaffInput = {
@@ -27866,11 +30988,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUpdateOneWithoutOrderNestedInput
@@ -27885,6 +31014,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27892,6 +31024,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
@@ -27904,6 +31040,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -27911,6 +31050,10 @@ export namespace Prisma {
     deliveryOptionId?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
   }
 
   export type OfflineSaleUpdateWithoutStaffInput = {
@@ -28174,6 +31317,9 @@ export namespace Prisma {
     totalAmount: number
     totalNGN: number
     paymentMethod: string
+    paymentReference?: string | null
+    paymentProviderId?: string | null
+    paymentVerified?: boolean
     createdAt?: Date | string
     customerId?: string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -28181,6 +31327,10 @@ export namespace Prisma {
     channel?: $Enums.OrderChannel
     deliveryFee?: number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: Date | string | null
+    refundReason?: string | null
+    refundTransactionId?: string | null
+    refundStatus?: $Enums.RefundStatus | null
   }
 
   export type OrderUpdateWithoutDeliveryOptionInput = {
@@ -28190,11 +31340,18 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     customer?: CustomerUpdateOneWithoutOrdersNestedInput
     staff?: StaffUpdateOneWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -28209,6 +31366,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -28216,6 +31376,10 @@ export namespace Prisma {
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     offlineSale?: OfflineSaleUncheckedUpdateOneWithoutOrderNestedInput
     receiptEmailStatus?: ReceiptEmailStatusUncheckedUpdateOneWithoutOrderNestedInput
@@ -28228,6 +31392,9 @@ export namespace Prisma {
     totalAmount?: FloatFieldUpdateOperationsInput | number
     totalNGN?: IntFieldUpdateOperationsInput | number
     paymentMethod?: StringFieldUpdateOperationsInput | string
+    paymentReference?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentProviderId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentVerified?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     guestInfo?: NullableJsonNullValueInput | InputJsonValue
@@ -28235,6 +31402,10 @@ export namespace Prisma {
     channel?: EnumOrderChannelFieldUpdateOperationsInput | $Enums.OrderChannel
     deliveryFee?: NullableFloatFieldUpdateOperationsInput | number | null
     deliveryDetails?: NullableJsonNullValueInput | InputJsonValue
+    refundedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    refundReason?: NullableStringFieldUpdateOperationsInput | string | null
+    refundTransactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    refundStatus?: NullableEnumRefundStatusFieldUpdateOperationsInput | $Enums.RefundStatus | null
   }
 
   export type OrderItemCreateManyOrderInput = {

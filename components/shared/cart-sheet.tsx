@@ -30,7 +30,13 @@ export function CartSheet() {
   const clearCart = useCartStore((s) => s.clearCart);
   const totalItemsCount = useCartStore((s) => s.totalItems());
   const distinctCount = useCartStore((s) => s.totalDistinctItems());
+  const totalAmount = useCartStore((s) => s.totalAmount());
+  const rawTotalWeight = useCartStore((s) => s.totalWeight());
   const { currency } = useCurrency();
+
+  const totalWeight = Number.isFinite(rawTotalWeight) ? rawTotalWeight : 0;
+  const formattedTotal = formatAmount(totalAmount, currency);
+  const formattedWeight = `${totalWeight.toFixed(3)}kg`;
 
   const [pendingMap, setPendingMap] = useState<Record<string, boolean>>({});
 
@@ -40,7 +46,6 @@ export function CartSheet() {
 
   const handleDecrease = useCallback(
     (item: CartItem, stock: number, key: string) => {
-      // optimistic
       updateQuantity(
         item.product.id,
         item.color,
@@ -70,12 +75,6 @@ export function CartSheet() {
     },
     [updateQuantity, setPending]
   );
-
-  const totalPriceValue = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const formattedTotal = formatAmount(totalPriceValue, currency);
 
   return (
     <Sheet>
@@ -123,6 +122,7 @@ export function CartSheet() {
                   price,
                   hasSizeMod,
                   sizeModFee,
+                  unitWeight = 0,
                 } = item;
                 const formattedUnit = formatAmount(price, currency);
                 const variant = product.variants.find(
@@ -131,12 +131,16 @@ export function CartSheet() {
                 const stock =
                   variant && typeof variant.inStock === "number"
                     ? variant.inStock
-                    : variant && typeof variant.stock === "number"
-                    ? variant.stock
+                    : variant && typeof (variant as any).stock === "number"
+                    ? (variant as any).stock
                     : Infinity;
 
                 const key = `${product.id}-${color}-${size}-${idx}`;
                 const isPending = Boolean(pendingMap[key]);
+
+                const lineWeight = Number.isFinite(unitWeight)
+                  ? parseFloat((unitWeight * quantity).toFixed(3))
+                  : 0;
 
                 return (
                   <div
@@ -238,6 +242,15 @@ export function CartSheet() {
                             ))}
                           </div>
                         )}
+                        {/* Weight info per line */}
+                        <div className="mt-1 text-xs text-gray-600">
+                          <div>
+                            Unit weight: {Number.isFinite(unitWeight) ? unitWeight.toFixed(3) : "0.000"}kg
+                          </div>
+                          <div>
+                            Total weight: {lineWeight.toFixed(3)}kg
+                          </div>
+                        </div>
                       </div>
                       <button
                         onClick={() =>
@@ -264,13 +277,19 @@ export function CartSheet() {
             </div>
 
             <div className="sticky bottom-0 left-0 p-4 border-t border-gray-200 bg-white">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-semibold text-gray-900">
                   Total:
                 </span>
                 <span className="text-lg font-bold text-gray-900">
                   {formattedTotal}
                 </span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-semibold text-gray-900">
+                  Total Weight:
+                </span>
+                <span className="text-sm text-gray-700">{formattedWeight}</span>
               </div>
               <div className="flex gap-2 mt-4">
                 <Button
@@ -282,10 +301,7 @@ export function CartSheet() {
                   <Trash2 className="w-4 h-4 mr-2" />
                   Clear All
                 </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => router.push("/checkout")}
-                >
+                <Button className="flex-1" onClick={() => router.push("/checkout")}>
                   Proceed
                 </Button>
               </div>

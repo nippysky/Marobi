@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "next-auth.d.ts", "prisma/seed.cjs"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "next-auth.d.ts", "prisma/seed.cjs", "app/api/reconcile/paystack/route.ts ts Copy Edit"],
   "exclude": ["node_modules"]
 }

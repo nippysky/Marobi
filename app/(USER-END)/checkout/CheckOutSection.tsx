@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, ReactNode } from "react";
+import React, { useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,9 +25,12 @@ import { Toaster, toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import type { CheckoutUser } from "./page";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
-import { useCheckout, CartItemPayload } from "@/lib/hooks/useCheckout";
+import {
+  useCheckout,
+  CartItemPayload,
+  CustomerPayload,
+} from "@/lib/hooks/useCheckout";
 
-// dynamic import
 const PaystackButton = dynamic(
   () => import("react-paystack").then((m) => m.PaystackButton),
   { ssr: false }
@@ -37,6 +40,16 @@ interface CountryData {
   name: string;
   iso2: string;
   callingCodes: string[];
+}
+
+interface DeliveryOption {
+  id: string;
+  name: string;
+  provider?: string | null;
+  type: "COURIER" | "PICKUP";
+  baseFee: number;
+  active: boolean;
+  metadata?: any;
 }
 
 interface Props {
@@ -73,7 +86,11 @@ export default function CheckoutSection({ user }: Props) {
   const { currency } = useCurrency();
   const items = useCartStore((s) => s.items) as CartItem[];
   const clearCart = useCartStore((s) => s.clear) as () => void;
-  const DELIVERY_FEE = 500;
+  const totalWeight = useCartStore((s) => s.totalWeight()) || 0;
+
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
+  const [selectedDeliveryOption, setSelectedDeliveryOption] =
+    useState<DeliveryOption | null>(null);
 
   const { isProcessing, error, result, createOrder, reset } = useCheckout();
 
@@ -87,14 +104,26 @@ export default function CheckoutSection({ user }: Props) {
   const [country, setCountry] = useState<CountryData | null>(null);
   const [stateList, setStateList] = useState<string[]>([]);
   const [state, setState] = useState(user?.state ?? "");
-  const [deliveryAddress, setDeliveryAddress] = useState(user?.deliveryAddress ?? "");
+  const [deliveryAddress, setDeliveryAddress] = useState(
+    user?.deliveryAddress ?? ""
+  );
 
   const [billingSame, setBillingSame] = useState(true);
-  const [billingAddress, setBillingAddress] = useState(user?.billingAddress ?? "");
+  const [billingAddress, setBillingAddress] = useState(
+    user?.billingAddress ?? ""
+  );
 
-  // Success modal control
+  // Success modal
   const [showSuccess, setShowSuccess] = useState(false);
-  const [customerEmailForModal, setCustomerEmailForModal] = useState<string>("");
+  const [customerEmailForModal, setCustomerEmailForModal] =
+    useState<string>("");
+
+  // Payment reference retention for retry
+  const [lastPaymentReference, setLastPaymentReference] = useState<string | null>(
+    null
+  );
+  const [orderCreatingFromReference, setOrderCreatingFromReference] =
+    useState(false);
 
   // Load countries
   useEffect(() => {
@@ -121,7 +150,7 @@ export default function CheckoutSection({ user }: Props) {
     loadCountries();
   }, [user?.country]);
 
-  // Load states
+  // Load states when country changes
   useEffect(() => {
     async function loadStates() {
       if (!country) {
@@ -144,13 +173,40 @@ export default function CheckoutSection({ user }: Props) {
         setStateList([]);
         toast.error("Could not load states.");
       }
-      if (country.callingCodes.length) {
+      if (country?.callingCodes?.length) {
         setPhoneCode(`+${country.callingCodes[0]}`);
       }
     }
     loadStates();
   }, [country]);
 
+  // Fetch delivery options when country is set
+  useEffect(() => {
+    async function loadOptions() {
+      if (!country) return;
+      try {
+        const res = await fetch(
+          `/api/delivery-options?country=${encodeURIComponent(country.name)}`
+        );
+        if (!res.ok) throw new Error("Failed to load delivery options");
+        const data: DeliveryOption[] = await res.json();
+        const activeOptions = data.filter((o) => o.active);
+        setDeliveryOptions(activeOptions);
+        setSelectedDeliveryOption(
+          (prev) =>
+            (prev && activeOptions.find((o) => o.id === prev.id)) ??
+            activeOptions[0] ??
+            null
+        );
+      } catch (err) {
+        console.error("load delivery options:", err);
+        toast.error("Could not load delivery options.");
+      }
+    }
+    loadOptions();
+  }, [country]);
+
+  // Phone options helper
   const phoneOptions = useMemo(() => {
     const map = new Map<string, string>();
     countryList.forEach((c) =>
@@ -165,12 +221,25 @@ export default function CheckoutSection({ user }: Props) {
   }, [countryList]);
 
   // Totals
-  const itemsSubtotal = items.reduce(
-    (sum: number, item: CartItem) => sum + (item.price - item.sizeModFee) * item.quantity,
-    0
+  const itemsSubtotal = useMemo(
+    () =>
+      items.reduce(
+        (sum: number, item: CartItem) =>
+          sum + (item.price - item.sizeModFee) * item.quantity,
+        0
+      ),
+    [items]
   );
-  const sizeModTotal = items.reduce((sum: number, item: CartItem) => sum + item.sizeModFee * item.quantity, 0);
-  const total = itemsSubtotal + sizeModTotal + DELIVERY_FEE;
+  const sizeModTotal = useMemo(
+    () =>
+      items.reduce(
+        (sum: number, item: CartItem) => sum + item.sizeModFee * item.quantity,
+        0
+      ),
+    [items]
+  );
+  const deliveryFee = selectedDeliveryOption?.baseFee ?? 0;
+  const total = itemsSubtotal + sizeModTotal + deliveryFee;
 
   // Readiness
   const isPaymentReady =
@@ -178,22 +247,39 @@ export default function CheckoutSection({ user }: Props) {
     items.length > 0 &&
     firstName.trim() !== "" &&
     lastName.trim() !== "" &&
-    deliveryAddress.trim() !== "";
+    deliveryAddress.trim() !== "" &&
+    selectedDeliveryOption !== null;
 
-  // Paystack config
   const amountInLowestDenomination = Math.round(total * 100);
-  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY || "pk_test_c2269f877802b324fdb3abc7554c34d137d13780";
+  const paystackPublicKey =
+    process.env.NEXT_PUBLIC_PAYSTACK_KEY ||
+    "pk_test_c2269f877802b324fdb3abc7554c34d137d13780";
 
-  const paystackConfig = {
-    reference: `${Date.now()}`,
-    email: email,
-    amount: amountInLowestDenomination,
-    publicKey: paystackPublicKey,
-  };
+  // Paystack reference for idempotency
+  const [paystackReference, setPaystackReference] = useState<string>(
+    `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+  );
+
+  // regenerate reference when user changes critical fields and there is no active processing
+  useEffect(() => {
+    if (!isProcessing && !orderCreatingFromReference) {
+      setPaystackReference(`${Date.now()}-${Math.random().toString(36).slice(2, 6)}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total, email]);
+
+  const paystackConfig = useMemo(
+    () => ({
+      reference: paystackReference,
+      email: email,
+      amount: amountInLowestDenomination,
+      publicKey: paystackPublicKey,
+    }),
+    [paystackReference, email, amountInLowestDenomination, paystackPublicKey]
+  );
 
   // Customer payload
-  const customerPayload: any = {
-    id: undefined,
+  const customerPayload: CustomerPayload = {
     firstName,
     lastName,
     email,
@@ -202,56 +288,112 @@ export default function CheckoutSection({ user }: Props) {
     billingAddress: billingSame ? deliveryAddress : billingAddress,
     country: country?.name,
     state,
+    ...(session?.user?.id ? { id: session.user.id } : {}),
   };
-  if (session?.user?.id) {
-    customerPayload.id = session.user.id;
-  }
+
+  // Build cart items payload (deduplicated)
+  const buildCartItemsPayload = useCallback((): CartItemPayload[] => {
+    return items.map((it: any) => ({
+      productId: it.product.id,
+      color: it.color || "N/A",
+      size: it.size || "N/A",
+      quantity: it.quantity,
+      hasSizeMod: !!it.hasSizeMod,
+      sizeModFee: it.sizeModFee || 0,
+      unitWeight: it.unitWeight ?? 0,
+    }));
+  }, [items]);
 
   // Payment success handler
   const handlePaystackSuccess = async (reference: any) => {
     try {
-      if (isProcessing) return;
+      if (isProcessing || orderCreatingFromReference) return;
 
-      const cartItems: CartItemPayload[] = items.map((it: any) => ({
-        productId: it.product.id,
-        color: it.color || "N/A",
-        size: it.size || "N/A",
-        quantity: it.quantity,
-        hasSizeMod: !!it.hasSizeMod,
-        sizeModFee: it.sizeModFee || 0,
-      }));
+      // Extract reference string — various shapes depending on SDK
+      const refString =
+        reference?.reference || reference?.ref || paystackReference || "";
+      if (!refString) {
+        toast.error("Could not determine payment reference.");
+        return;
+      }
+
+      setLastPaymentReference(refString);
+      setOrderCreatingFromReference(true);
+
+      const cartItems = buildCartItemsPayload();
 
       const order = await createOrder({
         items: cartItems,
         customer: customerPayload,
         paymentMethod: "Paystack",
         currency,
-        deliveryFee: DELIVERY_FEE,
+        deliveryFee,
         timestamp: new Date().toISOString(),
-      });
+        deliveryOptionId: selectedDeliveryOption?.id,
+        paymentReference: refString,
+      } as any);
 
       if (!order) {
-        toast.error("Order creation failed.");
+        toast.error(
+          "Order creation failed after payment. We'll keep the payment reference so you can retry."
+        );
+        setOrderCreatingFromReference(false);
         return;
       }
 
-      // set email explicitly in case result hydrates slightly later
       setCustomerEmailForModal(order.email);
       toast.success("Order created successfully.");
-      // note: we do NOT clear cart here; defer until modal close for smoother UX
+      setOrderCreatingFromReference(false);
     } catch (err) {
       console.error("Order creation after payment failed:", err);
       toast.error("Something went wrong creating your order.");
+      setOrderCreatingFromReference(false);
     }
   };
 
-  // Show modal once we have a confirmed result with orderId
+  // Retry path if order creation previously failed after payment
+  const retryOrderCreation = async () => {
+    if (!lastPaymentReference) return;
+    if (isProcessing || orderCreatingFromReference) return;
+
+    setOrderCreatingFromReference(true);
+    try {
+      const cartItems = buildCartItemsPayload();
+
+      const order = await createOrder({
+        items: cartItems,
+        customer: customerPayload,
+        paymentMethod: "Paystack",
+        currency,
+        deliveryFee,
+        timestamp: new Date().toISOString(),
+        deliveryOptionId: selectedDeliveryOption?.id,
+        paymentReference: lastPaymentReference,
+      } as any);
+
+      if (!order) {
+        toast.error("Retry failed. Please contact support.");
+        setOrderCreatingFromReference(false);
+        return;
+      }
+
+      setCustomerEmailForModal(order.email);
+      toast.success("Order created successfully on retry.");
+    } finally {
+      setOrderCreatingFromReference(false);
+    }
+  };
+
   useEffect(() => {
     if (result?.orderId) {
       setCustomerEmailForModal(result.email);
       setShowSuccess(true);
     }
   }, [result]);
+
+  // disable payment button when prerequisites or processing
+  const paymentDisabled =
+    !isPaymentReady || isProcessing || orderCreatingFromReference;
 
   return (
     <>
@@ -263,7 +405,9 @@ export default function CheckoutSection({ user }: Props) {
             Home
           </Link>{" "}
           /{" "}
-          <span className="font-medium text-gray-900 dark:text-gray-100">Checkout</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">
+            Checkout
+          </span>
         </nav>
 
         <Button
@@ -274,20 +418,35 @@ export default function CheckoutSection({ user }: Props) {
           <FaArrowLeftLong /> Back
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
           {/* Delivery & Billing */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 flex flex-col">
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Delivery Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField label="First Name" htmlFor="firstName">
-                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.currentTarget.value)}
+                  />
                 </FormField>
                 <FormField label="Last Name" htmlFor="lastName">
-                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.currentTarget.value)} />
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.currentTarget.value)}
+                  />
                 </FormField>
                 <FormField label="Email" htmlFor="email">
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.currentTarget.value)}
+                  />
                 </FormField>
                 <FormField label="Phone Number" htmlFor="phone">
                   <div className="flex">
@@ -304,7 +463,12 @@ export default function CheckoutSection({ user }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input id="phone" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.currentTarget.value)}
+                    />
                   </div>
                 </FormField>
                 <FormField label="Country" htmlFor="country">
@@ -349,74 +513,181 @@ export default function CheckoutSection({ user }: Props) {
                     </Select>
                   )}
                 </FormField>
-                <FormField label="Delivery Address" htmlFor="deliveryAddress" span2>
+                <FormField
+                  label="Delivery Address"
+                  htmlFor="deliveryAddress"
+                  span2
+                >
                   <Textarea
                     id="deliveryAddress"
                     value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.currentTarget.value)}
+                    onChange={(e) =>
+                      setDeliveryAddress(e.currentTarget.value)
+                    }
                     rows={3}
                   />
                 </FormField>
               </div>
             </div>
 
-            {/* Billing Info */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
-              <div className="flex items-center mb-4">
-                <input id="sameBilling" type="checkbox" checked={billingSame} onChange={() => setBillingSame((v) => !v)} className="mr-2" />
-                <label htmlFor="sameBilling" className="font-medium">
-                  Billing same as delivery
-                </label>
+            {/* Billing Info & Delivery Option */}
+            <div className="space-y-6 flex flex-col">
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
+                <div className="flex items-center mb-4">
+                  <input
+                    id="sameBilling"
+                    type="checkbox"
+                    checked={billingSame}
+                    onChange={() => setBillingSame((v) => !v)}
+                    className="mr-2"
+                  />
+                  <label htmlFor="sameBilling" className="font-medium">
+                    Billing same as delivery
+                  </label>
+                </div>
+                {!billingSame && (
+                  <FormField
+                    label="Billing Address"
+                    htmlFor="billingAddress"
+                    span2
+                  >
+                    <Textarea
+                      id="billingAddress"
+                      value={billingAddress}
+                      onChange={(e) =>
+                        setBillingAddress(e.currentTarget.value)
+                      }
+                      rows={3}
+                    />
+                  </FormField>
+                )}
               </div>
-              {!billingSame && (
-                <FormField label="Billing Address" htmlFor="billingAddress" span2>
-                  <Textarea id="billingAddress" value={billingAddress} onChange={(e) => setBillingAddress(e.currentTarget.value)} rows={3} />
-                </FormField>
+
+              {country?.name === "Nigeria" && (
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Delivery Option
+                  </h2>
+                  {deliveryOptions.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      No delivery options available for {country?.name}.
+                    </p>
+                  ) : (
+                    <div className="grid gap-4">
+                      {deliveryOptions.map((opt) => (
+                        <div
+                          key={opt.id}
+                          className={`border rounded-lg p-4 flex justify-between items-start ${
+                            selectedDeliveryOption?.id === opt.id
+                              ? "ring-2 ring-brand"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{opt.name}</div>
+                            <div className="text-xs text-gray-600">
+                              {opt.provider
+                                ? `Provider: ${opt.provider}`
+                                : "In-person / generic"}{" "}
+                              • {opt.type.toLowerCase()}
+                            </div>
+                            <div className="text-sm mt-1">
+                              Fee: {formatAmount(opt.baseFee, currency)}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="radio"
+                              name="deliveryOption"
+                              checked={selectedDeliveryOption?.id === opt.id}
+                              onChange={() => setSelectedDeliveryOption(opt)}
+                              aria-label={`Select delivery option ${opt.name}`}
+                              className="ml-2"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
 
           {/* Cart + Summary */}
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
+          <div className="space-y-6 flex flex-col min-h-0">
+            {/* Cart items card */}
+            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col">
               <h2 className="text-lg font-semibold mb-4">Your Cart</h2>
-              <ScrollArea className="max-h-48">
-                <ul className="divide-y divide-gray-200">
-                  {items.map((item, idx) => (
-                    <li key={`${item.product.id}-${item.color}-${item.size}-${idx}`} className="py-3 flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        {item.product.images[0] && (
-                          <img src={item.product.images[0]} alt={item.product.name} className="w-12 h-12 rounded object-cover border" />
-                        )}
-                        <div className="text-sm">
-                          <p className="font-medium text-gray-900">{item.product.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {item.color}, {item.size}
-                          </p>
-                          {item.hasSizeMod && <p className="text-xs text-yellow-600">+5% fee</p>}
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">{formatAmount(item.price * item.quantity, currency)}</div>
-                    </li>
-                  ))}
-                </ul>
-              </ScrollArea>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <ScrollArea className="h-60">
+                  <ul className="divide-y divide-gray-200">
+                    {items.map((item, idx) => {
+                      const unitWeight = item.unitWeight ?? 0;
+                      const lineWeight = parseFloat(
+                        ((unitWeight * item.quantity) || 0).toFixed(3)
+                      );
+                      return (
+                        <li
+                          key={`${item.product.id}-${item.color}-${item.size}-${idx}`}
+                          className="py-3 flex justify-between items-start"
+                        >
+                          <div className="flex items-start gap-3">
+                            {item.product.images[0] && (
+                              <img
+                                src={item.product.images[0]}
+                                alt={item.product.name}
+                                className="w-12 h-12 rounded object-cover border"
+                              />
+                            )}
+                            <div className="text-sm">
+                              <p className="font-medium text-gray-900">
+                                {item.product.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {item.color}, {item.size} × {item.quantity}
+                              </p>
+                              {item.hasSizeMod && (
+                                <p className="text-xs text-yellow-600">
+                                  +5% size-mod fee
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-600 mt-1">
+                                Unit weight: {unitWeight.toFixed(3)}kg • Total:{" "}
+                                {lineWeight.toFixed(3)}kg
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {formatAmount(item.price * item.quantity, currency)}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </ScrollArea>
+              </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md">
+            {/* Summary card */}
+            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm flex-1">
                 <div className="flex justify-between">
                   <span>Items Subtotal:</span>
                   <span>{formatAmount(itemsSubtotal, currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Size Mods (5%):</span>
+                  <span>Size Mods:</span>
                   <span>{formatAmount(sizeModTotal, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee:</span>
-                  <span>{formatAmount(DELIVERY_FEE, currency)}</span>
+                  <span>{formatAmount(deliveryFee, currency)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total Weight:</span>
+                  <span>{totalWeight.toFixed(3)}kg</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg pt-2 border-t">
                   <span>Total:</span>
@@ -424,25 +695,51 @@ export default function CheckoutSection({ user }: Props) {
                 </div>
               </div>
 
-              {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+              {error && (
+                <div className="mt-3 text-sm text-red-600">{error}</div>
+              )}
 
-              {/* Payment button */}
               <div className="mt-6">
                 {!isPaymentReady ? (
                   <Button disabled className="w-full py-3 rounded-full">
                     Complete required fields
                   </Button>
                 ) : (
-                  <div>
+                  <div className="space-y-2">
                     <PaystackButton
                       {...paystackConfig}
-                      text={isProcessing ? "Finalizing order..." : `Pay ${formatAmount(total, currency)}`}
+                      text={
+                        isProcessing || orderCreatingFromReference
+                          ? "Finalizing order..."
+                          : `Pay ${formatAmount(total, currency)}`
+                      }
                       onSuccess={handlePaystackSuccess}
                       onClose={() => {
                         toast.error("Payment cancelled. Please try again.");
                       }}
                       className="w-full py-3 rounded-full bg-brand text-white font-medium disabled:opacity-60"
+                      disabled={paymentDisabled}
                     />
+                    {orderCreatingFromReference &&
+                      lastPaymentReference &&
+                      !result?.orderId && (
+                        <div className="text-center text-sm">
+                          Payment succeeded with reference{" "}
+                          <code>{lastPaymentReference}</code>, creating order...
+                        </div>
+                      )}
+                    {!orderCreatingFromReference &&
+                      lastPaymentReference &&
+                      !result?.orderId && (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={retryOrderCreation}
+                          disabled={isProcessing}
+                        >
+                          Retry Order Creation
+                        </Button>
+                      )}
                     {isProcessing && (
                       <p className="mt-2 text-center text-sm text-gray-600">
                         We’re confirming your order. This should take a moment.
@@ -456,18 +753,16 @@ export default function CheckoutSection({ user }: Props) {
         </div>
       </section>
 
-      {/* Success modal */}
       <OrderSuccessModal
         open={showSuccess}
         orderId={result?.orderId || ""}
         email={customerEmailForModal || result?.email || email}
         onClose={() => {
           setShowSuccess(false);
-          // now clear cart after user has seen success
           try {
             clearCart();
           } catch {}
-          reset(); // clear snapshot
+          reset();
           router.push("/all-products");
         }}
       />

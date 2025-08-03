@@ -53,10 +53,7 @@ export default async function ProductPage({
 
       <main className="mt-10 px-5 md:px-10 lg:px-20 flex-1 space-y-12">
         {/* Breadcrumb */}
-        <nav
-          aria-label="Breadcrumb"
-          className="text-sm text-gray-600 mb-4"
-        >
+        <nav aria-label="Breadcrumb" className="text-sm text-gray-600 mb-4">
           <ol className="flex flex-wrap items-center space-x-1 sm:space-x-2">
             <li>
               <a href="/" className="hover:underline">
@@ -103,11 +100,7 @@ export default async function ProductPage({
 
         {/* — Reviews Accordion — */}
         <div className="lg:px-60">
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue=""
-          >
+          <Accordion type="single" collapsible defaultValue="">
             <AccordionItem value="reviews">
               <AccordionTrigger className="w-full text-xl font-semibold text-gray-900 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
                 Customer Reviews ({reviews.length})
@@ -131,11 +124,7 @@ export default async function ProductPage({
           {related.length > 0 ? (
             <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {related.map((p) => (
-                <a
-                  key={p.id}
-                  href={`/product/${p.id}`}
-                  className="block"
-                >
+                <a key={p.id} href={`/product/${p.id}`} className="block">
                   <ProductCard product={p} />
                 </a>
               ))}

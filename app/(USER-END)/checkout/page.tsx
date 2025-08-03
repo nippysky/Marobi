@@ -1,4 +1,3 @@
-
 import React from "react";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";

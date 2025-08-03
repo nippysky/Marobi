@@ -1,4 +1,5 @@
-// "use client"
+"use client";
+
 import { useState, useCallback, useEffect } from "react";
 
 export interface CartItemPayload {
@@ -8,6 +9,7 @@ export interface CartItemPayload {
   quantity: number;
   hasSizeMod?: boolean;
   sizeModFee?: number;
+  unitWeight?: number;
 }
 
 export interface CustomerPayload {
@@ -27,6 +29,18 @@ export interface OrderResult {
   email: string;
 }
 
+export interface CreateOrderPayload {
+  items: CartItemPayload[];
+  customer: CustomerPayload;
+  paymentMethod: string;
+  currency: string;
+  deliveryFee: number;
+  timestamp: string;
+  deliveryOptionId?: string;
+  paymentReference?: string;
+  onSuccess?: () => void;
+}
+
 const STORAGE_KEY = "pending_order_snapshot_v1";
 
 type Snapshot = {
@@ -44,7 +58,7 @@ export function useCheckout() {
   const [error, setError] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
-  // Load from localStorage on mount
+  // Hydrate from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -62,7 +76,7 @@ export function useCheckout() {
         }
       }
     } catch {
-      // ignore
+      // ignore corruption
     }
   }, []);
 
@@ -74,15 +88,7 @@ export function useCheckout() {
   }, []);
 
   const createOrder = useCallback(
-    async (payload: {
-      items: CartItemPayload[];
-      customer: CustomerPayload;
-      paymentMethod: string;
-      currency: string;
-      deliveryFee: number;
-      timestamp: string;
-      onSuccess?: () => void;
-    }): Promise<OrderResult | null> => {
+    async (payload: CreateOrderPayload): Promise<OrderResult | null> => {
       setIsProcessing(true);
       setError(null);
 

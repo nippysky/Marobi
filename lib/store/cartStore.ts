@@ -7,6 +7,7 @@ import type { Product } from "@/lib/products";
  * A single item in the cart: wraps a Product plus the desired quantity,
  * as well as the specific color and size the user chose.
  * Optionally, customMods for size modifications, plus hasSizeMod and the fee.
+ * Also includes per-unit weight so total weight can be derived.
  */
 export interface CartItem {
   product: Product;
@@ -17,6 +18,7 @@ export interface CartItem {
   hasSizeMod: boolean;
   sizeModFee: number;
   customMods?: Record<string, string | number>;
+  unitWeight?: number; // kg per single unit, optional for backwards compatibility
 }
 
 interface CartStoreState {
@@ -43,6 +45,7 @@ interface CartStoreState {
   totalItems: () => number; // sum of quantities
   totalDistinctItems: () => number; // number of unique entries
   totalAmount: () => number;
+  totalWeight: () => number; // aggregated weight (kg)
 }
 
 // deep equality for customMods
@@ -84,6 +87,7 @@ export const useCartStore = create<CartStoreState>()(
           hasSizeMod,
           customMods,
           sizeModFee,
+          unitWeight = 0,
         } = item;
         const items = get().items;
         const maxStock = getVariantStock(product, color, size);
@@ -132,6 +136,7 @@ export const useCartStore = create<CartStoreState>()(
                 hasSizeMod,
                 sizeModFee,
                 customMods,
+                unitWeight,
               },
             ],
           });
@@ -213,6 +218,13 @@ export const useCartStore = create<CartStoreState>()(
           (sum, { price, quantity }) => sum + price * quantity,
           0
         ),
+
+      totalWeight: () =>
+        get()
+          .items.reduce(
+            (sum, { unitWeight = 0, quantity }) => sum + unitWeight * quantity,
+            0
+          ),
     }),
     {
       name: "cart",

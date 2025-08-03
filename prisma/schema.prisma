@@ -18,6 +18,7 @@ enum OrderStatus {
   Processing
   Shipped
   Delivered
+  Cancelled
 }
 
 enum Currency {
@@ -51,6 +52,12 @@ enum UserRole {
 enum DeliveryType {
   COURIER
   PICKUP
+}
+
+enum RefundStatus {
+  Pending
+  Completed
+  Failed
 }
 
 model Customer {
@@ -185,6 +192,9 @@ model Order {
   totalAmount         Float
   totalNGN            Int
   paymentMethod       String
+  paymentReference    String?               @unique // idempotency key from provider
+  paymentProviderId   String?               // e.g., Paystack transaction ID
+  paymentVerified     Boolean               @default(false)
   createdAt           DateTime              @default(now())
   customer            Customer?             @relation(fields: [customerId], references: [id])
   customerId          String?
@@ -198,7 +208,12 @@ model Order {
   deliveryOption      DeliveryOption?       @relation("OrderDeliveryOption", fields: [deliveryOptionId], references: [id])
   deliveryOptionId    String?
   deliveryFee         Float?                // actual fee charged (can override baseFee)
-  deliveryDetails     Json?                 // e.g., tracking number, pickup notes, etc.
+  deliveryDetails     Json?                 // e.g., tracking number, pickup notes, aggregated weight, etc.
+
+  refundedAt          DateTime?
+  refundReason        String?
+  refundTransactionId String?
+  refundStatus        RefundStatus?
 }
 
 model OrderItem {
@@ -249,6 +264,26 @@ model ReceiptEmailStatus {
   sent         Boolean   @default(false)
   deliveryFee  Float? 
   updatedAt    DateTime  @updatedAt
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String   // e.g., "paystack"
+  eventId    String   @unique
+  payload    Json
+  createdAt  DateTime @default(now())
+}
+
+model OrphanPayment {
+  id             String   @id @default(cuid())
+  reference      String   @unique
+  amount         Int      // lowest denomination (e.g., kobo)
+  currency       String
+  payload        Json
+  firstSeenAt    DateTime @default(now())
+  reconciled     Boolean  @default(false)
+  reconciledAt   DateTime?
+  resolutionNote String?  // e.g., "Pending manual review" or "Order created"
 }
 
 model HeroSlide {

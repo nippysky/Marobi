@@ -11,6 +11,7 @@ export interface Product {
     color: string;
     size: string;
     inStock: number;
+    weight?: number; // kg per variant
   }>;
   sizeMods: boolean;
   videoUrl: string | null;
@@ -47,9 +48,10 @@ export async function getProductById(id: string): Promise<Product | null> {
       color: v.color,
       size: v.size,
       inStock: v.stock,
+      weight: v.weight ?? 0,
     })),
     sizeMods: p.sizeMods,
-    videoUrl: p.videoUrl, // ← pulled from your new Prisma field
+    videoUrl: p.videoUrl,
   };
 }
 
@@ -82,12 +84,12 @@ export async function getProductsByCategory(
       color: v.color,
       size: v.size,
       inStock: v.stock,
+      weight: (v as any).weight ?? 0,
     })),
     sizeMods: p.sizeMods,
     videoUrl: p.videoUrl,
   }));
 }
-
 
 /** 3️⃣ Fetch reviews for a product */
 export async function getReviewsByProduct(
@@ -106,7 +108,6 @@ export async function getReviewsByProduct(
     createdAt: r.createdAt,
   }));
 }
-
 
 // Fetch all published products with at least one image (for carousel ads)
 export async function getAdProducts(limit = 10): Promise<Product[]> {
@@ -132,16 +133,16 @@ export async function getAdProducts(limit = 10): Promise<Product[]> {
         EUR: p.priceEUR ?? 0,
         GBP: p.priceGBP ?? 0,
       },
-      variants: p.variants.map((v: { color: string; size: string; stock: number }) => ({
+      variants: p.variants.map((v: any) => ({
         color: v.color,
         size: v.size,
         inStock: v.stock,
+        weight: v.weight ?? 0,
       })),
       sizeMods: p.sizeMods,
       videoUrl: p.videoUrl,
     }));
 }
-
 
 export async function getAllProducts(): Promise<Product[]> {
   const rows = await prisma.product.findMany({
@@ -161,10 +162,11 @@ export async function getAllProducts(): Promise<Product[]> {
       EUR: p.priceEUR ?? 0,
       GBP: p.priceGBP ?? 0,
     },
-    variants: p.variants.map((v) => ({
+    variants: p.variants.map((v: any) => ({
       color: v.color,
       size: v.size,
       inStock: v.stock,
+      weight: v.weight ?? 0,
     })),
     sizeMods: p.sizeMods,
     videoUrl: p.videoUrl,
