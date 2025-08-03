@@ -94,13 +94,36 @@ export default function CheckoutSection({ user }: Props) {
   const clearCart = useCartStore((s) => s.clear) as () => void;
   const totalWeight = useCartStore((s) => s.totalWeight()) || 0;
 
+  // ----------- Declare all values before use -----------
+  // Totals (declare before any useEffect that depends on them!)
+  const itemsSubtotal = useMemo(
+    () =>
+      items.reduce(
+        (sum: number, item: CartItem) =>
+          sum + (item.price - item.sizeModFee) * item.quantity,
+        0
+      ),
+    [items]
+  );
+  const sizeModTotal = useMemo(
+    () =>
+      items.reduce(
+        (sum: number, item: CartItem) => sum + item.sizeModFee * item.quantity,
+        0
+      ),
+    [items]
+  );
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [selectedDeliveryOption, setSelectedDeliveryOption] =
     useState<DeliveryOption | null>(null);
 
-  const { isProcessing, error, result, createOrder, reset } = useCheckout();
+  const deliveryFee = selectedDeliveryOption?.baseFee ?? 0;
+  const total = itemsSubtotal + sizeModTotal + deliveryFee;
 
-  // Prefill
+  // Error display state (for "show error only after payment attempt")
+  const [hasAttemptedPayment, setHasAttemptedPayment] = useState(false);
+
+  // --- Form states
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
@@ -113,7 +136,6 @@ export default function CheckoutSection({ user }: Props) {
   const [deliveryAddress, setDeliveryAddress] = useState(
     user?.deliveryAddress ?? ""
   );
-
   const [billingSame, setBillingSame] = useState(true);
   const [billingAddress, setBillingAddress] = useState(
     user?.billingAddress ?? ""
@@ -131,7 +153,10 @@ export default function CheckoutSection({ user }: Props) {
   const [orderCreatingFromReference, setOrderCreatingFromReference] =
     useState(false);
 
-  // Load countries
+  // useCheckout hook
+  const { isProcessing, error, result, createOrder, reset } = useCheckout();
+
+  // --- Load countries
   useEffect(() => {
     async function loadCountries() {
       try {
@@ -154,9 +179,10 @@ export default function CheckoutSection({ user }: Props) {
       }
     }
     loadCountries();
+    // eslint-disable-next-line
   }, [user?.country]);
 
-  // Load states
+  // --- Load states
   useEffect(() => {
     async function loadStates() {
       if (!country) {
@@ -186,7 +212,7 @@ export default function CheckoutSection({ user }: Props) {
     loadStates();
   }, [country]);
 
-  // Fetch delivery options
+  // --- Fetch delivery options
   useEffect(() => {
     async function loadOptions() {
       if (!country) return;
@@ -212,6 +238,12 @@ export default function CheckoutSection({ user }: Props) {
     loadOptions();
   }, [country]);
 
+  // --- Reset "hasAttemptedPayment" if user edits form or cart
+  useEffect(() => {
+    setHasAttemptedPayment(false);
+    // eslint-disable-next-line
+  }, [email, total, firstName, lastName, deliveryAddress, selectedDeliveryOption]);
+
   // Phone code options
   const phoneOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -225,27 +257,6 @@ export default function CheckoutSection({ user }: Props) {
       iso2,
     }));
   }, [countryList]);
-
-  // Totals
-  const itemsSubtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum: number, item: CartItem) =>
-          sum + (item.price - item.sizeModFee) * item.quantity,
-        0
-      ),
-    [items]
-  );
-  const sizeModTotal = useMemo(
-    () =>
-      items.reduce(
-        (sum: number, item: CartItem) => sum + item.sizeModFee * item.quantity,
-        0
-      ),
-    [items]
-  );
-  const deliveryFee = selectedDeliveryOption?.baseFee ?? 0;
-  const total = itemsSubtotal + sizeModTotal + deliveryFee;
 
   // Readiness
   const isPaymentReady =
@@ -318,6 +329,7 @@ export default function CheckoutSection({ user }: Props) {
 
   const handlePaystackSuccess = async (reference: any) => {
     try {
+      setHasAttemptedPayment(true);
       if (isProcessing || orderCreatingFromReference) return;
 
       const refString =
@@ -362,6 +374,7 @@ export default function CheckoutSection({ user }: Props) {
   };
 
   const retryOrderCreation = async () => {
+    setHasAttemptedPayment(true);
     if (!lastPaymentReference) return;
     if (isProcessing || orderCreatingFromReference) return;
 
@@ -706,17 +719,6 @@ export default function CheckoutSection({ user }: Props) {
                 </div>
               </div>
 
-      {error && (
-  <div className="mt-3 text-sm text-red-600">
-    {typeof error === "string" ? error : error.error}
-    {error.code && <div className="text-xs mt-1">Code: {error.code}</div>}
-    {error.details && (
-      <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(error.details, null, 2)}</pre>
-    )}
-  </div>
-)}
-
-
               <div className="mt-6">
                 {!isPaymentReady ? (
                   <Button disabled className="w-full py-3 rounded-full">
@@ -724,20 +726,22 @@ export default function CheckoutSection({ user }: Props) {
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                    <PaystackButton
-                      {...paystackConfig}
-                      text={
-                        isProcessing || orderCreatingFromReference
-                          ? "Finalizing order..."
-                          : `Pay ${formatAmount(total, currency)}`
-                      }
-                      onSuccess={handlePaystackSuccess}
-                      onClose={() => {
-                        toast.error("Payment cancelled. Please try again.");
-                      }}
-                      className="w-full py-3 rounded-full bg-brand text-white font-medium disabled:opacity-60"
-                      disabled={paymentDisabled || !safePaystackPublicKey}
-                    />
+                <PaystackButton
+  {...paystackConfig}
+  text={
+    isProcessing || orderCreatingFromReference
+      ? "Finalizing order..."
+      : `Pay ${formatAmount(total, currency)}`
+  }
+  onSuccess={handlePaystackSuccess}
+  onClose={() => {
+    setHasAttemptedPayment(true);
+    toast.error("Payment cancelled. Please try again.");
+  }}
+  className="w-full py-3 rounded-full bg-brand text-white font-medium disabled:opacity-60"
+  disabled={paymentDisabled || !safePaystackPublicKey}
+/>
+
                     {orderCreatingFromReference &&
                       lastPaymentReference &&
                       !result?.orderId && (
@@ -763,11 +767,20 @@ export default function CheckoutSection({ user }: Props) {
                         We’re confirming your order. This should take a moment.
                       </p>
                     )}
-             
                   </div>
                 )}
               </div>
             </div>
+            {/* --- ERROR UI OUTSIDE THE CARD --- */}
+            {hasAttemptedPayment && error && (
+              <div className="mt-2 px-3 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm">
+                {typeof error === "string" ? error : error.error}
+                {error.code && <div className="text-xs mt-1">Code: {error.code}</div>}
+                {error.details && (
+                  <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(error.details, null, 2)}</pre>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
