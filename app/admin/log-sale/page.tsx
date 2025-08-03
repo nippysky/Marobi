@@ -9,7 +9,7 @@ export default async function LogOfflineSalePage() {
   // 1) Check session
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    const cb = encodeURIComponent("/admin/log‑sale");
+    const cb = encodeURIComponent("/admin/log-sale");
     return redirect(`/admin-login?callbackUrl=${cb}`);
   }
 
@@ -23,8 +23,8 @@ export default async function LogOfflineSalePage() {
 
   // 3) Render form
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-extrabold mb-8">Log Offline Sale</h1>
+    <div className="p-8 max-w-6xl mx-auto">
+      <h1 className="text-4xl font-extrabold mb-8">Log Offline Sale</h1>
       <OfflineSaleForm staffId={staff.id} />
     </div>
   );

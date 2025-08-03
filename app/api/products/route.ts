@@ -19,7 +19,8 @@ const ProductPayload = z.object({
   sizeStocks: z.record(z.string(), z.string()),
   customSizes: z.array(z.string()),
   images: z.array(z.string()),
-  videoUrl: z.string().url().optional().nullable(),
+  videoUrl: z.url().optional().nullable(),
+  weight: z.number().min(0.0001), 
 });
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -48,7 +49,14 @@ export async function GET(req: NextRequest) {
         status: true,
         videoUrl: true,
         categorySlug: true,
-        variants: { select: { color: true, size: true, stock: true } },
+        variants: {
+          select: {
+            color: true,
+            size: true,
+            stock: true,
+            weight: true,
+          },
+        },
       },
       orderBy: { name: "asc" },
     });
@@ -72,6 +80,7 @@ export async function GET(req: NextRequest) {
         color: v.color,
         size: v.size,
         inStock: v.stock,
+        weight: v.weight ?? null,
       })),
     }));
 
@@ -112,10 +121,11 @@ export async function POST(request: NextRequest) {
       customSizes,
       images,
       videoUrl,
+      weight,
     } = parsed.data;
 
-    // build variants
-    const variants: { color: string; size: string; stock: number }[] = [];
+    // build variants (all get the same weight)
+    const variants: { color: string; size: string; stock: number; weight: number }[] = [];
     const sizes = Object.keys(sizeStocks);
     if (colors.length) {
       for (const color of colors) {
@@ -125,10 +135,11 @@ export async function POST(request: NextRequest) {
               color,
               size,
               stock: Number(sizeStocks[size]) || 0,
+              weight,
             });
           }
         } else {
-          variants.push({ color, size: "", stock: 0 });
+          variants.push({ color, size: "", stock: 0, weight });
         }
       }
     } else {
@@ -137,6 +148,7 @@ export async function POST(request: NextRequest) {
           color: "",
           size,
           stock: Number(sizeStocks[size]) || 0,
+          weight,
         });
       }
     }
@@ -163,6 +175,7 @@ export async function POST(request: NextRequest) {
                 color: v.color,
                 size: v.size,
                 stock: v.stock,
+                weight: v.weight,
               })),
             }
           : undefined,
@@ -180,11 +193,17 @@ export async function POST(request: NextRequest) {
         status: true,
         videoUrl: true,
         categorySlug: true,
-        variants: { select: { color: true, size: true, stock: true } },
+        variants: {
+          select: {
+            color: true,
+            size: true,
+            stock: true,
+            weight: true,
+          },
+        },
       },
     });
 
-    // reshape to match frontend `Product` interface
     const shaped = {
       id: product.id,
       name: product.name,
@@ -204,6 +223,7 @@ export async function POST(request: NextRequest) {
         color: v.color,
         size: v.size,
         inStock: v.stock,
+        weight: v.weight ?? null,
       })),
     };
 

@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import ProductReviewsPanel from "./ProductReviewsPanel";
+import { Button } from "@/components/ui/button";
 
 interface ProductBasics {
   id: string;
   name: string;
   description: string | null;
   images: string[];
-  category: string;
+  category: {
+    name: string;
+    description: string | null;
+  };
   averageRating: number;
   ratingCount: number;
   createdAt: Date;
@@ -16,6 +20,18 @@ interface ProductBasics {
   priceUSD: number | null;
   priceEUR: number | null;
   priceGBP: number | null;
+  status: "Draft" | "Published" | "Archived";
+  sizeMods: boolean;
+  videoUrl: string | null;
+  variants: {
+    id: string;
+    color: string;
+    size: string;
+    stock: number;
+    weight: number | null;
+    createdAt: Date;
+  }[];
+  wishlistCount: number;
 }
 
 export default function ProductTabsClient({
@@ -60,23 +76,24 @@ function TabButton({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
+      variant={active ? "secondary" : "ghost"}
+      size="sm"
       onClick={onClick}
-      aria-current={active ? "page" : undefined}
-      type="button"
-      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+      className={`rounded-none border-b-2 -mb-px ${
         active
           ? "border-gray-900 text-gray-900"
           : "border-transparent text-gray-500 hover:text-gray-800"
       }`}
     >
       {label}
-    </button>
+    </Button>
   );
 }
 
 function OverviewSection({ product }: { product: ProductBasics }) {
   const gallery = product.images;
+
   return (
     <div className="grid gap-6 md:grid-cols-3">
       {/* left side */}
@@ -91,14 +108,12 @@ function OverviewSection({ product }: { product: ProductBasics }) {
             <dd>{product.name}</dd>
 
             <dt className="text-gray-500">Category</dt>
-            <dd>{product.category}</dd>
+            <dd>{product.category.name}</dd>
 
             <dt className="text-gray-500">Prices</dt>
             <dd>
-              ₦{product.priceNGN ?? "-"} /
-              ${product.priceUSD ?? "-"} /
-              €{product.priceEUR ?? "-"} /
-              £{product.priceGBP ?? "-"}
+              ₦{product.priceNGN ?? "-"} / ${product.priceUSD ?? "-"} / €
+              {product.priceEUR ?? "-"} / £{product.priceGBP ?? "-"}
             </dd>
 
             <dt className="text-gray-500">Rating</dt>
@@ -106,6 +121,28 @@ function OverviewSection({ product }: { product: ProductBasics }) {
               {product.ratingCount
                 ? `${product.averageRating.toFixed(2)} (${product.ratingCount})`
                 : "No reviews yet"}
+            </dd>
+
+            <dt className="text-gray-500">Status</dt>
+            <dd>{product.status}</dd>
+
+            <dt className="text-gray-500">Size Mods</dt>
+            <dd>{product.sizeMods ? "Enabled" : "Disabled"}</dd>
+
+            <dt className="text-gray-500">Video</dt>
+            <dd>
+              {product.videoUrl ? (
+                <a
+                  href={product.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 underline text-sm"
+                >
+                  View Video
+                </a>
+              ) : (
+                "—"
+              )}
             </dd>
           </dl>
         </div>
@@ -123,6 +160,45 @@ function OverviewSection({ product }: { product: ProductBasics }) {
             <p className="italic text-sm text-gray-400">
               No description added yet.
             </p>
+          )}
+        </div>
+
+        {/* variants */}
+        <div className="p-4 border rounded bg-white">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide">
+            Variants
+          </h2>
+          {product.variants.length === 0 ? (
+            <p className="italic text-sm text-gray-400">No variants created.</p>
+          ) : (
+            <div className="overflow-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-left p-2 border-b">Color</th>
+                    <th className="text-left p-2 border-b">Size</th>
+                    <th className="text-left p-2 border-b">Stock</th>
+                    <th className="text-left p-2 border-b">Weight</th>
+                    <th className="text-left p-2 border-b">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {product.variants.map((v) => (
+                    <tr key={v.id} className="odd:bg-gray-50">
+                      <td className="p-2 border-b">{v.color}</td>
+                      <td className="p-2 border-b">{v.size}</td>
+                      <td className="p-2 border-b">{v.stock}</td>
+                      <td className="p-2 border-b">
+                        {v.weight != null ? `${v.weight.toFixed(2)} kg` : "—"}
+                      </td>
+                      <td className="p-2 border-b">
+                        {new Date(v.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
@@ -180,7 +256,7 @@ function OverviewSection({ product }: { product: ProductBasics }) {
           </h2>
           <ul className="space-y-1 list-disc pl-4 text-sm text-gray-600">
             <li>Use consistent aspect‐ratios for images.</li>
-            <li>High‑res photos build trust.</li>
+            <li>High-res photos build trust.</li>
             <li>Prompt customers to leave reviews.</li>
           </ul>
         </div>

@@ -11,13 +11,35 @@ export async function GET(req: NextRequest) {
 
   const products = await prisma.product.findMany({
     where: {
-      OR: [
-        { id: { contains: query, mode: "insensitive" } },
-        { name: { contains: query, mode: "insensitive" } }
+      AND: [
+        {
+          status: "Published",
+        },
+        {
+          OR: [
+            { id: { contains: query, mode: "insensitive" } },
+            { name: { contains: query, mode: "insensitive" } },
+          ],
+        },
       ],
-      status: "Published",
     },
-    include: { variants: true },
+    select: {
+      id: true,
+      name: true,
+      variants: {
+        select: {
+          color: true,
+          size: true,
+          stock: true,
+        },
+      },
+      sizeMods: true,
+      images: true,
+      priceNGN: true,
+      priceUSD: true,
+      priceEUR: true,
+      priceGBP: true,
+    },
     take: 8,
   });
 

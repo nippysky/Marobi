@@ -55,6 +55,12 @@ function safePositiveInt(str: string, { min = 0, max = 1_000_000 }: { min?: numb
   if (n > max) return max;
   return n;
 }
+function safePositiveFloat(val: unknown): number | null {
+  if (val === "" || val == null) return null;
+  const n = Number(val);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
@@ -103,14 +109,27 @@ export async function PUT(
     return jsonError("At least one size/stock entry is required to publish.");
   }
 
+  const weight = safePositiveFloat(body.weight); // new default variant weight
+  if (body.status === "Published" && weight == null) {
+    return jsonError("Weight is required to publish.");
+  }
+
   // build desired variants
   const effectiveColors = colors.length ? colors : [""];
-  const desiredMap = new Map<string, { color: string; size: string; stock: number }>();
+  const desiredMap = new Map<string, { color: string; size: string; stock: number; weight?: number }>();
   for (const size of sizeLabels) {
     const stock = safePositiveInt(rawSizeStocks[size]);
     if (stock == null) continue;
     for (const color of effectiveColors) {
-      desiredMap.set(comboKey(color, size), { color, size: size.trim(), stock });
+      const entry: { color: string; size: string; stock: number; weight?: number } = {
+        color,
+        size: size.trim(),
+        stock,
+      };
+      if (weight != null) {
+        entry.weight = weight;
+      }
+      desiredMap.set(comboKey(color, size), entry);
     }
   }
   if (body.status === "Published" && desiredMap.size === 0) {
@@ -137,7 +156,7 @@ export async function PUT(
           priceGBP,
           sizeMods,
           status: body.status as ProductStatus,
-          videoUrl,   
+          videoUrl,
         },
       });
 
@@ -151,10 +170,24 @@ export async function PUT(
         const key = comboKey(desired.color, desired.size);
         if (existingMap.has(key)) {
           const ev = existingMap.get(key)!;
-          await tx.variant.update({ where: { id: ev.id }, data: { stock: desired.stock } });
+          await tx.variant.update({
+            where: { id: ev.id },
+            data: {
+              stock: desired.stock,
+              ...(desired.weight !== undefined ? { weight: desired.weight } : {}),
+            },
+          });
           existingMap.delete(key);
         } else {
-          await tx.variant.create({ data: { productId, ...desired } });
+          await tx.variant.create({
+            data: {
+              productId,
+              color: desired.color,
+              size: desired.size,
+              stock: desired.stock,
+              ...(desired.weight !== undefined ? { weight: desired.weight } : {}),
+            },
+          });
         }
       }
       for (const stale of existingMap.values()) {
@@ -177,8 +210,11 @@ export async function PUT(
         priceGBP: true,
         sizeMods: true,
         status: true,
-        videoUrl: true, 
-        variants: { select: { color: true, size: true, stock: true }, orderBy: [{ color: "asc" }, { size: "asc" }] },
+        videoUrl: true,
+        variants: {
+          select: { color: true, size: true, stock: true, weight: true },
+          orderBy: [{ color: "asc" }, { size: "asc" }],
+        },
       },
     });
     if (!updated) return jsonError("Product not found after update", 404);

@@ -1,3 +1,4 @@
+// lib/mail.ts
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/db";
 
@@ -12,17 +13,46 @@ const MUTED_COLOR = "#6b7280";
 const BORDER_RADIUS = "8px";
 
 /* ---------- Transporter ---------- */
+/**
+ * SMTP configuration:
+ * - EMAIL_HOST / EMAIL_PORT / EMAIL_USER / EMAIL_PASS should be set in env.
+ * - For Gmail: if using a Google account with 2FA enabled you must create an "App Password"
+ *   and use that as EMAIL_PASS. Regular account password will often fail or be blocked.
+ * - Consider using a transactional provider (SendGrid, Mailgun, etc.) for reliability.
+ */
+const smtpHost = process.env.EMAIL_HOST || "smtp.gmail.com";
+const smtpPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : 587; // prefer 587 (STARTTLS)
+const smtpUser = process.env.EMAIL_USER;
+const smtpPass = process.env.EMAIL_PASS;
+
+if (!smtpUser || !smtpPass) {
+  console.warn(
+    "[mail] WARNING: EMAIL_USER or EMAIL_PASS not set. Outbound emails will fail until configured."
+  );
+}
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpPort === 465, // true if using port 465
+  auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
+  tls: {
+    rejectUnauthorized: false, // in production you might want to enforce true
   },
 });
 
-transporter.verify().catch((err) => {
-  console.warn("⚠️ Email transporter verification failed:", err);
-});
+// Verify transporter once at startup (non-blocking)
+transporter
+  .verify()
+  .then(() => {
+    console.info("[mail] SMTP transporter verified and ready.");
+  })
+  .catch((err) => {
+    console.warn("⚠️ Email transporter verification failed:", err);
+  });
 
 /* ---------- Email Shell Renderer ---------- */
 interface RenderEmailOptions {
@@ -173,12 +203,17 @@ export async function sendVerificationEmail(email: string, token: string) {
     preheader: "Verify your email to finish setting up your Marobi account.",
   });
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to: email,
-    subject: `Verify your ${BRAND_NAME} account`,
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: email,
+      subject: `Verify your ${BRAND_NAME} account`,
+      html,
+    });
+  } catch (err) {
+    console.warn(`[mail] sendVerificationEmail failed for ${email}:`, err);
+    throw err;
+  }
 }
 
 /** Password reset (link only) */
@@ -205,12 +240,17 @@ export async function sendResetPasswordEmail(
     preheader: "Reset your Marobi password securely.",
   });
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to: email,
-    subject: `Reset your ${BRAND_NAME} password`,
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: email,
+      subject: `Reset your ${BRAND_NAME} password`,
+      html,
+    });
+  } catch (err) {
+    console.warn(`[mail] sendResetPasswordEmail failed for ${email}:`, err);
+    throw err;
+  }
 }
 
 /** Generic transactional / notification email */
@@ -236,11 +276,40 @@ export async function sendGenericEmail(args: {
     preheader,
   });
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.warn(`[mail] sendGenericEmail failed for ${to}:`, err);
+    throw err;
+  }
+}
+
+/** Status update email (wrapper for clarity) */
+export async function sendStatusEmail(params: {
+  to: string;
+  name: string;
+  orderId: string;
+  status: string;
+}) {
+  const { to, name, orderId, status } = params;
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  await sendGenericEmail({
     to,
-    subject,
-    html,
+    subject: `Your order ${orderId} is now ${status}`,
+    title: `Order ${orderId} — ${status}`,
+    intro: `Hi ${name},`,
+    bodyHtml: `<p>Your order <strong>${orderId}</strong> status has been updated to <strong>${status}</strong>.</p>`,
+    button: {
+      label: "View Your Orders",
+      url: `${baseUrl}/account`,
+    },
+    preheader: `Your order is now ${status}`,
+    footerNote: "Questions? Just reply to this email and we’ll help.",
   });
 }
 
@@ -347,7 +416,11 @@ export async function sendReceiptEmailWithRetry({
       <div style="margin-top:16px;font-size:14px;">
         <p><strong>Customer:</strong> ${name}</p>
         <p><strong>Email:</strong> ${to}</p>
-        ${recipient.phone ? `<p><strong>Phone:</strong> ${recipient.phone}</p>` : ""}
+        ${
+          recipient.phone
+            ? `<p><strong>Phone:</strong> ${recipient.phone}</p>`
+            : ""
+        }
         ${addressHtml}
       </div>
     </div>
@@ -419,9 +492,14 @@ export async function sendReceiptEmailWithRetry({
       `Receipt email send failed for order ${order.id}, will retry at ${nextRetry.toISOString()}`,
       err
     );
-    // rethrow so caller can observe if needed
     throw err;
   }
 }
 
-export { BRAND_NAME, BRAND_COLOR, BRAND_ACCENT };
+export {
+  BRAND_NAME,
+  BRAND_COLOR,
+  BRAND_ACCENT,
+  renderEmail,
+  transporter,
+};

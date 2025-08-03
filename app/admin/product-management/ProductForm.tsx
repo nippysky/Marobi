@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, ChangeEvent } from "react";
-import { ProductPayload } from "@/types/product";
+import type { ProductPayload } from "@/types/product";
 import type { Category } from "@/lib/categories";
 import {
   Card,
@@ -46,56 +46,66 @@ export default function ProductForm({
     initialProduct?.description ?? ""
   );
   const [price, setPrice] = useState({
-    NGN: initialProduct?.price.NGN.toString() ?? "",
-    USD: initialProduct?.price.USD.toString() ?? "",
-    EUR: initialProduct?.price.EUR.toString() ?? "",
-    GBP: initialProduct?.price.GBP.toString() ?? "",
+    NGN:
+      initialProduct?.price.NGN != null
+        ? String(initialProduct.price.NGN)
+        : "",
+    USD:
+      initialProduct?.price.USD != null
+        ? String(initialProduct.price.USD)
+        : "",
+    EUR:
+      initialProduct?.price.EUR != null
+        ? String(initialProduct.price.EUR)
+        : "",
+    GBP:
+      initialProduct?.price.GBP != null
+        ? String(initialProduct.price.GBP)
+        : "",
   });
   const [status, setStatus] = useState<ProductPayload["status"]>(
     initialProduct?.status ?? "Draft"
   );
-  const [sizeMods, setSizeMods] = useState(
-    initialProduct?.sizeMods ?? false
-  );
+  const [sizeMods, setSizeMods] = useState(initialProduct?.sizeMods ?? false);
   const initialHasColors = (initialProduct?.colors?.length ?? 0) > 0;
   const [hasColors, setHasColors] = useState(initialHasColors);
   const [colors, setColors] = useState<string[]>(
     initialHasColors ? [...(initialProduct?.colors || [])] : []
   );
   const [videoUrl, setVideoUrl] = useState(initialProduct?.videoUrl ?? "");
+  const [weight, setWeight] = useState<string>(
+    initialProduct?.weight != null ? String(initialProduct.weight) : ""
+  );
 
   useEffect(() => {
     if (hasColors && colors.length === 0) setColors([""]);
     if (!hasColors) setColors([]);
   }, [hasColors]);
-  const [sizeStocks, setSizeStocks] = useState<Record<string, string>>(
-    { ...(initialProduct?.sizeStocks ?? {}) }
-  );
-  const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(
-    () => {
-      const base: Record<string, boolean> = {};
-      for (const s of CONVENTIONAL_SIZES) {
-        base[s] = initialProduct?.sizeStocks?.[s] !== undefined;
-      }
-      return base;
+
+  const [sizeStocks, setSizeStocks] = useState<Record<string, string>>({
+    ...(initialProduct?.sizeStocks ?? {}),
+  });
+  const [sizeEnabled, setSizeEnabled] = useState<Record<string, boolean>>(() => {
+    const base: Record<string, boolean> = {};
+    for (const s of CONVENTIONAL_SIZES) {
+      base[s] = initialProduct?.sizeStocks?.[s] !== undefined;
     }
-  );
+    return base;
+  });
   const [customSizes, setCustomSizes] = useState<string[]>(
     initialProduct?.customSizes ?? []
   );
-  const [images, setImages] = useState<string[]>(
-    initialProduct?.images ?? []
-  );
+  const [images, setImages] = useState<string[]>(initialProduct?.images ?? []);
   const [saving, setSaving] = useState(false);
 
   const isFormValid = useMemo(() => {
     if (!name.trim() || !category || !description.trim()) return false;
+    if (!weight || isNaN(Number(weight)) || Number(weight) <= 0) return false;
     for (const cur of ["NGN", "USD", "EUR", "GBP"] as const) {
       const num = Number(price[cur]);
       if (!price[cur] || isNaN(num) || num < 1) return false;
     }
-    if (hasColors && colors.filter((c) => c.trim()).length === 0)
-      return false;
+    if (hasColors && colors.filter((c) => c.trim()).length === 0) return false;
     for (const sz of CONVENTIONAL_SIZES) {
       if (
         sizeEnabled[sz] &&
@@ -121,6 +131,7 @@ export default function ProductForm({
     sizeStocks,
     customSizes,
     images,
+    weight,
   ]);
 
   async function uploadFile(file: File): Promise<string> {
@@ -152,7 +163,9 @@ export default function ProductForm({
 
   async function handleSave() {
     if (!isFormValid) {
-      toast.error("Please fill all required fields and ensure prices ≥ 1.");
+      toast.error(
+        "Please fill all required fields, ensure prices ≥ 1, and weight is provided."
+      );
       return;
     }
     setSaving(true);
@@ -176,6 +189,7 @@ export default function ProductForm({
       customSizes: customSizes.filter((c) => c.trim()),
       images,
       videoUrl: videoUrl.trim() || null,
+      weight: parseFloat(weight),
     };
     try {
       await onSave(payload);
@@ -185,12 +199,16 @@ export default function ProductForm({
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className={`max-w-4xl mx-auto ${saving ? "opacity-80" : ""}`}>
       <CardHeader>
         <CardTitle>Product Details</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="flex flex-col space-y-1">
+        <div
+          className={`flex flex-col space-y-1 ${
+            saving ? "animate-pulse" : ""
+          }`}
+        >
           <Label>Product Name *</Label>
           <Input
             value={name}
@@ -198,7 +216,11 @@ export default function ProductForm({
             disabled={saving}
           />
         </div>
-        <div className="flex flex-col space-y-1">
+        <div
+          className={`flex flex-col space-y-1 ${
+            saving ? "animate-pulse" : ""
+          }`}
+        >
           <Label>Category *</Label>
           <Select
             value={category}
@@ -217,7 +239,11 @@ export default function ProductForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col space-y-1">
+        <div
+          className={`flex flex-col space-y-1 ${
+            saving ? "animate-pulse" : ""
+          }`}
+        >
           <Label>Status *</Label>
           <Select
             value={status}
@@ -252,6 +278,20 @@ export default function ProductForm({
           />
           <Label>Has Colors?</Label>
         </div>
+
+        <div className="flex flex-col space-y-1">
+          <Label>Default Variant Weight (kg) *</Label>
+          <Input
+            type="number"
+            placeholder="e.g., 0.5"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            disabled={saving}
+            min={0.001}
+            step="0.001"
+          />
+        </div>
+
         {hasColors && (
           <div className="md:col-span-2 grid grid-cols-1 gap-2">
             {colors.map((c, i) => (
@@ -318,16 +358,15 @@ export default function ProductForm({
         </div>
 
         <div className="md:col-span-2 flex flex-col space-y-1">
-  <Label>Video URL</Label>
-  <Input
-    type="url"
-    placeholder="https://youtube.com/…"
-    value={videoUrl}
-    onChange={(e) => setVideoUrl(e.target.value)}
-    disabled={saving}
-  />
-</div>
-
+          <Label>Video URL</Label>
+          <Input
+            type="url"
+            placeholder="https://youtube.com/…"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            disabled={saving}
+          />
+        </div>
 
         <div className="md:col-span-2 space-y-2">
           <Label>Sizes & Stock</Label>
@@ -444,9 +483,7 @@ export default function ProductForm({
                         className="absolute top-1 right-1"
                         disabled={saving}
                         onClick={() =>
-                          setImages((imgs) =>
-                            imgs.filter((_, i) => i !== idx)
-                          )
+                          setImages((imgs) => imgs.filter((_, i) => i !== idx))
                         }
                       >
                         <X className="h-4 w-4 text-red-600" />

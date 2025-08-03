@@ -48,7 +48,6 @@ export default function ProductReviewsPanel({ productId }: { productId: string }
       const json = await res.json();
       toast.success("Review deleted");
       setDeleteTarget(null);
-      // Update header stats instantly (optional)
       if (meta) {
         meta.averageRating = json.newProductStats.averageRating;
         meta.ratingCount = json.newProductStats.ratingCount;
@@ -107,8 +106,10 @@ export default function ProductReviewsPanel({ productId }: { productId: string }
           className="border rounded px-3 py-2 text-sm"
         >
           <option value="ALL">All Ratings</option>
-          {[5,4,3,2,1].map(r => (
-            <option key={r} value={r}>{r} stars</option>
+          {[5, 4, 3, 2, 1].map((r) => (
+            <option key={r} value={r}>
+              {r} stars
+            </option>
           ))}
         </select>
       </div>
@@ -119,7 +120,7 @@ export default function ProductReviewsPanel({ productId }: { productId: string }
           loading={loading}
           error={error}
           reviews={data}
-          onDelete={id => setDeleteTarget(id)}
+          onDelete={(id) => setDeleteTarget(id)}
           meta={meta}
         />
       </div>
@@ -155,12 +156,16 @@ export default function ProductReviewsPanel({ productId }: { productId: string }
       )}
 
       {/* Delete Dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Review?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. The product rating will be recalculated.
+              This action cannot be undone. The product rating will be
+              recalculated.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -189,11 +194,7 @@ function SummaryHeader({ meta, loading }: { meta: any; loading: boolean }) {
     );
   }
   if (!meta) {
-    return (
-      <div className="text-sm text-gray-500">
-        No data yet.
-      </div>
-    );
+    return <div className="text-sm text-gray-500">No data yet.</div>;
   }
 
   const { averageRating, ratingCount, starBreakdown } = meta;
@@ -216,7 +217,7 @@ function SummaryHeader({ meta, loading }: { meta: any; loading: boolean }) {
           Star Distribution (Global)
         </div>
         <div className="space-y-1">
-          {[5,4,3,2,1].map(r => {
+          {[5, 4, 3, 2, 1].map((r) => {
             const count = starBreakdown?.[String(r)] ?? 0;
             const total = ratingCount || 1;
             const pct = ((count / total) * 100) || 0;
@@ -258,7 +259,10 @@ function ReviewsList({
   if (error) {
     return (
       <div className="p-6 text-sm text-red-600">
-        Failed to load reviews. <button onClick={() => location.reload()} className="underline">Reload</button>
+        Failed to load reviews.{" "}
+        <button onClick={() => location.reload()} className="underline">
+          Reload
+        </button>
       </div>
     );
   }
@@ -286,9 +290,9 @@ function ReviewsList({
 
   return (
     <ul className="divide-y">
-      {reviews.map(r => (
+      {reviews.map((r) => (
         <li key={r.id} className="p-4 flex gap-4">
-            <RatingStars rating={r.rating} />
+          <RatingStars rating={r.rating} />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-medium">
@@ -299,9 +303,7 @@ function ReviewsList({
                 {new Date(r.createdAt).toLocaleString()}
               </span>
             </div>
-            <p className="text-sm mt-1 text-gray-800 line-clamp-3">
-              {r.body}
-            </p>
+            <p className="text-sm mt-1 text-gray-800 line-clamp-3">{r.body}</p>
           </div>
           <button
             onClick={() => onDelete(r.id)}

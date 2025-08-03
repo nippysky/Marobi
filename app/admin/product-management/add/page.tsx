@@ -1,8 +1,9 @@
 import BackButton from "@/components/BackButton";
-
 import { getAllCategories } from "@/lib/categories";
 import type { Category } from "@/lib/categories";
 import AddProductSection from "../AddProductSection";
+
+export const dynamic = "force-dynamic";
 
 export default async function AddProductPage() {
   const categories: Category[] = await getAllCategories();

@@ -1,3 +1,4 @@
+// file: app/admin/order-inventory/OrderTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -28,7 +29,6 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -38,10 +38,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Printer, Download, Trash2 } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Printer,
+  Download,
+  RefreshCcw,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
-
 import Papa from "papaparse";
 
 import type { OrderChannel, OrderRow } from "@/types/orders";
@@ -54,7 +59,6 @@ const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Delivered"];
 const CURRENCY_OPTIONS: Currency[] = ["NGN", "USD", "EUR", "GBP"];
 
 export default function OrderTable({ initialData }: Props) {
-  // ─── State ────────────────────────────────────────────────────────────
   const [data, setData] = useState<OrderRow[]>(initialData);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | OrderStatus>("All");
@@ -62,63 +66,19 @@ export default function OrderTable({ initialData }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
 
-    // single & bulk delete states
-  const [pendingDelete, setPendingDelete] = useState<string[]>([]);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [receiptOrder, setReceiptOrder] = useState<OrderRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
-
-  const [rowSelection, setRowSelection] = useState<{ [key: string]: boolean }>({});
-
-
 
   function openReceiptModal(order: OrderRow) {
     setReceiptOrder(order);
     setReceiptOpen(true);
   }
 
-
-    // ─── DELETE logic ─────────────────────────────────────────────────────
-  async function doDelete(ids: string[]) {
-    try {
-      await toast.promise(
-        Promise.all(
-          ids.map((id) =>
-            fetch(`/api/orders/${id}`, { method: "DELETE" }).then(res => {
-              if (!res.ok) throw new Error("Delete failed");
-            })
-          )
-        ),
-        {
-          loading: `Deleting ${ids.length} order(s)…`,
-          success: `Deleted ${ids.length} order(s)!`,
-          error: `Could not delete orders`,
-        }
-      );
-      // remove from UI
-      setData((d) => d.filter((o) => !ids.includes(o.id)));
-    } catch {
-      /* handled by toast */
-    } finally {
-      setDeleteOpen(false);
-      table.resetRowSelection();
-    }
-  }
-
-  function confirmDelete(id: string) {
-    setPendingDelete([id]);
-    setDeleteOpen(true);
-  }
-
-  function confirmBulkDelete() {
-    setPendingDelete(selectedIds);
-    setDeleteOpen(true);
-  }
-
-
-  // ─── Inline status update ─────────────────────────────────────────────
+  // Inline status change with indicator
   async function handleStatusChange(id: string, newStatus: OrderStatus) {
+    if (updatingIds.has(id)) return;
+    setUpdatingIds((s) => new Set(s).add(id));
     try {
       const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -129,13 +89,19 @@ export default function OrderTable({ initialData }: Props) {
       setData((d) =>
         d.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
-      toast.success("Status updated");
+      toast.success(`Order ${id} status updated to ${newStatus}`);
     } catch (err: any) {
       toast.error("❌ " + err.message);
+    } finally {
+      setUpdatingIds((s) => {
+        const copy = new Set(s);
+        copy.delete(id);
+        return copy;
+      });
     }
   }
 
-  // ─── Print with print‑js ──────────────────────────────────────────────
+  // Print (modern/futuristic)
   async function handlePrint(order: OrderRow) {
     if (typeof window === "undefined") return;
 
@@ -143,11 +109,11 @@ export default function OrderTable({ initialData }: Props) {
     const vatRate = 0.075;
     const subtotal = +order.totalAmount.toFixed(2);
     const vat = +(subtotal * vatRate).toFixed(2);
-    const deliveryCharge = 500;
+    const deliveryCharge = order.deliveryFee ?? 0;
+    const deliveryOptionName = order.deliveryOption?.name || "—";
     const totalWeight = order.products
       .reduce((w, p) => w + p.quantity * 0.2, 0)
       .toFixed(2);
-    const courier = "DHL Express";
     const sym =
       order.currency === "NGN"
         ? "₦"
@@ -158,43 +124,154 @@ export default function OrderTable({ initialData }: Props) {
         : "£";
     const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
 
-    const lines = order.products
-      .map(
-        (p) => `
-      <div class="line">
-        <div>
-          ${p.name}<br/>
-          <span class="small">Color: ${p.color} • Size: ${p.size} • Qty: ${
+    const productLines = order.products
+      .map((p) => {
+        const sizeModDetails = p.hasSizeMod
+          ? `<div class="mod">
+               <div><strong>Size modification fee:</strong> ${sym}${p.sizeModFee.toFixed(
+                 2
+               )}</div>
+               ${
+                 p.customSize
+                   ? `<div class="custom-sizes"><strong>Custom sizes:</strong> ${Object.entries(
+                       p.customSize
+                     )
+                       .map(([k, v]) => `${k}:${v}`)
+                       .join(", ")}</div>`
+                   : ""
+               }
+             </div>`
+          : "";
+        return `
+          <div class="prod">
+            <div class="prod-info">
+              <div class="name">${p.name}</div>
+              <div class="meta">Color: ${p.color} • Size: ${p.size} • Qty: ${
           p.quantity
-        }</span>
-        </div>
-        <div>${sym}${p.lineTotal.toLocaleString()}</div>
-      </div>`
-      )
+        }</div>
+              ${sizeModDetails}
+            </div>
+            <div class="price">${sym}${p.lineTotal.toLocaleString()}</div>
+          </div>
+        `;
+      })
       .join("");
 
     const html = `
       <html>
-        <head><style>${receiptCSS}</style></head>
+        <head>
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <style>
+            :root {
+              --bg:#0f111a;
+              --card:#1f233e;
+              --text:#f0f5ff;
+              --muted:#8a9bb8;
+              --accent:#5c7cfa;
+              --radius:16px;
+              font-family: system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+            }
+            body { background: #07091e; color: var(--text); padding:24px; margin:0;}
+            .wrapper { max-width:800px; margin:0 auto; }
+            .header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+            .title { font-size:1.75rem; font-weight:700; letter-spacing:0.5px; }
+            .small { font-size:0.75rem; color: var(--muted); margin-top:4px;}
+            .card { background: var(--card); border-radius: var(--radius); padding:24px; margin-top:16px; position:relative; overflow:hidden; }
+            .section { margin-bottom:20px; }
+            .prod { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.08); }
+            .prod-info { max-width:70%; }
+            .name { font-weight:600; font-size:1rem; }
+            .meta { font-size:0.65rem; color: var(--muted); margin-top:4px; }
+            .mod { margin-top:6px; font-size:0.65rem; background: rgba(92,124,250,0.08); padding:6px 8px; border-radius:8px; }
+            .custom-sizes { margin-top:4px; }
+            .price { font-weight:700; font-size:1rem; }
+            .totals { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:16px; }
+            .line { display:flex; justify-content:space-between; padding:6px 0; }
+            .grand { display:flex; justify-content:space-between; padding:12px 0; font-size:1.125rem; font-weight:700; border-top:2px solid var(--accent); margin-top:8px; }
+            .footer { margin-top:32px; font-size:0.75rem; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+            .badge { background: var(--accent); padding:4px 8px; border-radius:999px; font-size:0.5rem; text-transform:uppercase; letter-spacing:1px; display:inline-block; }
+            .info { display:flex; flex-direction:column; gap:4px; }
+            .delivery { margin-top:12px; background: rgba(255,255,255,0.03); padding:12px; border-radius:8px; }
+          </style>
+        </head>
         <body>
-          <div class="header">
-            <div>${now}</div>
-            <div>Marobi Receipt</div>
-            <div>Order: ${order.id}</div>
-          </div>
-          <div>Payment: ${order.paymentMethod}</div>
-          ${lines}
-          <div class="total"><span>Subtotal</span><span>${sym}${subtotal.toLocaleString()}</span></div>
-          <div class="line"><span>VAT ${(vatRate * 100).toFixed(1)}%</span><span>${sym}${vat.toLocaleString()}</span></div>
-          <div class="line"><span>Delivery</span><span>${sym}${deliveryCharge.toLocaleString()}</span></div>
-          <div class="line"><span>Weight</span><span>${totalWeight}kg</span></div>
-          <div class="line"><span>Courier</span><span>${courier}</span></div>
-          <div class="total"><span>Grand Total</span><span>${sym}${grand.toLocaleString()}</span></div>
-          <div class="footer small">
-            Customer: ${order.customer?.name ?? "Guest"}<br/>
-            Email: ${order.customer?.email ?? "-"}<br/>
-            Phone: ${order.customer?.phone ?? "-"}<br/>
-            Address: ${order.customer?.address ?? "-"}
+          <div class="wrapper">
+            <div class="header">
+              <div class="title">Marobi Receipt</div>
+              <div class="info">
+                <div><span class="badge">${order.status}</span></div>
+                <div class="small">Order: ${order.id}</div>
+                <div class="small">Date: ${now}</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section">
+                ${productLines}
+              </div>
+
+              <div class="section totals">
+                <div>
+                  <div class="line">
+                    <div>Subtotal</div>
+                    <div>${sym}${subtotal.toLocaleString()}</div>
+                  </div>
+                  <div class="line">
+                    <div>VAT (7.5%)</div>
+                    <div>${sym}${vat.toLocaleString()}</div>
+                  </div>
+                  <div class="line">
+                    <div>Delivery (${deliveryOptionName})</div>
+                    <div>${sym}${deliveryCharge.toLocaleString()}</div>
+                  </div>
+                  <div class="line">
+                    <div>Weight</div>
+                    <div>${totalWeight}kg</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="grand">
+                    <div>Grand Total</div>
+                    <div>${sym}${grand.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="delivery">
+                <div><strong>Delivery Option:</strong> ${deliveryOptionName}</div>
+                <div><strong>Delivery Fee:</strong> ${sym}${deliveryCharge.toLocaleString()}</div>
+                ${
+                  order.deliveryDetails
+                    ? `<div><strong>Details:</strong> ${order.deliveryDetails}</div>`
+                    : ""
+                }
+              </div>
+
+              <div class="footer">
+                <div>
+                  <div><strong>Customer:</strong> ${
+                    order.customer?.name ?? "Guest"
+                  }</div>
+                  <div><strong>Email:</strong> ${
+                    order.customer?.email ?? "-"
+                  }</div>
+                  <div><strong>Phone:</strong> ${
+                    order.customer?.phone ?? "-"
+                  }</div>
+                  <div><strong>Address:</strong> ${
+                    order.customer?.address ?? "-"
+                  }</div>
+                </div>
+                <div>
+                  <div><strong>Payment:</strong> ${order.paymentMethod}</div>
+                  <div><strong>Channel:</strong> ${
+                    order.channel === "OFFLINE"
+                      ? "Offline Sale"
+                      : "Online Store"
+                  }</div>
+                </div>
+              </div>
+            </div>
           </div>
         </body>
       </html>
@@ -209,7 +286,6 @@ export default function OrderTable({ initialData }: Props) {
     });
   }
 
-  // ─── Filtering & searching ────────────────────────────────────────────
   const filtered = useMemo(() => {
     return data.filter((o) => {
       if (search) {
@@ -228,22 +304,50 @@ export default function OrderTable({ initialData }: Props) {
     });
   }, [data, search, statusFilter, currencyFilter]);
 
-  // ─── CSV Export ───────────────────────────────────────────────────────
   function handleExportCSV() {
-    const rows = filtered.map((o) => ({
-      "Order ID": o.id,
-      Status: o.status,
-      "Amount (NGN)": o.totalNGN,
-      Amount: o.totalAmount,
-      Currency: o.currency,
-      "Channel":       o.channel === "OFFLINE" ? "Offline Sale" : "Online Store",
-      "Payment Method": o.paymentMethod,
-      "Customer Name": o.customer.name,
-      "Customer Email": o.customer.email,
-      "Customer Phone": o.customer.phone,
-      "Customer Address": o.customer.address,
-      "Created At": o.createdAt,
-    }));
+    const rows = filtered.map((o) => {
+      // product summary
+      const productSummary = o.products
+        .map(
+          (p) =>
+            `${p.name} x${p.quantity} (Color: ${p.color}, Size: ${p.size})`
+        )
+        .join(" | ");
+
+      // size mod summary per product
+      const sizeModSummary = o.products
+        .map((p) => {
+          if (!p.hasSizeMod) return null;
+          const custom = p.customSize
+            ? `; custom: ${Object.entries(p.customSize)
+                .map(([k, v]) => `${k}:${v}`)
+                .join(", ")}`
+            : "";
+          return `${p.name}: fee ${p.sizeModFee.toFixed(2)}${custom}`;
+        })
+        .filter(Boolean)
+        .join(" | ");
+
+      return {
+        "Order ID": o.id,
+        Status: o.status,
+        Channel: o.channel === "OFFLINE" ? "Offline Sale" : "Online Store",
+        Currency: o.currency,
+        "Amount (NGN)": o.totalNGN,
+        Amount: o.totalAmount,
+        "Payment Method": o.paymentMethod,
+        "Customer Name": o.customer.name,
+        "Customer Email": o.customer.email,
+        "Customer Phone": o.customer.phone,
+        "Customer Address": o.customer.address,
+        "Delivery Option": o.deliveryOption?.name ?? "—",
+        "Delivery Fee": o.deliveryFee ?? 0,
+        "Delivery Details": o.deliveryDetails || "—",
+        Products: productSummary,
+        "Size Modifications": sizeModSummary || "None",
+        "Created At": o.createdAt,
+      };
+    });
     const csv = Papa.unparse(rows);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -256,33 +360,17 @@ export default function OrderTable({ initialData }: Props) {
     URL.revokeObjectURL(url);
   }
 
-  // ─── Columns & table instance ────────────────────────────────────────
   const columns = useMemo<ColumnDef<OrderRow>[]>(() => [
     {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(v) => row.toggleSelected(!!v)}
-        />
-      ),
-    },
-    {
       accessorKey: "id",
-      header: "Order ID",
+      header: "Order ID",
       cell: ({ getValue }) => (
         <code className="font-mono text-sm">{getValue<string>()}</code>
       ),
     },
     {
       id: "preview",
-      header: "Order Contents",
+      header: "Order Contents",
       cell: ({ row }) => {
         const prods = row.original.products.slice(0, 3);
         return (
@@ -309,7 +397,7 @@ export default function OrderTable({ initialData }: Props) {
               className="ml-2 whitespace-nowrap"
               onClick={() => openReceiptModal(row.original)}
             >
-              View All
+              View All
             </Button>
           </div>
         );
@@ -326,18 +414,42 @@ export default function OrderTable({ initialData }: Props) {
             : s === "Shipped"
             ? "bg-yellow-100 text-yellow-800"
             : "bg-green-100 text-green-800";
+        const isUpdating = updatingIds.has(row.original.id);
         return (
-          <span
-            className={`px-2 py-0.5 rounded-full text-sm font-medium ${color}`}
-          >
-            {s}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-2 py-0.5 rounded-full text-sm font-medium ${color}`}
+            >
+              {s}
+            </span>
+            <Select
+              value={row.original.status}
+              onValueChange={(v) =>
+                handleStatusChange(row.original.id, v as OrderStatus)
+              }
+              disabled={isUpdating}
+            >
+              <SelectTrigger className="h-8 px-2 w-auto">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s2) => (
+                  <SelectItem key={s2} value={s2}>
+                    {s2}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isUpdating && (
+              <RefreshCcw className="animate-spin h-4 w-4 text-gray-600" />
+            )}
+          </div>
         );
       },
     },
     {
       id: "amountNGN",
-      header: "Amount (NGN)",
+      header: "Amount (NGN)",
       accessorFn: (r) => r.totalNGN,
       cell: ({ getValue }) => (
         <span className="font-medium">
@@ -373,14 +485,13 @@ export default function OrderTable({ initialData }: Props) {
       header: "Currency",
     },
     {
-  accessorKey: "channel",
-  header:      "Channel",
-  cell:        ({ getValue }) => {
-    const v = getValue<OrderChannel>();
-    return v === "OFFLINE" ? "Offline Sale" : "Online Store";
-  },
-},
-
+      accessorKey: "channel",
+      header: "Channel",
+      cell: ({ getValue }) => {
+        const v = getValue<OrderChannel>();
+        return v === "OFFLINE" ? "Offline Sale" : "Online Store";
+      },
+    },
     {
       id: "customer",
       header: "Customer",
@@ -400,6 +511,20 @@ export default function OrderTable({ initialData }: Props) {
       },
     },
     {
+      id: "delivery",
+      header: "Delivery",
+      cell: ({ row }) => (
+        <div className="text-sm">
+          <div>{row.original.deliveryOption?.name ?? "—"}</div>
+          {typeof row.original.deliveryFee === "number" && (
+            <div className="text-xs text-gray-500">
+              Fee: ₦{row.original.deliveryFee.toLocaleString()}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
@@ -412,80 +537,31 @@ export default function OrderTable({ initialData }: Props) {
           >
             <Printer className="h-5 w-5" />
           </Button>
-          <Select
-            value={row.original.status}
-            onValueChange={(v) =>
-              handleStatusChange(row.original.id, v as OrderStatus)
-            }
-          >
-            <SelectTrigger className="h-8 px-2 w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-red-600 hover:text-red-800"
-            onClick={() => confirmDelete(row.original.id)}
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
         </div>
       ),
     },
-  ], []);
+  ], [updatingIds]);
 
-  // ─── Columns & table instance ────────────────────────────────────────
   const table = useReactTable({
     data: filtered,
     columns,
-    state: { sorting, pagination, rowSelection },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // ─── Helpers ───────────────────────────────────────────────────────────
-  const selectedIds = useMemo(
-    () => table.getSelectedRowModel().flatRows.map(r => r.original.id),
-    [table]
-  );
-  const anySelected = selectedIds.length > 0;
-
   return (
     <>
-      {/* Bulk toolbar */}
-      {anySelected && (
-        <div className="flex items-center justify-between bg-gray-100 p-2 rounded mb-4">
-          <span>
-            <strong>{selectedIds.length}</strong> selected
-          </span>
-          <Button size="sm" variant="destructive" onClick={confirmBulkDelete}>
-            Delete Selected
+      {/* Export + filters */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-1 h-4 w-4" /> Export CSV
           </Button>
         </div>
-      )}
-
-
-      {/* ── Export + Filters Bar ── */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-        <Button
-          variant="outline"
-          onClick={handleExportCSV}
-          className="mb-2 md:mb-0"
-        >
-          <Download className="mr-1 h-4 w-4" /> Export CSV
-        </Button>
 
         <div className="flex flex-col md:flex-row items-center gap-4">
           <Input
@@ -531,7 +607,7 @@ export default function OrderTable({ initialData }: Props) {
         </div>
       </div>
 
-      {/* ── Table ── */}
+      {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
         <Table>
           <TableHeader>
@@ -596,7 +672,7 @@ export default function OrderTable({ initialData }: Props) {
         </Table>
       </div>
 
-      {/* ── Pagination ── */}
+      {/* Pagination */}
       <div className="flex items-center justify-between py-4">
         <Button
           variant="link"
@@ -629,7 +705,7 @@ export default function OrderTable({ initialData }: Props) {
         </select>
       </div>
 
-      {/* ── Receipt Preview Modal ── */}
+      {/* Receipt Modal */}
       {receiptOrder && (
         <Dialog open={receiptOpen} onOpenChange={() => setReceiptOpen(false)}>
           <DialogContent className="max-w-lg rounded-lg shadow-lg print:hidden">
@@ -646,11 +722,11 @@ export default function OrderTable({ initialData }: Props) {
                 const vatRate = 0.075;
                 const subtotal = +o.totalAmount.toFixed(2);
                 const vat = +(subtotal * vatRate).toFixed(2);
-                const deliveryCharge = 500;
+                const deliveryCharge = o.deliveryFee ?? 0;
+                const deliveryOptionName = o.deliveryOption?.name || "—";
                 const totalWeight = o.products
                   .reduce((w, p) => w + p.quantity * 0.2, 0)
                   .toFixed(2);
-                const courier = "DHL Express";
                 const sym =
                   o.currency === "NGN"
                     ? "₦"
@@ -662,14 +738,41 @@ export default function OrderTable({ initialData }: Props) {
                 const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
 
                 return (
-                  <div className="px-2">
+                  <div className="px-2 space-y-4">
                     {o.products.map((p) => (
-                      <div key={p.id} className="flex justify-between mb-2">
-                        <div>
+                      <div
+                        key={p.id}
+                        className="flex justify-between mb-2 border-b pb-2"
+                      >
+                        <div className="flex-1">
                           <div className="font-medium">{p.name}</div>
                           <div className="text-sm text-gray-600">
-                            Color: {p.color} • Size: {p.size} • Qty: {p.quantity}
+                            Color: {p.color} • Size: {p.size} • Qty:{" "}
+                            {p.quantity}
                           </div>
+                          {p.hasSizeMod && (
+                            <div className="mt-1 text-[12px] bg-indigo-50 p-2 rounded">
+                              <div>
+                                <strong>Size Mod:</strong> applied (5%)
+                              </div>
+                              <div>
+                                <strong>Fee:</strong> {sym}
+                                {p.sizeModFee.toFixed(2)}
+                              </div>
+                              {p.customSize && (
+                                <div className="text-xs mt-1">
+                                  <div className="font-medium">
+                                    Custom measurements:
+                                  </div>
+                                  <div>
+                                    {Object.entries(p.customSize)
+                                      .map(([k, v]) => `${k}: ${v}`)
+                                      .join(" • ")}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="font-medium">
                           {sym}
@@ -677,6 +780,7 @@ export default function OrderTable({ initialData }: Props) {
                         </div>
                       </div>
                     ))}
+
                     <div className="flex justify-between font-medium">
                       <span>Subtotal</span>
                       <span>
@@ -692,7 +796,7 @@ export default function OrderTable({ initialData }: Props) {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Delivery</span>
+                      <span>Delivery ({deliveryOptionName})</span>
                       <span>
                         {sym}
                         {deliveryCharge.toLocaleString()}
@@ -702,10 +806,6 @@ export default function OrderTable({ initialData }: Props) {
                       <span>Weight</span>
                       <span>{totalWeight}kg</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Courier</span>
-                      <span>{courier}</span>
-                    </div>
                     <div className="flex justify-between font-semibold mt-2">
                       <span>Grand Total</span>
                       <span>
@@ -713,6 +813,7 @@ export default function OrderTable({ initialData }: Props) {
                         {grand.toLocaleString()}
                       </span>
                     </div>
+
                     <div className="mt-4 text-sm space-y-1">
                       <div>
                         <strong>Customer:</strong> {o.customer?.name ?? "Guest"}
@@ -725,6 +826,16 @@ export default function OrderTable({ initialData }: Props) {
                       </div>
                       <div>
                         <strong>Address:</strong> {o.customer?.address ?? "-"}
+                      </div>
+                      <div className="mt-2">
+                        <div>
+                          <strong>Delivery Option:</strong>{" "}
+                          {deliveryOptionName}
+                        </div>
+                        <div>
+                          <strong>Delivery Details:</strong>{" "}
+                          {o.deliveryDetails || "—"}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -745,29 +856,6 @@ export default function OrderTable({ initialData }: Props) {
           </DialogContent>
         </Dialog>
       )}
-
-      
-      {/* Delete Confirmation Modal */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Delete {pendingDelete.length > 1 ? `${pendingDelete.length} orders?` : `order?`}
-            </DialogTitle>
-            <DialogDescription>
-              This <strong>cannot</strong> be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => doDelete(pendingDelete)}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

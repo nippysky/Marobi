@@ -6,11 +6,17 @@ export type ProductPayload = {
   category: string;
   description: string;
   images: string[];
-  price: { NGN: string | number; USD: string | number; EUR: string | number; GBP: string | number };
+  price: {
+    NGN: string | number;
+    USD: string | number;
+    EUR: string | number;
+    GBP: string | number;
+  };
   status: "Draft" | "Published" | "Archived";
   sizeMods: boolean;
-  colors: string[]; 
-  sizeStocks: Record<string, string>; 
-  customSizes: string[]; 
+  colors: string[];
+  sizeStocks: Record<string, string>;
+  customSizes: string[];
   videoUrl?: string | null;
+  weight: number;
 };

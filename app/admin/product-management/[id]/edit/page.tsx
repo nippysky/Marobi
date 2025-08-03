@@ -25,9 +25,9 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
       priceGBP: true,
       status: true,
       sizeMods: true,
-       videoUrl: true,
+      videoUrl: true,
       variants: {
-        select: { color: true, size: true, stock: true },
+        select: { color: true, size: true, stock: true, weight: true },
         orderBy: [{ color: "asc" }, { size: "asc" }],
       },
     },
@@ -52,6 +52,10 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
     (sz) => !CONVENTIONAL_SIZES.includes(sz as any)
   );
 
+  // 4) Weight: derive from first variant that has weight, fallback to 0
+  const firstWithWeight = product.variants.find((v) => typeof v.weight === "number" && !isNaN(v.weight));
+  const weight = firstWithWeight?.weight ?? 0;
+
   return {
     id:          product.id,
     name:        product.name,
@@ -70,7 +74,8 @@ async function loadProductPayload(id: string): Promise<ProductPayload | null> {
     colors:     distinctColors,
     sizeStocks,
     customSizes,
-    videoUrl:   product.videoUrl ?? "", 
+    videoUrl:   product.videoUrl ?? "",
+    weight,
   };
 }
 
