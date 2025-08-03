@@ -1,3 +1,9 @@
+// types/admin.ts
+import type {
+  OrderStatus,
+  Currency,
+} from "@/lib/generated/prisma-client";
+
 export interface AdminCustomerRow {
   id: string;
   name: string;
@@ -21,8 +27,8 @@ export interface AdminCustomerOrderProduct {
 
 export interface AdminCustomerOrder {
   id: string;
-  status: "Processing" | "Shipped" | "Delivered";
-  currency: "NGN" | "USD" | "EUR" | "GBP";
+  status: OrderStatus; // now includes "Cancelled"
+  currency: Currency;
   totalAmount: number;
   totalNGN: number;
   createdAt: string;
@@ -38,7 +44,7 @@ export interface AdminCustomerOrder {
     address: string;
   };
 
-  /** Populated for one‑off guest checkouts (never persisted to Customer table) */
+  /** Populated for one-off guest checkouts (never persisted to Customer table) */
   guestInfo?: {
     firstName: string;
     lastName: string;

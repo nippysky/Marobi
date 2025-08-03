@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import BackButton from "@/components/BackButton";
 import { notFound } from "next/navigation";
@@ -6,9 +8,10 @@ import {
   AdminCustomerOrderProduct,
 } from "@/types/admin";
 import CustomerSummary from "../CustomerSummary";
-import CustomerOrdersTable from "../CustomerOrdersTable";
+import CustomerOrdersTable from "./CustomerOrdersTable";
 
-export const dynamic = "force-dynamic";
+
+
 async function fetchCustomer(customerId: string) {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
@@ -51,13 +54,12 @@ async function fetchCustomer(customerId: string) {
   return customer;
 }
 
-
 export default async function CustomerDetailPage({
   params,
 }: {
-  params: Promise<{ customerId: string }>;
+  params: { customerId: string };
 }) {
-  const { customerId } = await params;
+  const { customerId } = params;
   const c = await fetchCustomer(customerId);
   if (!c) return notFound();
 
@@ -98,7 +100,7 @@ export default async function CustomerDetailPage({
     totalAmount: o.totalAmount,
     totalNGN: o.totalNGN,
     createdAt: o.createdAt.toISOString(),
-     paymentMethod: o.paymentMethod, 
+    paymentMethod: o.paymentMethod,
     customer: {
       id: c.id,
       name: `${c.firstName} ${c.lastName}`.trim(),
