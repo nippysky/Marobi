@@ -7,14 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Truck } from "lucide-react";
-import type { Currency } from "@/lib/generated/prisma-client";
+import type {
+  Currency,
+  OrderStatus,
+  OrderChannel,
+} from "@/lib/generated/prisma-client";
 
 export interface OrderDetailProps {
   order: {
     id: string;
     createdAt: string;
-    status: "Processing" | "Shipped" | "Delivered";
-    channel: "ONLINE" | "OFFLINE";
+    status: OrderStatus;
+    channel: OrderChannel;
     currency: Currency;
     paymentMethod: string;
     deliveryAddress: string;
@@ -53,11 +57,15 @@ export default function OrderDetail({ order }: OrderDetailProps) {
   const modTotal = items.reduce((sum, i) => sum + i.sizeModFee * i.quantity, 0);
   const total = subtotal + modTotal + deliveryFee;
 
-  // map your Prisma status → one of Badge’s allowed variants
-  const badgeVariant: "default" | "outline" | "secondary" = 
-    status === "Delivered" ? "default" :
-    status === "Processing" ? "outline" :
-    "secondary";
+  // map status to badge variant
+  const badgeVariant: "default" | "outline" | "secondary" =
+    status === "Delivered"
+      ? "default"
+      : status === "Processing"
+      ? "outline"
+      : status === "Cancelled"
+      ? "secondary"
+      : "secondary"; // fallback for unexpected
 
   return (
     <div className="space-y-6">
@@ -110,13 +118,13 @@ export default function OrderDetail({ order }: OrderDetailProps) {
                     </p>
                     {i.hasSizeMod && (
                       <p className="text-xs text-yellow-600">
-                        +5% custom‑size fee
+                        +5% custom-size fee
                       </p>
                     )}
                   </div>
                   <div className="text-right space-y-1">
                     <p className="font-medium">
-                      {currency} {formatAmount(i.lineTotal, currency)}
+                      {currency} {formatAmount(i.lineTotal, currency)}
                     </p>
                     <p className="text-xs text-gray-500">× {i.quantity}</p>
                   </div>
@@ -137,19 +145,27 @@ export default function OrderDetail({ order }: OrderDetailProps) {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span>Items Subtotal:</span>
-              <span>{currency} {formatAmount(subtotal, currency)}</span>
+              <span>
+                {currency} {formatAmount(subtotal, currency)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Size Mod Fees:</span>
-              <span>{currency} {formatAmount(modTotal, currency)}</span>
+              <span>
+                {currency} {formatAmount(modTotal, currency)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Delivery:</span>
-              <span>{currency} {formatAmount(deliveryFee, currency)}</span>
+              <span>
+                {currency} {formatAmount(deliveryFee, currency)}
+              </span>
             </div>
             <div className="flex justify-between font-semibold text-lg pt-2 border-t">
               <span>Total:</span>
-              <span>{currency} {formatAmount(total, currency)}</span>
+              <span>
+                {currency} {formatAmount(total, currency)}
+              </span>
             </div>
             <p className="mt-4 text-sm text-gray-700">
               Payment Method: <strong>{paymentMethod}</strong>
