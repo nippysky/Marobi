@@ -547,26 +547,11 @@ export async function POST(req: NextRequest) {
     let errorDetails = err?.meta || undefined;
     let errorCode = err?.code || undefined;
 
-    // If in dev, always show the real error
-    // If in prod, mask it unless it's a stock or known logic error
-    if (
-      IS_PRODUCTION &&
-      !(
-        errorMessage.includes("Insufficient stock") ||
-        errorMessage.includes("not found") ||
-        errorCode === "P2002"
-      )
-    ) {
-      errorMessage = "Internal Server Error";
-      errorDetails = undefined;
-    }
-
-    // Send both error and details for dev, just error for prod
+    // Always return full error object for dev & prod
     return NextResponse.json(
-      IS_PRODUCTION
-        ? { error: errorMessage }
-        : { error: errorMessage, code: errorCode, details: errorDetails },
+      { error: errorMessage, code: errorCode, details: errorDetails },
       { status: errorMessage === "Internal Server Error" ? 500 : 400 }
     );
   }
+
 }

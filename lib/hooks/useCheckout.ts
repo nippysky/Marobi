@@ -48,14 +48,14 @@ type Snapshot = {
   status: "pending" | "finalizing" | "confirmed" | "failed";
   payload: any;
   result?: OrderResult;
-  error?: string;
+  error?: any; // <-- ALLOW error to be any type, not just string
   updatedAt: string;
 };
 
 export function useCheckout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<OrderResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
   useEffect(() => {
@@ -110,13 +110,13 @@ export function useCheckout() {
         });
         const json = await resp.json();
         if (!resp.ok) {
-          const msg = json.error || "Order creation failed";
-          setError(msg);
+          // Store full error object for debugging!
+          setError(json);
           persistSnapshot({
             clientOrderId,
             status: "failed",
             payload,
-            error: msg,
+            error: json,
             updatedAt: new Date().toISOString(),
           });
           setIsProcessing(false);
@@ -144,12 +144,12 @@ export function useCheckout() {
         return orderResult;
       } catch (err: any) {
         const msg = err?.message || "Network error";
-        setError(msg);
+        setError({ error: msg });
         persistSnapshot({
           clientOrderId,
           status: "failed",
           payload,
-          error: msg,
+          error: { error: msg },
           updatedAt: new Date().toISOString(),
         });
         setIsProcessing(false);

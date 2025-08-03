@@ -706,9 +706,16 @@ export default function CheckoutSection({ user }: Props) {
                 </div>
               </div>
 
-              {error && (
-                <div className="mt-3 text-sm text-red-600">{error}</div>
-              )}
+      {error && (
+  <div className="mt-3 text-sm text-red-600">
+    {typeof error === "string" ? error : error.error}
+    {error.code && <div className="text-xs mt-1">Code: {error.code}</div>}
+    {error.details && (
+      <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(error.details, null, 2)}</pre>
+    )}
+  </div>
+)}
+
 
               <div className="mt-6">
                 {!isPaymentReady ? (
@@ -756,9 +763,7 @@ export default function CheckoutSection({ user }: Props) {
                         We’re confirming your order. This should take a moment.
                       </p>
                     )}
-                    {error && (
-                      <div className="mt-2 text-sm text-red-600">{error}</div>
-                    )}
+             
                   </div>
                 )}
               </div>
