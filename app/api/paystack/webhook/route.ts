@@ -1,4 +1,6 @@
+// app/api/paystack/webhook/route.ts
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs"; // Next.js 15+ expects "nodejs"
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -6,8 +8,6 @@ import {
   validateWebhookSignature,
   verifyTransaction,
 } from "@/lib/paystack";
-
-export const runtime = "nodejs"; // Next.js 15+ expects "nodejs"
 
 // Safe JSON parse
 function safeParse(str: string) {
@@ -22,12 +22,13 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("x-paystack-signature") || "";
   const rawBody = await req.text();
 
-  // Validate webhook signature
+  // 1. Validate webhook signature
   if (!validateWebhookSignature(rawBody, signature)) {
     console.warn("Invalid Paystack webhook signature");
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // 2. Parse JSON safely
   const body = safeParse(rawBody);
   if (!body) {
     return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const eventId = body?.id || `${event}:${data.reference}`;
 
-  // Persist webhook event for dedupe/audit.
+  // 3. Dedupe: Persist webhook event
   try {
     await prisma.webhookEvent.create({
       data: {
@@ -62,9 +63,10 @@ export async function POST(req: NextRequest) {
     // continue processing
   }
 
+  // 4. Handle only 'charge.success'
   if (event === "charge.success") {
     try {
-      const tx = await verifyTransaction(data.reference); // throws if invalid
+      const tx = await verifyTransaction(data.reference); // Throws if invalid
 
       const existingOrder = await prisma.order.findUnique({
         where: { paymentReference: data.reference },
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!existingOrder) {
+        // Orphan payment: no order found
         await prisma.orphanPayment.upsert({
           where: { reference: data.reference },
           create: {
@@ -95,6 +98,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Patch order if needed
       const updates: Record<string, any> = {};
       if (existingOrder.paymentReference !== data.reference) {
         updates.paymentReference = data.reference;
@@ -113,6 +117,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Mark any orphans as reconciled
       await prisma.orphanPayment.updateMany({
         where: { reference: data.reference },
         data: {
@@ -129,5 +134,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 5. Ignore other events, but acknowledge
   return NextResponse.json({ ok: true, message: "Event ignored" }, { status: 200 });
 }

@@ -11,6 +11,11 @@ import { sendReceiptEmailWithRetry } from "@/lib/mail";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { verifyTransaction, PaystackError } from "@/lib/paystack";
+// --- Use shared types! ---
+import type {
+  CartItemPayload,
+  CustomerPayload,
+} from "@/lib/hooks/useCheckout"; // or from "@/lib/types" if you moved them
 
 const ALLOWED_CURRENCIES = ["NGN", "USD", "EUR", "GBP"] as const;
 type AllowedCurrency = (typeof ALLOWED_CURRENCIES)[number];
@@ -19,31 +24,10 @@ function toLowest(amount: number): number {
   return Math.round(amount * 100);
 }
 
-interface OrderItemPayload {
-  productId: string;
-  color?: string;
-  size?: string;
-  quantity: number;
-  hasSizeMod?: boolean;
-  sizeModFee?: number;
-  unitWeight?: number;
-}
-
-interface CustomerInput {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  deliveryAddress: string;
-  billingAddress: string;
-  country?: string;
-  state?: string;
-}
-
+// --- Match your frontend type exactly! ---
 interface OnlineOrderPayload {
-  items: OrderItemPayload[];
-  customer: CustomerInput;
+  items: CartItemPayload[];
+  customer: CustomerPayload;
   paymentMethod: string;
   currency: string;
   timestamp?: string;

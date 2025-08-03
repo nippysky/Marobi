@@ -1,4 +1,3 @@
-// lib/paystack.ts
 import crypto from "crypto";
 import { prisma } from "@/lib/db";
 
@@ -7,18 +6,11 @@ import { prisma } from "@/lib/db";
 /* -------------------------------------------------------------------------- */
 const PAYSTACK_BASE = "https://api.paystack.co";
 
+// Use same secret for API and webhook signature (Paystack 2024+)
 const getSecretKey = () => {
-  if (!process.env.PAYSTACK_SECRET_KEY) {
-    throw new Error("Missing PAYSTACK_SECRET_KEY in environment");
-  }
-  return process.env.PAYSTACK_SECRET_KEY;
-};
-
-const getWebhookSecret = () => {
-  if (!process.env.PAYSTACK_WEBHOOK_SECRET) {
-    throw new Error("Missing PAYSTACK_WEBHOOK_SECRET in environment");
-  }
-  return process.env.PAYSTACK_WEBHOOK_SECRET;
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) throw new Error("Missing PAYSTACK_SECRET_KEY in environment");
+  return secret;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -41,7 +33,7 @@ export interface PaystackTransactionData {
     last_name?: string;
   };
   plan?: any;
-  id: number; // Paystack internal transaction id
+  id: number;
 }
 
 interface VerifyTransactionResponse {
@@ -82,24 +74,45 @@ export class PaystackError extends Error {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                     Transaction / Refund helpers                           */
+/*                  Transaction Verification / Refund helpers                 */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Verifies a Paystack transaction reference.
+ * Throws PaystackError on fail (with details).
+ * Handles non-JSON Paystack responses (HTML, downtime, etc).
+ */
 export async function verifyTransaction(
   reference: string
 ): Promise<PaystackTransactionData> {
   const secret = getSecretKey();
-  const res = await fetch(
-    `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${secret}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const url = `${PAYSTACK_BASE}/transaction/verify/${encodeURIComponent(reference)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-  const json: VerifyTransactionResponse = await res.json();
+  const text = await res.text();
+  let json: VerifyTransactionResponse;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    // Paystack returned HTML or other unexpected response (often a bad secret or network issue)
+    console.error("Paystack non-JSON response for verification:", {
+      url,
+      responseSnippet: text?.slice?.(0, 500),
+      status: res.status,
+    });
+    throw new PaystackError(
+      "Paystack returned an unexpected response during verification. Check your PAYSTACK_SECRET_KEY, network, or Paystack status.",
+      res.status,
+      { rawResponse: text, url }
+    );
+  }
+
   if (!res.ok || !json.status) {
     throw new PaystackError(
       `Failed to verify transaction: ${json.message}`,
@@ -120,6 +133,9 @@ export async function verifyTransaction(
   return tx;
 }
 
+/**
+ * Refunds a Paystack transaction by transaction ID or reference.
+ */
 export async function refundTransaction(opts: {
   transaction: number | string;
   amount?: number;
@@ -127,15 +143,9 @@ export async function refundTransaction(opts: {
   metadata?: Record<string, any>;
 }): Promise<PaystackRefundData> {
   const secret = getSecretKey();
-  const body: any = {
-    transaction: opts.transaction,
-  };
-  if (typeof opts.amount === "number") {
-    body.amount = opts.amount;
-  }
-  if (opts.metadata) {
-    body.metadata = opts.metadata;
-  }
+  const body: any = { transaction: opts.transaction };
+  if (typeof opts.amount === "number") body.amount = opts.amount;
+  if (opts.metadata) body.metadata = opts.metadata;
 
   const res = await fetch(`${PAYSTACK_BASE}/refund`, {
     method: "POST",
@@ -146,7 +156,22 @@ export async function refundTransaction(opts: {
     body: JSON.stringify(body),
   });
 
-  const json: RefundResponse = await res.json();
+  const text = await res.text();
+  let json: RefundResponse;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    console.error("Paystack non-JSON response for refund:", {
+      responseSnippet: text?.slice?.(0, 500),
+      status: res.status,
+    });
+    throw new PaystackError(
+      "Paystack returned an unexpected response during refund. Check your PAYSTACK_SECRET_KEY or Paystack status.",
+      res.status,
+      { rawResponse: text }
+    );
+  }
+
   if (!res.ok || !json.status) {
     throw new PaystackError(
       `Failed to initiate refund: ${json.message}`,
@@ -161,14 +186,17 @@ export async function refundTransaction(opts: {
 /* -------------------------------------------------------------------------- */
 /*                         Webhook / Deduplication                            */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Validates a Paystack webhook signature.
+ * As of 2025, Paystack uses your API secret key as the webhook secret.
+ */
 export function validateWebhookSignature(
   rawBody: string | Buffer,
   signatureHeader: string
 ): boolean {
-  const secret = getWebhookSecret();
+  const secret = getSecretKey();
   const hash = crypto.createHmac("sha512", secret).update(rawBody).digest("hex");
-
-  // Timing-safe comparison
   try {
     return crypto.timingSafeEqual(
       Buffer.from(hash, "utf8"),
@@ -190,20 +218,23 @@ export async function markAndCheckEventId(
 ): Promise<boolean> {
   try {
     await prisma.webhookEvent.create({
-      data: {
-        provider,
-        eventId,
-        payload,
-      },
+      data: { provider, eventId, payload },
     });
     return true; // newly recorded
   } catch (err: any) {
     // Unique constraint violation -> already seen
-    if (err.code === "P2002" && Array.isArray(err.meta?.target) && err.meta.target.includes("eventId")) {
+    if (
+      err.code === "P2002" &&
+      Array.isArray(err.meta?.target) &&
+      err.meta.target.includes("eventId")
+    ) {
       return false;
     }
-    // If the schema uses a different error shape, defensively fallback:
-    if (err.message && err.message.includes("Unique constraint failed") && err.message.includes("eventId")) {
+    // Defensive fallback for schema/ORM differences
+    if (
+      err.message?.includes?.("Unique constraint failed") &&
+      err.message?.includes?.("eventId")
+    ) {
       return false;
     }
     throw err;
@@ -211,7 +242,7 @@ export async function markAndCheckEventId(
 }
 
 /**
- * Reconcile a single orphan payment, stubbed hooks for create vs refund.
+ * Reconcile a single orphan payment (stubs for order or refund hooks).
  */
 export async function reconcileOrphanPayment(opts: {
   reference: string;

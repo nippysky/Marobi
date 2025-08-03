@@ -31,6 +31,8 @@ import { Toaster, toast } from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import type { CheckoutUser } from "./page";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
+
+// --- Use the shared checkout hook & types ---
 import {
   useCheckout,
   CartItemPayload,
@@ -94,8 +96,7 @@ export default function CheckoutSection({ user }: Props) {
   const clearCart = useCartStore((s) => s.clear) as () => void;
   const totalWeight = useCartStore((s) => s.totalWeight()) || 0;
 
-  // ----------- Declare all values before use -----------
-  // Totals (declare before any useEffect that depends on them!)
+  // Totals
   const itemsSubtotal = useMemo(
     () =>
       items.reduce(
@@ -153,7 +154,7 @@ export default function CheckoutSection({ user }: Props) {
   const [orderCreatingFromReference, setOrderCreatingFromReference] =
     useState(false);
 
-  // useCheckout hook
+  // useCheckout hook (shared)
   const { isProcessing, error, result, createOrder, reset } = useCheckout();
 
   // --- Load countries
@@ -726,21 +727,21 @@ export default function CheckoutSection({ user }: Props) {
                   </Button>
                 ) : (
                   <div className="space-y-2">
-                <PaystackButton
-  {...paystackConfig}
-  text={
-    isProcessing || orderCreatingFromReference
-      ? "Finalizing order..."
-      : `Pay ${formatAmount(total, currency)}`
-  }
-  onSuccess={handlePaystackSuccess}
-  onClose={() => {
-    setHasAttemptedPayment(true);
-    toast.error("Payment cancelled. Please try again.");
-  }}
-  className="w-full py-3 rounded-full bg-brand text-white font-medium disabled:opacity-60"
-  disabled={paymentDisabled || !safePaystackPublicKey}
-/>
+                    <PaystackButton
+                      {...paystackConfig}
+                      text={
+                        isProcessing || orderCreatingFromReference
+                          ? "Finalizing order..."
+                          : `Pay ${formatAmount(total, currency)}`
+                      }
+                      onSuccess={handlePaystackSuccess}
+                      onClose={() => {
+                        setHasAttemptedPayment(true);
+                        toast.error("Payment cancelled. Please try again.");
+                      }}
+                      className="w-full py-3 rounded-full bg-brand text-white font-medium disabled:opacity-60"
+                      disabled={paymentDisabled || !safePaystackPublicKey}
+                    />
 
                     {orderCreatingFromReference &&
                       lastPaymentReference &&
@@ -775,9 +776,13 @@ export default function CheckoutSection({ user }: Props) {
             {hasAttemptedPayment && error && (
               <div className="mt-2 px-3 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm">
                 {typeof error === "string" ? error : error.error}
-                {error.code && <div className="text-xs mt-1">Code: {error.code}</div>}
+                {error.code && (
+                  <div className="text-xs mt-1">Code: {error.code}</div>
+                )}
                 {error.details && (
-                  <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(error.details, null, 2)}</pre>
+                  <pre className="text-xs whitespace-pre-wrap">
+                    {JSON.stringify(error.details, null, 2)}
+                  </pre>
                 )}
               </div>
             )}

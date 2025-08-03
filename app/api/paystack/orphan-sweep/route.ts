@@ -1,10 +1,11 @@
+// app/api/paystack/orphan-sweep/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyTransaction, refundTransaction } from "@/lib/paystack";
 
-export const runtime = "nodejs"; // Next.js 15+ expects "nodejs"
+export const runtime = "nodejs";
 
-// Configuration
 const RECONCILE_SECRET = process.env.RECONCILE_SECRET || "";
 const AUTO_REFUND_ORPHANS = process.env.AUTO_REFUND_ORPHANS === "true";
 
@@ -30,10 +31,11 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date();
-  // Sweep orphans older than 10 minutes to avoid racing with in-flight order creation
+  // Only sweep orphans older than X minutes to avoid racing with in-flight orders
   const minAgeMinutes = 10;
   const cutoff = new Date(now.getTime() - minAgeMinutes * 60 * 1000);
 
+  // Get all unresolved orphans
   const orphans = await prisma.orphanPayment.findMany({
     where: {
       reconciled: false,
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Summary stats for reporting/audit
   const summary: {
     checked: number;
     alreadyResolved: number;
@@ -61,28 +64,27 @@ export async function POST(req: NextRequest) {
 
   for (const orphan of orphans) {
     try {
-      // Skip if already auto-refunded earlier
+      // 1. Skip if already auto-refunded
       if (orphan.resolutionNote?.includes("Auto-refunded")) {
         summary.skippedAlreadyAutoRefunded += 1;
         continue;
       }
 
-      // Verify transaction with Paystack
+      // 2. Verify Paystack transaction
       let tx;
       try {
         tx = await verifyTransaction(orphan.reference);
       } catch (verificationErr: any) {
         summary.errors.push(
-          `Verification failed for ${orphan.reference}: ${verificationErr.message}`
+          `Verification failed for ${orphan.reference}: ${verificationErr.message || verificationErr}`
         );
         continue;
       }
 
-      // If order appeared in the meantime, reconcile
+      // 3. Check if an order has appeared (race condition)
       const existingOrder = await prisma.order.findUnique({
         where: { paymentReference: orphan.reference },
       });
-
       if (existingOrder) {
         await prisma.orphanPayment.update({
           where: { reference: orphan.reference },
@@ -97,7 +99,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // Sanity: amount mismatch between stored orphan and actual transaction
+      // 4. Check for amount mismatch
       if (orphan.amount !== tx.amount) {
         summary.amountMismatches += 1;
         await prisma.orphanPayment.update({
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // No order exists: decide action based on config
+      // 5. If auto-refund is enabled, refund the orphan payment
       if (AUTO_REFUND_ORPHANS) {
         try {
           const refund = await refundTransaction({
@@ -132,10 +134,11 @@ export async function POST(req: NextRequest) {
           summary.autoRefunded += 1;
         } catch (refundErr: any) {
           summary.errors.push(
-            `Refund failed for ${orphan.reference}: ${refundErr.message}`
+            `Refund failed for ${orphan.reference}: ${refundErr.message || refundErr}`
           );
         }
       } else {
+        // Otherwise, flag for manual review
         await prisma.orphanPayment.update({
           where: { reference: orphan.reference },
           data: {
