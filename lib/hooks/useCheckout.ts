@@ -33,7 +33,7 @@ export interface CreateOrderPayload {
   items: CartItemPayload[];
   customer: CustomerPayload;
   paymentMethod: string;
-  currency: string;
+  currency: string; // expecting uppercase "NGN" | "USD" | ...
   deliveryFee: number;
   timestamp: string;
   deliveryOptionId?: string;
@@ -58,7 +58,6 @@ export function useCheckout() {
   const [error, setError] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
-  // Hydrate from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -76,7 +75,7 @@ export function useCheckout() {
         }
       }
     } catch {
-      // ignore corruption
+      // ignore
     }
   }, []);
 

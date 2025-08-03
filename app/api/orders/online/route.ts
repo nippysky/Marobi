@@ -3,11 +3,22 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { Currency, OrderChannel } from "@/lib/generated/prisma-client";
+import {
+  Currency as CurrencyEnum,
+  OrderChannel,
+  OrderStatus,
+} from "@/lib/generated/prisma-client";
 import { sendReceiptEmailWithRetry } from "@/lib/mail";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { verifyTransaction, PaystackError } from "@/lib/paystack";
+
+const ALLOWED_CURRENCIES = ["NGN", "USD", "EUR", "GBP"] as const;
+type AllowedCurrency = (typeof ALLOWED_CURRENCIES)[number];
+
+function toLowest(amount: number): number {
+  return Math.round(amount * 100);
+}
 
 /** Payload types for clarity */
 interface OrderItemPayload {
@@ -82,6 +93,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize and validate currency
+    const normalizedCurrency = (currency || "").toString().toUpperCase();
+    if (!ALLOWED_CURRENCIES.includes(normalizedCurrency as AllowedCurrency)) {
+      return NextResponse.json(
+        { error: `Unsupported currency: ${currency}` },
+        { status: 400 }
+      );
+    }
+
     // === Verify payment with Paystack ===
     let paystackTx;
     try {
@@ -95,17 +115,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    // Currency consistency
-    if (
-      paystackTx.currency.toUpperCase() !==
-      (currency as string).toUpperCase()
-    ) {
+    // Currency consistency (case-insensitive)
+    if (paystackTx.currency.toUpperCase() !== normalizedCurrency) {
       return NextResponse.json(
         {
-          error: `Currency mismatch: expected ${currency}, got ${paystackTx.currency}`,
+          error: `Currency mismatch: expected ${normalizedCurrency}, got ${paystackTx.currency}`,
         },
         { status: 400 }
       );
+    }
+
+    // Validate delivery option if given
+    if (deliveryOptionId) {
+      const deliveryOpt = await prisma.deliveryOption.findUnique({
+        where: { id: deliveryOptionId },
+      });
+      if (!deliveryOpt) {
+        return NextResponse.json(
+          { error: "Invalid deliveryOptionId provided" },
+          { status: 400 }
+        );
+      }
+      if (!deliveryOpt.active) {
+        return NextResponse.json(
+          { error: "Delivery option is not active" },
+          { status: 400 }
+        );
+      }
     }
 
     // === Idempotency: existing order ===
@@ -129,9 +165,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const expectedLowestFromOrder = Math.round(
-        existingOrder.totalAmount * 100
-      );
+      const expectedLowestFromOrder = toLowest(existingOrder.totalAmount);
       if (paystackTx.amount !== expectedLowestFromOrder) {
         console.warn("Existing order amount mismatch vs captured payment", {
           orderTotalLowest: expectedLowestFromOrder,
@@ -183,7 +217,7 @@ export async function POST(req: NextRequest) {
       }
 
       let unitPrice = 0;
-      switch ((currency as string).toUpperCase()) {
+      switch (normalizedCurrency) {
         case "USD":
           unitPrice = variant.product.priceUSD ?? 0;
           break;
@@ -217,7 +251,7 @@ export async function POST(req: NextRequest) {
         image: variant.product.images[0] ?? null,
         category: variant.product.categorySlug,
         quantity: i.quantity,
-        currency: currency as Currency,
+        currency: normalizedCurrency as CurrencyEnum,
         lineTotal,
         color: variant.color,
         size: variant.size,
@@ -233,7 +267,7 @@ export async function POST(req: NextRequest) {
     totalAmount += deliveryFee;
 
     // Compare expected amount with Paystack's captured amount (lowest denom)
-    const expectedLowest = Math.round(totalAmount * 100);
+    const expectedLowest = toLowest(totalAmount);
     if (paystackTx.amount !== expectedLowest) {
       console.warn("Payment amount mismatch", {
         expected: expectedLowest,
@@ -373,8 +407,8 @@ export async function POST(req: NextRequest) {
 
       const orderData: any = {
         id: newOrderId,
-        status: "Processing",
-        currency,
+        status: OrderStatus.Processing,
+        currency: normalizedCurrency as CurrencyEnum,
         totalAmount,
         totalNGN: Math.round(totalNGN),
         paymentMethod,
@@ -454,7 +488,7 @@ export async function POST(req: NextRequest) {
       await sendReceiptEmailWithRetry({
         order,
         recipient,
-        currency,
+        currency: normalizedCurrency,
         deliveryFee,
       });
     } catch (emailErr) {
@@ -472,7 +506,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("Online order POST error:", err);
 
-    // Handle unique constraint race on paymentReference without instanceof
+    // Unique constraint race on paymentReference
     if (
       err?.code === "P2002" &&
       Array.isArray(err?.meta?.target) &&
@@ -482,7 +516,9 @@ export async function POST(req: NextRequest) {
         const fallbackOrder = await prisma.order.findUnique({
           where: {
             paymentReference:
-              (err as any)?.meta?.targetValue || (err as any)?.params?.paymentReference || "",
+              (err as any)?.meta?.targetValue ||
+              (err as any)?.params?.paymentReference ||
+              "",
           },
           include: { customer: true },
         });

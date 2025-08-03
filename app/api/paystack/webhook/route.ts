@@ -1,4 +1,5 @@
-// app/api/paystack/webhook/route.ts
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
@@ -6,7 +7,7 @@ import {
   verifyTransaction,
 } from "@/lib/paystack";
 
-export const runtime = "nodejs"; // fixed: Next.js 15 expects "nodejs" not "node"
+export const runtime = "nodejs"; // Next.js 15+ expects "nodejs"
 
 // Safe JSON parse
 function safeParse(str: string) {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const eventId = body?.id || `${event}:${data.reference}`;
 
-  // Persist webhook event for dedupe/audit. If already exists, treat as duplicate and exit early.
+  // Persist webhook event for dedupe/audit.
   try {
     await prisma.webhookEvent.create({
       data: {
@@ -50,26 +51,27 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    // Unique constraint violation -> already processed
-    if (err?.code === "P2002" && Array.isArray(err?.meta?.target) && (err.meta.target as string[]).includes("eventId")) {
+    if (
+      err?.code === "P2002" &&
+      Array.isArray(err?.meta?.target) &&
+      (err.meta.target as string[]).includes("eventId")
+    ) {
       return NextResponse.json({ ok: true, message: "Duplicate event ignored" }, { status: 200 });
     }
     console.error("Failed to persist webhook event:", err);
-    // continue processing (we still want to attempt reconciliation even if audit log failed)
+    // continue processing
   }
 
   if (event === "charge.success") {
     try {
-      const tx = await verifyTransaction(data.reference); // throws if payment not successful
+      const tx = await verifyTransaction(data.reference); // throws if invalid
 
-      // Look up order by paymentReference (idempotency)
       const existingOrder = await prisma.order.findUnique({
         where: { paymentReference: data.reference },
         include: { customer: true },
       });
 
       if (!existingOrder) {
-        // Orphan payment: no order exists yet
         await prisma.orphanPayment.upsert({
           where: { reference: data.reference },
           create: {
@@ -93,7 +95,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Reconcile existing order: ensure payment metadata is synced
       const updates: Record<string, any> = {};
       if (existingOrder.paymentReference !== data.reference) {
         updates.paymentReference = data.reference;
@@ -112,7 +113,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Mark any orphanPayment as reconciled
       await prisma.orphanPayment.updateMany({
         where: { reference: data.reference },
         data: {
@@ -129,6 +129,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Other events are ignored for now
   return NextResponse.json({ ok: true, message: "Event ignored" }, { status: 200 });
 }

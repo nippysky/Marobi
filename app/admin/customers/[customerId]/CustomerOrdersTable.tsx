@@ -1,4 +1,3 @@
-// app/admin/customers/CustomerOrdersTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -35,7 +34,6 @@ import toast from "react-hot-toast";
 
 import { AdminCustomerOrder } from "@/types/admin";
 import { Currency, OrderStatus } from "@/lib/generated/prisma-client";
-import { AdminCustomerOrderProduct } from "@/types/admin";
 
 type Props = { initialData: AdminCustomerOrder[] };
 
@@ -55,7 +53,6 @@ export default function CustomerOrdersTable({ initialData }: Props) {
     setReceiptOpen(true);
   }
 
-  // Print CSS (80 mm)
   const receiptCSS = `
     @page { size: 80mm auto; margin: 0; }
     body { width: 80mm; font-family: monospace; margin:0; padding:4mm; }
@@ -73,14 +70,9 @@ export default function CustomerOrdersTable({ initialData }: Props) {
     const deliveryCharge = 500;
     const totalWeight = o.products.reduce((w, p) => w + p.quantity * 0.2, 0).toFixed(2);
     const courier = "DHL Express";
-    const sym =
-      o.currency === "NGN"
-        ? "₦"
-        : o.currency === "USD"
-        ? "$"
-        : o.currency === "EUR"
-        ? "€"
-        : "£";
+    const sym = o.currency === "NGN" ? "₦"
+               : o.currency === "USD" ? "$"
+               : o.currency === "EUR" ? "€" : "£";
     const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
 
     const cust = o.customer ?? {
@@ -90,9 +82,7 @@ export default function CustomerOrdersTable({ initialData }: Props) {
       address: o.guestInfo!.address,
     };
 
-    const lines = o.products
-      .map(
-        p => `
+    const lines = o.products.map(p => `
       <div class="line">
         <div>
           ${p.name}<br>
@@ -100,9 +90,7 @@ export default function CustomerOrdersTable({ initialData }: Props) {
         </div>
         <div>${sym}${p.lineTotal.toLocaleString()}</div>
       </div>
-    `
-      )
-      .join("");
+    `).join("");
 
     return `
       <html>
@@ -115,7 +103,7 @@ export default function CustomerOrdersTable({ initialData }: Props) {
           </div>
           ${lines}
           <div class="total"><span>Subtotal</span><span>${sym}${subtotal.toLocaleString()}</span></div>
-          <div class="line"><span>VAT (${(vatRate * 100).toFixed(1)}%)</span><span>${sym}${vat.toLocaleString()}</span></div>
+          <div class="line"><span>VAT (${(vatRate*100).toFixed(1)}%)</span><span>${sym}${vat.toLocaleString()}</span></div>
           <div class="line"><span>Delivery</span><span>${sym}${deliveryCharge.toLocaleString()}</span></div>
           <div class="line"><span>Weight</span><span>${totalWeight}kg</span></div>
           <div class="line"><span>Courier</span><span>${courier}</span></div>
@@ -146,9 +134,7 @@ export default function CustomerOrdersTable({ initialData }: Props) {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-      setData(prev =>
-        prev.map(o => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
+      setData(d => d.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       toast.success("Status updated");
     } catch (e: any) {
       toast.error("Failed to update status: " + e.message);
@@ -231,16 +217,15 @@ export default function CustomerOrdersTable({ initialData }: Props) {
       header: "Status",
       cell: ({ row }) => {
         const s = row.original.status;
-        const color =
-          s === "Processing"
-            ? "bg-blue-100 text-blue-800"
-            : s === "Shipped"
-            ? "bg-yellow-100 text-yellow-800"
-            : s === "Delivered"
-            ? "bg-green-100 text-green-800"
-            : s === "Cancelled"
-            ? "bg-red-100 text-red-800"
-            : "bg-gray-100 text-gray-800";
+        const color = s === "Processing"
+          ? "bg-blue-100 text-blue-800"
+          : s === "Shipped"
+          ? "bg-yellow-100 text-yellow-800"
+          : s === "Delivered"
+          ? "bg-green-100 text-green-800"
+          : s === "Cancelled"
+          ? "bg-red-100 text-red-800"
+          : "bg-gray-100 text-gray-800";
         return <span className={`px-2 py-0.5 rounded-full ${color}`}>{s}</span>;
       },
     },
@@ -248,14 +233,9 @@ export default function CustomerOrdersTable({ initialData }: Props) {
       accessorFn: r => r.totalAmount,
       header: "Amount",
       cell: ({ getValue, row }) => {
-        const sym =
-          row.original.currency === "NGN"
-            ? "₦"
-            : row.original.currency === "USD"
-            ? "$"
-            : row.original.currency === "EUR"
-            ? "€"
-            : "£";
+        const sym = row.original.currency === "NGN" ? "₦"
+                  : row.original.currency === "USD" ? "$"
+                  : row.original.currency === "EUR" ? "€" : "£";
         return `${sym}${getValue<number>().toLocaleString()}`;
       },
       enableSorting: true,
@@ -322,7 +302,7 @@ export default function CustomerOrdersTable({ initialData }: Props) {
             <SelectTrigger className="w-[160px]"><SelectValue placeholder="All Currencies" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Currencies</SelectItem>
-              {(["NGN","USD","EUR","GBP"] as Currency[]).map(c => (
+              {(["NGN", "USD", "EUR", "GBP"] as Currency[]).map(c => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
             </SelectContent>
@@ -343,8 +323,8 @@ export default function CustomerOrdersTable({ initialData }: Props) {
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
                           <span className="ml-1">
-                            {header.column.getIsSorted() === "asc" ? <ChevronUp className="h-4 w-4"/> 
-                             : header.column.getIsSorted() === "desc" ? <ChevronDown className="h-4 w-4"/> 
+                            {header.column.getIsSorted()==="asc" ? <ChevronUp className="h-4 w-4"/> 
+                             : header.column.getIsSorted()==="desc" ? <ChevronDown className="h-4 w-4"/> 
                              : null}
                           </span>
                         )}
@@ -374,29 +354,21 @@ export default function CustomerOrdersTable({ initialData }: Props) {
 
       {/* ─── Pagination ────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between py-4">
-        <Button variant="link" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-          ← Prev
-        </Button>
-        <span>
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-        </span>
-        <Button variant="link" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-          Next →
-        </Button>
+        <Button variant="link" onClick={()=>table.previousPage()} disabled={!table.getCanPreviousPage()}>← Prev</Button>
+        <span>Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
+        <Button variant="link" onClick={()=>table.nextPage()} disabled={!table.getCanNextPage()}>Next →</Button>
         <select
           className="ml-2 border rounded p-1"
           value={table.getState().pagination.pageSize}
-          onChange={e => table.setPageSize(Number(e.target.value))}
+          onChange={e=>table.setPageSize(Number(e.target.value))}
         >
-          {[10,20,30,50].map(s => (
-            <option key={s} value={s}>{s} / page</option>
-          ))}
+          {[10,20,30,50].map(s=><option key={s} value={s}>{s} / page</option>)}
         </select>
       </div>
 
       {/* ─── Receipt Modal ───────────────────────────────────────────────── */}
       {receiptOrder && (
-        <Dialog open={receiptOpen} onOpenChange={() => setReceiptOpen(false)}>
+        <Dialog open={receiptOpen} onOpenChange={()=>setReceiptOpen(false)}>
           <DialogContent className="max-w-lg print:hidden">
             <DialogHeader>
               <DialogTitle>Receipt — {receiptOrder.id}</DialogTitle>
@@ -469,9 +441,9 @@ export default function CustomerOrdersTable({ initialData }: Props) {
             </ScrollArea>
 
             <DialogFooter className="space-x-2">
-              <Button variant="outline" onClick={() => setReceiptOpen(false)}>Close</Button>
-              <Button variant="secondary" onClick={() => handlePrint(receiptOrder)}>
-                <Printer className="mr-1 h-4 w-4" /> Print
+              <Button variant="outline" onClick={()=>setReceiptOpen(false)}>Close</Button>
+              <Button variant="secondary" onClick={()=>handlePrint(receiptOrder)}>
+                <Printer className="mr-1 h-4 w-4"/> Print
               </Button>
             </DialogFooter>
           </DialogContent>

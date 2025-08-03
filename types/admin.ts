@@ -1,9 +1,3 @@
-// types/admin.ts
-import type {
-  OrderStatus,
-  Currency,
-} from "@/lib/generated/prisma-client";
-
 export interface AdminCustomerRow {
   id: string;
   name: string;
@@ -27,8 +21,8 @@ export interface AdminCustomerOrderProduct {
 
 export interface AdminCustomerOrder {
   id: string;
-  status: OrderStatus; // now includes "Cancelled"
-  currency: Currency;
+  status: "Processing" | "Shipped" | "Delivered" | "Cancelled";
+  currency: "NGN" | "USD" | "EUR" | "GBP";
   totalAmount: number;
   totalNGN: number;
   createdAt: string;

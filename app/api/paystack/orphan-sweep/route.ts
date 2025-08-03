@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyTransaction, refundTransaction } from "@/lib/paystack";
 
-export const runtime = "nodejs"; // fixed: Next.js 15 expects "nodejs" not "node"
+export const runtime = "nodejs"; // Next.js 15+ expects "nodejs"
 
 // Configuration
 const RECONCILE_SECRET = process.env.RECONCILE_SECRET || "";

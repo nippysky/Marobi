@@ -134,7 +134,10 @@ export async function POST(req: NextRequest) {
       message: "Orphan payment refunded",
     });
   } catch (refundErr: any) {
-    console.error("Refund failed during manual reconciliation:", refundErr);
+    console.error(
+      "Refund failed during manual reconciliation:",
+      refundErr
+    );
     return NextResponse.json(
       {
         error: "Refund failed",
