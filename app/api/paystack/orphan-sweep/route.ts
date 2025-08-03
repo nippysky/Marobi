@@ -1,9 +1,8 @@
-// app/api/paystack/orphan-sweep/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyTransaction, refundTransaction } from "@/lib/paystack";
 
-export const runtime = "node";
+export const runtime = "nodejs"; // fixed: Next.js 15 expects "nodejs" not "node"
 
 // Configuration
 const RECONCILE_SECRET = process.env.RECONCILE_SECRET || "";
@@ -62,13 +61,13 @@ export async function POST(req: NextRequest) {
 
   for (const orphan of orphans) {
     try {
-      // If resolutionNote already indicates an auto-refund happened previously, skip
+      // Skip if already auto-refunded earlier
       if (orphan.resolutionNote?.includes("Auto-refunded")) {
         summary.skippedAlreadyAutoRefunded += 1;
         continue;
       }
 
-      // Verify with Paystack
+      // Verify transaction with Paystack
       let tx;
       try {
         tx = await verifyTransaction(orphan.reference);
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // If an order appeared after the orphan was created, reconcile it
+      // If order appeared in the meantime, reconcile
       const existingOrder = await prisma.order.findUnique({
         where: { paymentReference: orphan.reference },
       });
@@ -98,13 +97,12 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // Sanity: amount mismatch between recorded orphan and actual transaction
+      // Sanity: amount mismatch between stored orphan and actual transaction
       if (orphan.amount !== tx.amount) {
         summary.amountMismatches += 1;
         await prisma.orphanPayment.update({
           where: { reference: orphan.reference },
           data: {
-            // we keep reconciled false so it can be reviewed manually
             resolutionNote: `Amount mismatch: orphan recorded ${orphan.amount}, actual ${tx.amount}; flagged for review`,
             payload: tx as any,
           },
@@ -112,7 +110,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // No order exists: either auto-refund or flag
+      // No order exists: decide action based on config
       if (AUTO_REFUND_ORPHANS) {
         try {
           const refund = await refundTransaction({
@@ -150,7 +148,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (e: any) {
       summary.errors.push(
-        `Unhandled error for ${orphan.reference}: ${e?.message || e}`
+        `Unhandled error for ${orphan.reference}: ${e?.message || String(e)}`
       );
     }
   }
