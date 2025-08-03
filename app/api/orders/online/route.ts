@@ -1,4 +1,3 @@
-// app/api/orders/online/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -61,6 +60,9 @@ function generateOrderId(): string {
   ).join("");
   return `M-ORD-${random}`;
 }
+
+// For error masking in production
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 export async function POST(req: NextRequest) {
   try {
@@ -504,9 +506,10 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err: any) {
-    console.error("Online order POST error:", err);
+    // FULL error logging to terminal, always
+    console.error("Online order POST error:", err, err?.meta || "");
 
-    // Unique constraint race on paymentReference
+    // Prisma unique constraint race on paymentReference
     if (
       err?.code === "P2002" &&
       Array.isArray(err?.meta?.target) &&
@@ -539,10 +542,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const msg = err?.message?.includes("Insufficient stock")
-      ? err.message
-      : "Internal Server Error";
-    const status = msg === "Internal Server Error" ? 500 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    // Build detailed error output for easier debugging
+    let errorMessage = err?.message || "Internal Server Error";
+    let errorDetails = err?.meta || undefined;
+    let errorCode = err?.code || undefined;
+
+    // If in dev, always show the real error
+    // If in prod, mask it unless it's a stock or known logic error
+    if (
+      IS_PRODUCTION &&
+      !(
+        errorMessage.includes("Insufficient stock") ||
+        errorMessage.includes("not found") ||
+        errorCode === "P2002"
+      )
+    ) {
+      errorMessage = "Internal Server Error";
+      errorDetails = undefined;
+    }
+
+    // Send both error and details for dev, just error for prod
+    return NextResponse.json(
+      IS_PRODUCTION
+        ? { error: errorMessage }
+        : { error: errorMessage, code: errorCode, details: errorDetails },
+      { status: errorMessage === "Internal Server Error" ? 500 : 400 }
+    );
   }
 }
