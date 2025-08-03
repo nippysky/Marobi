@@ -6,7 +6,7 @@ import {
   verifyTransaction,
 } from "@/lib/paystack";
 
-export const runtime = "node";
+export const runtime = "nodejs"; // fixed: Next.js 15 expects "nodejs" not "node"
 
 // Safe JSON parse
 function safeParse(str: string) {
