@@ -19,18 +19,64 @@ function normalizeCustomSize(raw: any): Record<string, string> | null {
   return null;
 }
 
-function normalizeDeliveryDetails(raw: any): string | null {
-  if (raw === null || raw === undefined) return null;
-  if (typeof raw === "string") return raw;
-  if (typeof raw === "number" || typeof raw === "boolean") return String(raw);
-  try {
-    if (typeof raw === "object") {
-      return JSON.stringify(raw);
-    }
-  } catch {
-    // ignore
+function normalizeAddress(o: any): string {
+  if (o.customer) {
+    return (
+      o.customer.deliveryAddress ||
+      o.customer.billingAddress ||
+      o.customer.country ||
+      o.customer.state ||
+      "—"
+    );
   }
-  return null;
+  if (o.guestInfo && typeof o.guestInfo === "object") {
+    return (
+      o.guestInfo.deliveryAddress ||
+      o.guestInfo.address ||
+      o.guestInfo.billingAddress ||
+      o.guestInfo.country ||
+      o.guestInfo.state ||
+      "—"
+    );
+  }
+  return "—";
+}
+
+function humanizeDeliveryDetails(raw: any, deliveryOption?: any): string {
+  if (!raw) return "—";
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) return String(raw);
+
+  const entries: string[] = [];
+  if (raw.aggregatedWeight) {
+    entries.push(
+      `Weight: ${parseFloat(raw.aggregatedWeight).toLocaleString()}kg`
+    );
+  }
+  if (deliveryOption?.name) {
+    entries.push(`Courier: ${deliveryOption.name}`);
+  }
+  for (const [k, v] of Object.entries(raw)) {
+    if (
+      k !== "aggregatedWeight" &&
+      k !== "deliveryOptionId" &&
+      v != null &&
+      v !== ""
+    ) {
+      entries.push(
+        `${k[0].toUpperCase() + k.slice(1)}: ${
+          typeof v === "object" ? JSON.stringify(v) : v
+        }`
+      );
+    }
+  }
+  return entries.length ? entries.join(" • ") : "—";
 }
 
 async function fetchOrders(): Promise<OrderRow[]> {
@@ -46,6 +92,8 @@ async function fetchOrders(): Promise<OrderRow[]> {
           phone: true,
           deliveryAddress: true,
           billingAddress: true,
+          country: true,
+          state: true,
         },
       },
       items: {
@@ -92,8 +140,7 @@ async function fetchOrders(): Promise<OrderRow[]> {
         name: `${o.customer.firstName} ${o.customer.lastName}`.trim(),
         email: o.customer.email,
         phone: o.customer.phone,
-        address:
-          o.customer.deliveryAddress ?? o.customer.billingAddress ?? "—",
+        address: normalizeAddress(o),
       };
     } else if (
       o.guestInfo &&
@@ -103,11 +150,10 @@ async function fetchOrders(): Promise<OrderRow[]> {
       const gi = o.guestInfo as Record<string, string>;
       customerObj = {
         id: null,
-        name:
-          `${gi.firstName ?? ""} ${gi.lastName ?? ""}`.trim() || "Guest",
+        name: `${gi.firstName ?? ""} ${gi.lastName ?? ""}`.trim() || "Guest",
         email: gi.email ?? "",
         phone: gi.phone ?? "",
-        address: gi.address ?? "—",
+        address: normalizeAddress(o),
       };
     } else {
       customerObj = {
@@ -160,15 +206,18 @@ async function fetchOrders(): Promise<OrderRow[]> {
           }
         : null,
       deliveryFee: o.deliveryFee ?? 0,
-      deliveryDetails: normalizeDeliveryDetails(o.deliveryDetails),
+      deliveryDetails: humanizeDeliveryDetails(
+        o.deliveryDetails,
+        o.deliveryOption
+      ),
     };
   });
 }
 
 export default async function OrderInventoryPage() {
-  const initialData = await fetchOrders();
+  const data = await fetchOrders();
 
-  if (initialData.length === 0) {
+  if (data.length === 0) {
     return (
       <div className="py-6 px-3">
         <EmptyState
@@ -180,5 +229,6 @@ export default async function OrderInventoryPage() {
     );
   }
 
-  return <OrderInventoryClient initialData={initialData} />;
+  // Pass as data (not initialData)
+  return <OrderInventoryClient data={data} />;
 }

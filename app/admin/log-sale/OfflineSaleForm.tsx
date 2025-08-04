@@ -119,32 +119,26 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchOptions() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/delivery-options?active=true");
-        if (!res.ok) {
-          throw new Error(`Failed to load: ${res.statusText}`);
-        }
-        const data: { deliveryOptions: DeliveryOption[] } = await res.json();
-        if (!cancelled) {
-          setOptions(data.deliveryOptions || []);
-        }
-      } catch (e) {
-        console.warn("Failed to load delivery options", e);
-        if (!cancelled) setError("Unable to load options");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+useEffect(() => {
+  let cancelled = false;
+  async function fetchOptions() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/delivery-options?active=true");
+      if (!res.ok) throw new Error(`Failed to load: ${res.statusText}`);
+      const data: DeliveryOption[] = await res.json();
+      if (!cancelled) setOptions(data || []);
+    } catch (e) {
+      if (!cancelled) setError("Unable to load options");
+    } finally {
+      if (!cancelled) setLoading(false);
     }
-    fetchOptions();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }
+  fetchOptions();
+  return () => { cancelled = true; };
+}, []);
+
 
   const grouped = {
     COURIER: options.filter((o) => o.type === "COURIER"),

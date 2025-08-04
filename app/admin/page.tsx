@@ -2,158 +2,282 @@ export const dynamic = "force-dynamic";
 
 import AdminDashboardClient from "@/components/admin/AdminDashboardClient";
 import { prisma } from "@/lib/db";
+import type { OrderRow } from "@/types/orders"; // Ensure this matches your OrderTable usage
 
 /**
- * Build top N products by total quantity sold, always in NGN.
+ * Helpers — exactly match order-inventory logic
  */
-async function fetchTopProducts(limit = 5) {
-  // 1) Group orderItems by variantId to get quantities sold
-  const grouped = await prisma.orderItem.groupBy({
-    by: ["variantId"],
-    _sum: { quantity: true },
-    orderBy: { _sum: { quantity: "desc" } },
-    take: limit,
-  });
+function normalizeCustomSize(raw: any): Record<string, string> | null {
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (v !== null && v !== undefined) {
+        out[k] = String(v);
+      }
+    }
+    return Object.keys(out).length ? out : null;
+  }
+  return null;
+}
 
-  const variantIds = grouped.map((g) => g.variantId);
+function normalizeAddress(o: any): string {
+  if (o.customer) {
+    return (
+      o.customer.deliveryAddress ||
+      o.customer.billingAddress ||
+      o.customer.country ||
+      o.customer.state ||
+      "—"
+    );
+  }
+  if (o.guestInfo && typeof o.guestInfo === "object") {
+    return (
+      o.guestInfo.deliveryAddress ||
+      o.guestInfo.address ||
+      o.guestInfo.billingAddress ||
+      o.guestInfo.country ||
+      o.guestInfo.state ||
+      "—"
+    );
+  }
+  return "—";
+}
 
-  // 2) Fetch the matching Variants & their Product
-  const variants = await prisma.variant.findMany({
-    where: { id: { in: variantIds } },
-    include: { product: true },
-  });
+function humanizeDeliveryDetails(raw: any, deliveryOption?: any): string {
+  if (!raw) return "—";
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) return String(raw);
 
-  // 3) Assemble top-products array
-  return grouped.map((g) => {
-    const soldQty = g._sum.quantity ?? 0;
-    const variant = variants.find((v) => v.id === g.variantId)!;
-    const prod    = variant.product;
-    // always compute NGN revenue
-    const revenueNGN = Math.round((prod.priceNGN ?? 0) * soldQty);
-
-    return {
-      id:       prod.id, 
-      name:     prod.name,
-      sold:     soldQty,
-      revenue:  revenueNGN,
-      image:    prod.images[0],
-      category: prod.categorySlug,
-    };
-  });
+  const entries: string[] = [];
+  if (raw.aggregatedWeight) {
+    entries.push(
+      `Weight: ${parseFloat(raw.aggregatedWeight).toLocaleString()}kg`
+    );
+  }
+  if (deliveryOption?.name) {
+    entries.push(`Courier: ${deliveryOption.name}`);
+  }
+  // Add any extra info
+  for (const [k, v] of Object.entries(raw)) {
+    if (
+      k !== "aggregatedWeight" &&
+      k !== "deliveryOptionId" &&
+      v != null &&
+      v !== ""
+    ) {
+      entries.push(
+        `${k[0].toUpperCase() + k.slice(1)}: ${typeof v === "object" ? JSON.stringify(v) : v}`
+      );
+    }
+  }
+  return entries.length ? entries.join(" • ") : "—";
 }
 
 /**
- * Fetch most recent orders, with either customer or guest info.
+ * Fetches recent 5 orders, with all info, just like inventory.
  */
-async function fetchRecentOrders(limit = 5) {
+async function fetchRecentOrders(): Promise<OrderRow[]> {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
-    take: limit,
-    select: {
-      id:           true,
-      status:       true,
-      currency:     true,
-      totalAmount:  true,
-      totalNGN:     true,
-      createdAt:    true,
-      paymentMethod:true,
+    take: 5,
+    include: {
       customer: {
         select: {
-          id:              true,
-          firstName:       true,
-          lastName:        true,
-          email:           true,
-          phone:           true,
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
           deliveryAddress: true,
-          billingAddress:  true,
+          billingAddress: true,
+          country: true,
+          state: true,
         },
       },
-      guestInfo: true,
       items: {
         select: {
-          id:        true,
-          name:      true,
-          image:     true,
-          category:  true,
-          color:     true,
-          size:      true,
-          quantity:  true,
+          id: true,
+          name: true,
+          image: true,
+          category: true,
+          color: true,
+          size: true,
+          quantity: true,
           lineTotal: true,
+          hasSizeMod: true,
+          sizeModFee: true,
+          customSize: true,
+          variant: {
+            select: {
+              product: {
+                select: {
+                  priceNGN: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      offlineSale: true,
+      deliveryOption: {
+        select: {
+          id: true,
+          name: true,
+          provider: true,
+          type: true,
         },
       },
     },
   });
 
   return orders.map((o) => {
-    let customerData;
+    // Customer normalization
+    let customerObj: OrderRow["customer"];
     if (o.customer) {
-      customerData = {
-        id:      o.customer.id,
-        name:    `${o.customer.firstName} ${o.customer.lastName}`.trim(),
-        email:   o.customer.email,
-        phone:   o.customer.phone,
-        address:
-          o.customer.deliveryAddress ||
-          o.customer.billingAddress ||
-          "No address on file",
+      customerObj = {
+        id: o.customer.id,
+        name: `${o.customer.firstName} ${o.customer.lastName}`.trim(),
+        email: o.customer.email,
+        phone: o.customer.phone,
+        address: normalizeAddress(o),
       };
-    } else if (o.guestInfo && typeof o.guestInfo === "object") {
-      const gi = o.guestInfo as {
-        firstName: string;
-        lastName:  string;
-        email:     string;
-        phone:     string;
-        address:   string;
-      };
-      customerData = {
-        id:      "",
-        name:    `${gi.firstName} ${gi.lastName}`.trim() || "Guest",
-        email:   gi.email,
-        phone:   gi.phone,
-        address: gi.address,
+    } else if (
+      o.guestInfo &&
+      typeof o.guestInfo === "object" &&
+      !Array.isArray(o.guestInfo)
+    ) {
+      const gi = o.guestInfo as Record<string, string>;
+      customerObj = {
+        id: null,
+        name:
+          `${gi.firstName ?? ""} ${gi.lastName ?? ""}`.trim() || "Guest",
+        email: gi.email ?? "",
+        phone: gi.phone ?? "",
+        address: normalizeAddress(o),
       };
     } else {
-      customerData = {
-        id:      "",
-        name:    "Guest",
-        email:   "",
-        phone:   "",
+      customerObj = {
+        id: null,
+        name: "Guest",
+        email: "",
+        phone: "",
         address: "—",
       };
     }
 
+    // Calculate NGN total for reporting
+    const totalNGN: number = o.items.reduce(
+      (sum: number, it) =>
+        sum + (it.variant?.product.priceNGN ?? 0) * it.quantity,
+      0
+    );
+
+    // Normalize each product row
+    const products = o.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+      image: it.image ?? "",
+      category: it.category,
+      color: it.color,
+      size: it.size,
+      quantity: it.quantity,
+      lineTotal: it.lineTotal,
+      priceNGN: it.variant.product.priceNGN ?? 0,
+      hasSizeMod: it.hasSizeMod,
+      sizeModFee: it.sizeModFee,
+      customSize: normalizeCustomSize(it.customSize),
+    }));
+
     return {
-      id:           o.id,
-      status:       o.status,
-      currency:     o.currency,
-      totalAmount:  o.totalAmount,
-      totalNGN:     o.totalNGN,      // <— always correct NGN total
-      paymentMethod:o.paymentMethod,
-      createdAt:    o.createdAt.toISOString(),
-      customer:     customerData,
-      products:     o.items.map((it) => ({
-        id:        it.id,
-        name:      it.name,
-        image:     it.image ?? "",
-        category:  it.category,
-        color:     it.color,
-        size:      it.size,
-        quantity:  it.quantity,
-        lineTotal: it.lineTotal,
-      })),
+      id: o.id,
+      status: o.status,
+      currency: o.currency,
+      totalAmount: o.totalAmount,
+      totalNGN,
+      paymentMethod: o.paymentMethod,
+      createdAt: o.createdAt.toISOString(),
+      products,
+      customer: customerObj,
+      channel: o.channel,
+      deliveryOption: o.deliveryOption
+        ? {
+            id: o.deliveryOption.id,
+            name: o.deliveryOption.name,
+            provider: o.deliveryOption.provider,
+            type: o.deliveryOption.type,
+          }
+        : null,
+      deliveryFee: o.deliveryFee ?? 0,
+      deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, o.deliveryOption),
+    };
+  });
+}
+
+/**
+ * Build top N products by total quantity sold, always in NGN.
+ * Excludes orders with status "Cancelled".
+ */
+async function fetchTopProducts(limit = 5) {
+  const validOrderIds = (
+    await prisma.order.findMany({
+      where: { status: { not: "Cancelled" } },
+      select: { id: true },
+    })
+  ).map((o) => o.id);
+
+  if (!validOrderIds.length) return [];
+
+  const grouped = await prisma.orderItem.groupBy({
+    by: ["variantId"],
+    _sum: { quantity: true },
+    where: { orderId: { in: validOrderIds } },
+    orderBy: { _sum: { quantity: "desc" } },
+    take: limit,
+  });
+
+  const variantIds = grouped.map((g) => g.variantId);
+
+  const variants = await prisma.variant.findMany({
+    where: { id: { in: variantIds } },
+    include: { product: true },
+  });
+
+  return grouped.map((g) => {
+    const soldQty = g._sum.quantity ?? 0;
+    const variant = variants.find((v) => v.id === g.variantId)!;
+    const prod = variant.product;
+    const revenueNGN = Math.round((prod.priceNGN ?? 0) * soldQty);
+
+    return {
+      id: prod.id,
+      name: prod.name,
+      sold: soldQty,
+      revenue: revenueNGN,
+      image: prod.images[0],
+      category: prod.categorySlug,
     };
   });
 }
 
 /**
  * Build revenue time‑series (Day, Month, 6 Months, Year).
+ * Only includes non-cancelled orders in calculations.
  */
 async function buildRevenueSeries() {
   const now = new Date();
   const sumRange = async (gte: Date, lte: Date) => {
     const agg = await prisma.order.aggregate({
-      where: { createdAt: { gte, lte } },
-      _sum:  { totalNGN: true },
+      where: {
+        createdAt: { gte, lte },
+        status: { not: "Cancelled" },
+      },
+      _sum: { totalNGN: true },
     });
     return agg._sum.totalNGN ?? 0;
   };
@@ -164,7 +288,7 @@ async function buildRevenueSeries() {
     const d = new Date(now);
     d.setDate(now.getDate() - i);
     const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const end   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
     daySeries.push({
       label: d.toLocaleDateString(undefined, { weekday: "short" }),
       value: await sumRange(start, end),
@@ -186,9 +310,9 @@ async function buildRevenueSeries() {
   // Last 6 distinct months
   const sixSeries = [];
   for (let i = 5; i >= 0; i--) {
-    const d     = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const start = new Date(d.getFullYear(), d.getMonth(), 1);
-    const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
     sixSeries.push({
       label: d.toLocaleDateString(undefined, { month: "short" }),
       value: await sumRange(start, end),
@@ -198,9 +322,9 @@ async function buildRevenueSeries() {
   // Last 5 years
   const yearSeries = [];
   for (let i = 4; i >= 0; i--) {
-    const y     = now.getFullYear() - i;
+    const y = now.getFullYear() - i;
     const start = new Date(y, 0, 1);
-    const end   = new Date(y, 11, 31, 23, 59, 59, 999);
+    const end = new Date(y, 11, 31, 23, 59, 59, 999);
     yearSeries.push({
       label: String(y),
       value: await sumRange(start, end),
@@ -208,10 +332,10 @@ async function buildRevenueSeries() {
   }
 
   return {
-    Day:        daySeries,
-    Month:      monthSeries,
+    Day: daySeries,
+    Month: monthSeries,
     "6 Months": sixSeries,
-    Year:       yearSeries,
+    Year: yearSeries,
   };
 }
 
@@ -228,14 +352,15 @@ export default async function AdminDashboardPage() {
     prisma.customer.count(),
     prisma.order.aggregate({
       _count: { _all: true },
-      _sum:   { totalNGN: true },
+      _sum: { totalNGN: true },
+      where: { status: { not: "Cancelled" } },
     }),
     fetchTopProducts(3),
-    fetchRecentOrders(5),
+    fetchRecentOrders(),
     buildRevenueSeries(),
   ]);
 
-  const totalOrders  = orderAgg._count._all;
+  const totalOrders = orderAgg._count._all;
   const totalRevenue = orderAgg._sum.totalNGN ?? 0;
 
   return (

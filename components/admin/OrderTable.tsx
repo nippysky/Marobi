@@ -1,4 +1,3 @@
-// file: app/admin/order-inventory/OrderTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -12,7 +11,6 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import Link from "next/link";
-
 import {
   Table,
   TableHeader,
@@ -48,34 +46,63 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
 import Papa from "papaparse";
-
 import type { OrderChannel, OrderRow } from "@/types/orders";
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
 import { receiptCSS } from "@/lib/utils";
 
-type Props = { initialData: OrderRow[] };
+type OrderTableProps = {
+  data: OrderRow[];
+  pageSize?: number;
+  showSearch?: boolean;
+  showExport?: boolean;
+  showPagination?: boolean;
+};
 
-const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Delivered"];
+const STATUS_OPTIONS: OrderStatus[] = [
+  "Processing",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+];
 const CURRENCY_OPTIONS: Currency[] = ["NGN", "USD", "EUR", "GBP"];
 
-export default function OrderTable({ initialData }: Props) {
+function displayDeliveryDetails(details: string | null | undefined) {
+  if (!details || details === "—") return <span>—</span>;
+  if (details.includes("•")) {
+    return (
+      <div className="space-y-1">
+        {details.split("•").map((entry, idx) => (
+          <div key={idx}>{entry.trim()}</div>
+        ))}
+      </div>
+    );
+  }
+  return <span>{details}</span>;
+}
+
+export default function OrderTable({
+  data: initialData,
+  pageSize = 50,
+  showSearch = true,
+  showExport = true,
+  showPagination = true,
+}: OrderTableProps) {
   const [data, setData] = useState<OrderRow[]>(initialData);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | OrderStatus>("All");
   const [currencyFilter, setCurrencyFilter] = useState<"All" | Currency>("All");
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
-
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize });
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [receiptOrder, setReceiptOrder] = useState<OrderRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
+  // Modal for viewing products
   function openReceiptModal(order: OrderRow) {
     setReceiptOrder(order);
     setReceiptOpen(true);
   }
 
-  // Inline status change with indicator
   async function handleStatusChange(id: string, newStatus: OrderStatus) {
     if (updatingIds.has(id)) return;
     setUpdatingIds((s) => new Set(s).add(id));
@@ -101,10 +128,8 @@ export default function OrderTable({ initialData }: Props) {
     }
   }
 
-  // Print (modern/futuristic)
   async function handlePrint(order: OrderRow) {
     if (typeof window === "undefined") return;
-
     const now = new Date().toLocaleString();
     const vatRate = 0.075;
     const subtotal = +order.totalAmount.toFixed(2);
@@ -123,7 +148,8 @@ export default function OrderTable({ initialData }: Props) {
         ? "€"
         : "£";
     const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
-
+    const deliveryDetails = order.deliveryDetails || "—";
+    const address = order.customer?.address ?? "—";
     const productLines = order.products
       .map((p) => {
         const sizeModDetails = p.hasSizeMod
@@ -156,7 +182,6 @@ export default function OrderTable({ initialData }: Props) {
         `;
       })
       .join("");
-
     const html = `
       <html>
         <head>
@@ -204,12 +229,10 @@ export default function OrderTable({ initialData }: Props) {
                 <div class="small">Date: ${now}</div>
               </div>
             </div>
-
             <div class="card">
               <div class="section">
                 ${productLines}
               </div>
-
               <div class="section totals">
                 <div>
                   <div class="line">
@@ -236,17 +259,21 @@ export default function OrderTable({ initialData }: Props) {
                   </div>
                 </div>
               </div>
-
               <div class="delivery">
                 <div><strong>Delivery Option:</strong> ${deliveryOptionName}</div>
                 <div><strong>Delivery Fee:</strong> ${sym}${deliveryCharge.toLocaleString()}</div>
-                ${
-                  order.deliveryDetails
-                    ? `<div><strong>Details:</strong> ${order.deliveryDetails}</div>`
-                    : ""
-                }
+                <div><strong>Delivery Details:</strong> ${
+                  deliveryDetails === "—"
+                    ? "—"
+                    : deliveryDetails
+                        .split("•")
+                        .map((entry) => entry.trim())
+                        .filter(Boolean)
+                        .map((entry) => `<div>${entry}</div>`)
+                        .join("")
+                }</div>
+                <div><strong>Delivery Address:</strong> ${address}</div>
               </div>
-
               <div class="footer">
                 <div>
                   <div><strong>Customer:</strong> ${
@@ -258,9 +285,7 @@ export default function OrderTable({ initialData }: Props) {
                   <div><strong>Phone:</strong> ${
                     order.customer?.phone ?? "-"
                   }</div>
-                  <div><strong>Address:</strong> ${
-                    order.customer?.address ?? "-"
-                  }</div>
+                  <div><strong>Address:</strong> ${address}</div>
                 </div>
                 <div>
                   <div><strong>Payment:</strong> ${order.paymentMethod}</div>
@@ -276,7 +301,6 @@ export default function OrderTable({ initialData }: Props) {
         </body>
       </html>
     `;
-
     const { default: printJS } = await import("print-js");
     printJS({
       printable: html,
@@ -288,7 +312,7 @@ export default function OrderTable({ initialData }: Props) {
 
   const filtered = useMemo(() => {
     return data.filter((o) => {
-      if (search) {
+      if (showSearch && search) {
         const s = search.toLowerCase();
         if (
           !o.id.toLowerCase().includes(s) &&
@@ -297,24 +321,21 @@ export default function OrderTable({ initialData }: Props) {
           return false;
         }
       }
-      if (statusFilter !== "All" && o.status !== statusFilter) return false;
-      if (currencyFilter !== "All" && o.currency !== currencyFilter)
+      if (showSearch && statusFilter !== "All" && o.status !== statusFilter) return false;
+      if (showSearch && currencyFilter !== "All" && o.currency !== currencyFilter)
         return false;
       return true;
     });
-  }, [data, search, statusFilter, currencyFilter]);
+  }, [data, search, statusFilter, currencyFilter, showSearch]);
 
   function handleExportCSV() {
     const rows = filtered.map((o) => {
-      // product summary
       const productSummary = o.products
         .map(
           (p) =>
             `${p.name} x${p.quantity} (Color: ${p.color}, Size: ${p.size})`
         )
         .join(" | ");
-
-      // size mod summary per product
       const sizeModSummary = o.products
         .map((p) => {
           if (!p.hasSizeMod) return null;
@@ -327,7 +348,6 @@ export default function OrderTable({ initialData }: Props) {
         })
         .filter(Boolean)
         .join(" | ");
-
       return {
         "Order ID": o.id,
         Status: o.status,
@@ -343,6 +363,7 @@ export default function OrderTable({ initialData }: Props) {
         "Delivery Option": o.deliveryOption?.name ?? "—",
         "Delivery Fee": o.deliveryFee ?? 0,
         "Delivery Details": o.deliveryDetails || "—",
+        "Delivery Address": o.customer.address ?? "—",
         Products: productSummary,
         "Size Modifications": sizeModSummary || "None",
         "Created At": o.createdAt,
@@ -360,6 +381,7 @@ export default function OrderTable({ initialData }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  // Columns
   const columns = useMemo<ColumnDef<OrderRow>[]>(() => [
     {
       accessorKey: "id",
@@ -413,7 +435,11 @@ export default function OrderTable({ initialData }: Props) {
             ? "bg-blue-100 text-blue-800"
             : s === "Shipped"
             ? "bg-yellow-100 text-yellow-800"
-            : "bg-green-100 text-green-800";
+            : s === "Delivered"
+            ? "bg-green-100 text-green-800"
+            : s === "Cancelled"
+            ? "bg-red-100 text-red-800"
+            : "";
         const isUpdating = updatingIds.has(row.original.id);
         return (
           <div className="flex items-center gap-2">
@@ -521,6 +547,9 @@ export default function OrderTable({ initialData }: Props) {
               Fee: ₦{row.original.deliveryFee.toLocaleString()}
             </div>
           )}
+          <div className="text-xs mt-1 text-gray-600">
+            {displayDeliveryDetails(row.original.deliveryDetails)}
+          </div>
         </div>
       ),
     },
@@ -556,56 +585,61 @@ export default function OrderTable({ initialData }: Props) {
   return (
     <>
       {/* Export + filters */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportCSV}>
-            <Download className="mr-1 h-4 w-4" /> Export CSV
-          </Button>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <Input
-            placeholder="Search orders…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-sm"
-          />
-          <div className="flex space-x-2">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as any)}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Statuses</SelectItem>
-                {STATUS_OPTIONS.map((st) => (
-                  <SelectItem key={st} value={st}>
-                    {st}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={currencyFilter}
-              onValueChange={(v) => setCurrencyFilter(v as any)}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All Currencies" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Currencies</SelectItem>
-                {CURRENCY_OPTIONS.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {(showExport || showSearch) && (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+          <div className="flex gap-2">
+            {showExport && (
+              <Button variant="outline" onClick={handleExportCSV}>
+                <Download className="mr-1 h-4 w-4" /> Export CSV
+              </Button>
+            )}
           </div>
+          {showSearch && (
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <Input
+                placeholder="Search orders…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full max-w-sm"
+              />
+              <div className="flex space-x-2">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => setStatusFilter(v as any)}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Statuses</SelectItem>
+                    {STATUS_OPTIONS.map((st) => (
+                      <SelectItem key={st} value={st}>
+                        {st}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={currencyFilter}
+                  onValueChange={(v) => setCurrencyFilter(v as any)}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="All Currencies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Currencies</SelectItem>
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
@@ -631,10 +665,10 @@ export default function OrderTable({ initialData }: Props) {
                           )}
                           {canSort && (
                             <span className="ml-1">
-                              {{
+                              {({
                                 asc: <ChevronUp className="h-4 w-4" />,
                                 desc: <ChevronDown className="h-4 w-4" />,
-                              }[header.column.getIsSorted() as string] ?? null}
+                              } as any)[header.column.getIsSorted() as string] ?? null}
                             </span>
                           )}
                         </div>
@@ -673,37 +707,39 @@ export default function OrderTable({ initialData }: Props) {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between py-4">
-        <Button
-          variant="link"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          ← Prev
-        </Button>
-        <span className="text-sm text-gray-700">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </span>
-        <Button
-          variant="link"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next →
-        </Button>
-        <select
-          className="ml-2 border rounded p-1"
-          value={table.getState().pagination.pageSize}
-          onChange={(e) => table.setPageSize(Number(e.target.value))}
-        >
-          {[10, 20, 30, 50].map((s) => (
-            <option key={s} value={s}>
-              {s} / page
-            </option>
-          ))}
-        </select>
-      </div>
+      {showPagination && (
+        <div className="flex items-center justify-between py-4">
+          <Button
+            variant="link"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            ← Prev
+          </Button>
+          <span className="text-sm text-gray-700">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </span>
+          <Button
+            variant="link"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next →
+          </Button>
+          <select
+            className="ml-2 border rounded p-1"
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+          >
+            {[10, 20, 30, 50].map((s) => (
+              <option key={s} value={s}>
+                {s} / page
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Receipt Modal */}
       {receiptOrder && (
@@ -736,6 +772,9 @@ export default function OrderTable({ initialData }: Props) {
                     ? "€"
                     : "£";
                 const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
+
+                const address = o.customer?.address ?? "—";
+                const deliveryDetails = o.deliveryDetails || "—";
 
                 return (
                   <div className="px-2 space-y-4">
@@ -780,7 +819,6 @@ export default function OrderTable({ initialData }: Props) {
                         </div>
                       </div>
                     ))}
-
                     <div className="flex justify-between font-medium">
                       <span>Subtotal</span>
                       <span>
@@ -813,7 +851,6 @@ export default function OrderTable({ initialData }: Props) {
                         {grand.toLocaleString()}
                       </span>
                     </div>
-
                     <div className="mt-4 text-sm space-y-1">
                       <div>
                         <strong>Customer:</strong> {o.customer?.name ?? "Guest"}
@@ -825,8 +862,7 @@ export default function OrderTable({ initialData }: Props) {
                         <strong>Phone:</strong> {o.customer?.phone ?? "-"}
                       </div>
                       <div>
-                        <strong>Address:</strong> {o.customer?.address ?? "-"}
-                      </div>
+                        <strong>Address:</strong> {address}</div>
                       <div className="mt-2">
                         <div>
                           <strong>Delivery Option:</strong>{" "}
@@ -834,7 +870,10 @@ export default function OrderTable({ initialData }: Props) {
                         </div>
                         <div>
                           <strong>Delivery Details:</strong>{" "}
-                          {o.deliveryDetails || "—"}
+                          {displayDeliveryDetails(deliveryDetails)}
+                        </div>
+                        <div>
+                          <strong>Delivery Address:</strong> {address}
                         </div>
                       </div>
                     </div>

@@ -209,7 +209,6 @@ model Order {
   deliveryOptionId    String?
   deliveryFee         Float?                // actual fee charged (can override baseFee)
   deliveryDetails     Json?                 // e.g., tracking number, pickup notes, aggregated weight, etc.
-
   refundedAt          DateTime?
   refundReason        String?
   refundTransactionId String?
