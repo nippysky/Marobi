@@ -1,14 +1,14 @@
+// app/admin/log-sale/page.tsx
 import React from "react";
-import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import OfflineSaleForm from "./OfflineSaleForm";
-import { authOptions } from "@/lib/authOptions";
+import { getAdminSession } from "@/lib/getAdminSession";
 
 export default async function LogOfflineSalePage() {
-  // 1) Check session
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  // 1) Check admin/staff session
+  const session = await getAdminSession();
+  if (!session || !session.user?.email || session.user.role === "customer") {
     const cb = encodeURIComponent("/admin/log-sale");
     return redirect(`/admin-login?callbackUrl=${cb}`);
   }

@@ -1,13 +1,28 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
-import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
 import ProfileSection from "./ProfileSection";
-import { authOptions } from "@/lib/authOptions";
+import { getCustomerSession } from "@/lib/getCustomerSession";
+
+type Profile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  billingAddress: string;
+  country: string;
+  state: string;
+  registeredAt: string;
+  lastLogin: string | null;
+};
 
 export default async function AccountPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/auth/login");
+  const session = await getCustomerSession();
+  if (!session || session.user?.role !== "customer" || !session.user?.email) {
+    redirect("/(USER-END)/auth/login");
+  }
 
   const user = await prisma.customer.findUnique({
     where: { email: session.user.email },
@@ -25,10 +40,11 @@ export default async function AccountPage() {
       lastLogin: true,
     },
   });
-  if (!user) redirect("/auth/login");
+  if (!user) {
+    redirect("/(USER-END)/auth/login");
+  }
 
-  // build a fully non-nullable profile object
-  const profile = {
+  const profile: Profile = {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
@@ -45,7 +61,9 @@ export default async function AccountPage() {
   return (
     <>
       <nav className="text-sm text-gray-600 mb-6 flex items-center gap-2">
-        <Link href="/" className="hover:underline">Home</Link>
+        <Link href="/" className="hover:underline">
+          Home
+        </Link>
         <span>/</span>
         <span className="font-medium">Account</span>
       </nav>

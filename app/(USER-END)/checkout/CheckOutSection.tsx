@@ -32,33 +32,24 @@ import { useSession } from "next-auth/react";
 import type { CheckoutUser } from "./page";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
 
-// --- Use the shared checkout hook & types ---
+// shared checkout hook/types
 import {
   useCheckout,
   CartItemPayload,
   CustomerPayload,
 } from "@/lib/hooks/useCheckout";
 
+// extracted form hooks
+import {
+  useCountryState,
+  useDeliveryOptions,
+  useCartTotals,
+} from "@/lib/hooks/useCheckoutForm";
+
 const PaystackButton = dynamic(
   () => import("react-paystack").then((m) => m.PaystackButton),
   { ssr: false }
 );
-
-interface CountryData {
-  name: string;
-  iso2: string;
-  callingCodes: string[];
-}
-
-interface DeliveryOption {
-  id: string;
-  name: string;
-  provider?: string | null;
-  type: "COURIER" | "PICKUP";
-  baseFee: number;
-  active: boolean;
-  metadata?: any;
-}
 
 interface Props {
   user: CheckoutUser | null;
@@ -90,50 +81,49 @@ const flagEmoji = (iso2: string) =>
 
 export default function CheckoutSection({ user }: Props) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSession({ required: false });
   const { currency } = useCurrency();
+
   const items = useCartStore((s) => s.items) as CartItem[];
   const clearCart = useCartStore((s) => s.clear) as () => void;
-  const totalWeight = useCartStore((s) => s.totalWeight()) || 0;
 
-  // Totals
-  const itemsSubtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum: number, item: CartItem) =>
-          sum + (item.price - item.sizeModFee) * item.quantity,
-        0
-      ),
-    [items]
-  );
-  const sizeModTotal = useMemo(
-    () =>
-      items.reduce(
-        (sum: number, item: CartItem) => sum + item.sizeModFee * item.quantity,
-        0
-      ),
-    [items]
-  );
-  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
-  const [selectedDeliveryOption, setSelectedDeliveryOption] =
-    useState<DeliveryOption | null>(null);
+  // Totals (without delivery fee)
+  const { itemsSubtotal, sizeModTotal, totalWeight, total: baseTotal } =
+    useCartTotals(items.map((it) => ({
+      price: it.price,
+      sizeModFee: it.sizeModFee,
+      quantity: it.quantity,
+      unitWeight: it.unitWeight,
+    })));
 
-  const deliveryFee = selectedDeliveryOption?.baseFee ?? 0;
-  const total = itemsSubtotal + sizeModTotal + deliveryFee;
+  // Country / state / phone logic
+  const {
+    countryList,
+    country,
+    setCountry,
+    stateList,
+    state,
+    setState,
+    phoneCode,
+    setPhoneCode,
+    phoneOptions,
+  } = useCountryState(user?.country, user?.state);
 
-  // Error display state (for "show error only after payment attempt")
-  const [hasAttemptedPayment, setHasAttemptedPayment] = useState(false);
+  // Delivery options based on country
+  const {
+    deliveryOptions,
+    selectedDeliveryOption,
+    setSelectedDeliveryOption,
+    deliveryFee,
+  } = useDeliveryOptions(country?.name);
 
-  // --- Form states
+  const total = baseTotal + deliveryFee;
+
+  // Form fields
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
-  const [phoneCode, setPhoneCode] = useState("+234");
   const [phoneNumber, setPhoneNumber] = useState(user?.phone ?? "");
-  const [countryList, setCountryList] = useState<CountryData[]>([]);
-  const [country, setCountry] = useState<CountryData | null>(null);
-  const [stateList, setStateList] = useState<string[]>([]);
-  const [state, setState] = useState(user?.state ?? "");
   const [deliveryAddress, setDeliveryAddress] = useState(
     user?.deliveryAddress ?? ""
   );
@@ -142,122 +132,19 @@ export default function CheckoutSection({ user }: Props) {
     user?.billingAddress ?? ""
   );
 
-  // Success modal
+  // Payment / UX state
+  const [hasAttemptedPayment, setHasAttemptedPayment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [customerEmailForModal, setCustomerEmailForModal] =
     useState<string>("");
-
-  // Payment reference retention for retry
   const [lastPaymentReference, setLastPaymentReference] = useState<string | null>(
     null
   );
   const [orderCreatingFromReference, setOrderCreatingFromReference] =
     useState(false);
 
-  // useCheckout hook (shared)
+  // Shared checkout hook
   const { isProcessing, error, result, createOrder, reset } = useCheckout();
-
-  // --- Load countries
-  useEffect(() => {
-    async function loadCountries() {
-      try {
-        const res = await fetch("/api/utils/countries");
-        if (!res.ok) throw new Error("Failed to fetch countries");
-        const data: CountryData[] = await res.json();
-        setCountryList(data);
-        const defaultCountry =
-          data.find((c) => c.name === user?.country) ??
-          data.find((c) => c.name === "Nigeria") ??
-          null;
-        setCountry(defaultCountry);
-        if (defaultCountry?.callingCodes.length) {
-          setPhoneCode(`+${defaultCountry.callingCodes[0]}`);
-        }
-      } catch (err) {
-        console.error("loadCountries error:", err);
-        setCountryList([]);
-        toast.error("Could not load country list.");
-      }
-    }
-    loadCountries();
-    // eslint-disable-next-line
-  }, [user?.country]);
-
-  // --- Load states
-  useEffect(() => {
-    async function loadStates() {
-      if (!country) {
-        setStateList([]);
-        return;
-      }
-      setStateList([]);
-      setState("");
-      try {
-        const res = await fetch("/api/utils/states", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ country: country.name }),
-        });
-        if (!res.ok) throw new Error("Failed to fetch states");
-        const json = await res.json();
-        setStateList(json.states ?? []);
-      } catch (err) {
-        console.error("loadStates error:", err);
-        setStateList([]);
-        toast.error("Could not load states.");
-      }
-      if (country?.callingCodes?.length) {
-        setPhoneCode(`+${country.callingCodes[0]}`);
-      }
-    }
-    loadStates();
-  }, [country]);
-
-  // --- Fetch delivery options
-  useEffect(() => {
-    async function loadOptions() {
-      if (!country) return;
-      try {
-        const res = await fetch(
-          `/api/delivery-options?country=${encodeURIComponent(country.name)}`
-        );
-        if (!res.ok) throw new Error("Failed to load delivery options");
-        const data: DeliveryOption[] = await res.json();
-        const activeOptions = data.filter((o) => o.active);
-        setDeliveryOptions(activeOptions);
-        setSelectedDeliveryOption(
-          (prev) =>
-            (prev && activeOptions.find((o) => o.id === prev.id)) ??
-            activeOptions[0] ??
-            null
-        );
-      } catch (err) {
-        console.error("load delivery options:", err);
-        toast.error("Could not load delivery options.");
-      }
-    }
-    loadOptions();
-  }, [country]);
-
-  // --- Reset "hasAttemptedPayment" if user edits form or cart
-  useEffect(() => {
-    setHasAttemptedPayment(false);
-    // eslint-disable-next-line
-  }, [email, total, firstName, lastName, deliveryAddress, selectedDeliveryOption]);
-
-  // Phone code options
-  const phoneOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    countryList.forEach((c) =>
-      c.callingCodes.forEach((code) => {
-        if (!map.has(code)) map.set(code, c.iso2);
-      })
-    );
-    return Array.from(map.entries()).map(([code, iso2]) => ({
-      code: `+${code}`,
-      iso2,
-    }));
-  }, [countryList]);
 
   // Readiness
   const isPaymentReady =
@@ -270,7 +157,7 @@ export default function CheckoutSection({ user }: Props) {
 
   const amountInLowestDenomination = Math.round(total * 100);
 
-  // Paystack public key (must be string for props)
+  // Paystack key
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
   if (!paystackPublicKey) {
     console.error(
@@ -279,12 +166,10 @@ export default function CheckoutSection({ user }: Props) {
   }
   const safePaystackPublicKey = paystackPublicKey || "";
 
-  // Paystack reference for idempotency
+  // Reference
   const [paystackReference, setPaystackReference] = useState<string>(
     `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
   );
-
-  // regenerate when appropriate
   useEffect(() => {
     if (!isProcessing && !orderCreatingFromReference) {
       setPaystackReference(
@@ -313,11 +198,13 @@ export default function CheckoutSection({ user }: Props) {
     billingAddress: billingSame ? deliveryAddress : billingAddress,
     country: country?.name,
     state,
-    ...(session?.user?.id ? { id: session.user.id } : {}),
+    ...(session?.user?.id && session.user.role === "customer"
+      ? { id: session.user.id }
+      : {}),
   };
 
   const buildCartItemsPayload = useCallback((): CartItemPayload[] => {
-    return items.map((it: any) => ({
+    return items.map((it) => ({
       productId: it.product.id,
       color: it.color || "N/A",
       size: it.size || "N/A",
@@ -772,7 +659,8 @@ export default function CheckoutSection({ user }: Props) {
                 )}
               </div>
             </div>
-            {/* --- ERROR UI OUTSIDE THE CARD --- */}
+
+            {/* Error display */}
             {hasAttemptedPayment && error && (
               <div className="mt-2 px-3 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm">
                 {typeof error === "string" ? error : error.error}

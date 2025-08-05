@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth/next";
+// app/admin/profile/page.tsx
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import PasswordChangeForm from "@/components/admin/PasswordChangeForm";
@@ -8,11 +8,11 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import { authOptions } from "@/lib/authOptions";
+import { getAdminSession } from "@/lib/getAdminSession";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role === "customer") {
+  const session = await getAdminSession();
+  if (!session || session.user?.role === "customer") {
     redirect("/admin-login");
   }
 
@@ -48,7 +48,6 @@ export default async function ProfilePage() {
         <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
 
         <div className="grid gap-8 md:grid-cols-2">
-          {/* ————————————————————————————————————————————— Profile Details — */}
           <Card>
             <CardHeader>
               <CardTitle>Profile Details</CardTitle>
@@ -97,7 +96,7 @@ export default async function ProfilePage() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Job Roles</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {staff.jobRoles.join(", ")}
+                    {(staff.jobRoles || []).join(", ")}
                   </dd>
                 </div>
 
@@ -122,7 +121,6 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* ————————————————————————————————————————————— Change Password — */}
           <PasswordChangeForm />
         </div>
       </div>

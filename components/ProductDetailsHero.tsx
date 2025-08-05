@@ -74,7 +74,7 @@ const ProductDetailHero: React.FC<Props> = ({
   const totalStock = useMemo(
     () =>
       product.variants.reduce(
-        (sum, v) => sum + (typeof v.inStock === "number" ? v.inStock : 0),
+        (sum, v) => sum + (typeof (v as any).inStock === "number" ? (v as any).inStock : 0),
         0
       ),
     [product.variants]
@@ -128,8 +128,8 @@ const ProductDetailHero: React.FC<Props> = ({
 
   const inStock = useMemo(
     () =>
-      typeof selectedVariant?.inStock === "number"
-        ? selectedVariant.inStock
+      typeof (selectedVariant as any)?.inStock === "number"
+        ? (selectedVariant as any).inStock
         : totalStock,
     [selectedVariant, totalStock]
   );
@@ -144,7 +144,7 @@ const ProductDetailHero: React.FC<Props> = ({
   const { currency } = useCurrency();
 
   const basePrice =
-    product.prices[currency] ?? Object.values(product.prices)[0] ?? 0;
+    (product as any).prices?.[currency] ?? Object.values((product as any).prices ?? {})[0] ?? 0;
   const sizeModFee = customSizeEnabled
     ? parseFloat((basePrice * 0.05).toFixed(2))
     : 0;
@@ -156,15 +156,18 @@ const ProductDetailHero: React.FC<Props> = ({
   const [wishLoading, setWishLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   useEffect(() => {
-    if (user && product.id) {
+    // only treat as customer if role === "customer"
+    if (user && user.role === "customer" && product.id) {
       fetch(`/api/account/wishlist/${product.id}`)
         .then((r) => r.json())
         .then((d) => setIsWishlisted(d.wishlisted))
         .catch(() => setIsWishlisted(false));
+    } else {
+      setIsWishlisted(false);
     }
   }, [user, product.id]);
   const toggleWishlist = async () => {
-    if (!user) {
+    if (!user || user.role !== "customer") {
       toast.error("Sign in to use wishlist");
       return;
     }
@@ -221,7 +224,7 @@ const ProductDetailHero: React.FC<Props> = ({
   };
 
   const unitWeight =
-    typeof selectedVariant?.weight === "number" ? selectedVariant.weight : 0;
+    typeof (selectedVariant as any)?.weight === "number" ? (selectedVariant as any).weight : 0;
   const totalWeight = useMemo(
     () => parseFloat((unitWeight * quantity).toFixed(3)),
     [unitWeight, quantity]
@@ -540,7 +543,7 @@ const ProductDetailHero: React.FC<Props> = ({
           </Button>
         </div>
 
-        {user && mounted && (
+        {user && mounted && user.role === "customer" && (
           <Button
             variant={isWishlisted ? "outline" : "secondary"}
             className={`mt-3 w-full ${isWishlisted ? "text-red-500" : ""}`}

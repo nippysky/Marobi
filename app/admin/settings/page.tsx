@@ -1,7 +1,8 @@
-"use client";
-
+// app/admin/settings/page.tsx
 import React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getAdminSession } from "@/lib/getAdminSession";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { ImageIcon, Ruler } from "lucide-react";
 
@@ -17,7 +18,15 @@ type CardConfig = {
   accentTextHover: string;
 };
 
-export default function StoreSettingsPage() {
+export default async function StoreSettingsPage() {
+  // enforce admin/staff session
+  const session = await getAdminSession();
+  if (!session || !session.user?.role || session.user.role === "customer") {
+    // redirect to admin login (preserve callback to return here)
+    const cb = encodeURIComponent("/admin/settings");
+    redirect(`/admin-login?callbackUrl=${cb}`);
+  }
+
   const cards: CardConfig[] = [
     {
       href: "/admin/settings/hero-slider",

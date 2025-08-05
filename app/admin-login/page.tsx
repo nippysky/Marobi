@@ -1,18 +1,12 @@
-import { getServerSession } from "next-auth/next";
+// app/admin-login/page.tsx
 import { redirect } from "next/navigation";
 import AdminSignInClient from "@/components/admin/AdminSignInClient";
-import { authOptions } from "@/lib/authOptions";
-
+import { getAdminSession } from "@/lib/getAdminSession";
 
 export default async function AdminLoginPage() {
-  // server‑side: check for an existing session
-  const session = await getServerSession(authOptions);
-
-  // if we have a session and it's *not* a customer, send them to /admin
-  if (session && session.user.role !== "customer") {
+  const session = await getAdminSession();
+  if (session) {
     redirect("/admin");
   }
-
-  // otherwise render the client‑side login form
   return <AdminSignInClient />;
 }

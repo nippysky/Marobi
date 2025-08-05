@@ -1,17 +1,18 @@
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth/next";
 import { Header } from "@/components/shared/header";
 import AccountSidebar from "./AccountSidebar";
-import { authOptions } from "@/lib/authOptions";
+import { getCustomerSession } from "@/lib/getCustomerSession";
 
 export default async function AccountLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/auth/login");
+  const session = await getCustomerSession();
+  if (!session || session.user?.role !== "customer") {
+    redirect("/(USER-END)/auth/login");
+  }
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-gray-100 to-white">

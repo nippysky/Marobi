@@ -2,24 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Search as SearchIcon,
   PencilRuler,
   UserRound,
-  User as UserIcon,
-  LogOut as LogoutIcon,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { signOut, useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import { SizeChartModal } from "../SizeChartModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
-
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useSearchModal } from "@/lib/context/searchModalContext";
 import { SearchModal } from "../SearchModal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,7 +24,7 @@ import { CartSheet } from "./cart-sheet";
 
 import { useCategories } from "@/lib/hooks/useCategories";
 import { FuturisticSkeleton } from "../FuturisticSkeleton";
-
+import { useAuthSession } from "@/lib/hooks/useAuthSession";
 
 const BrandIcon: React.FC = () => (
   <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold bg-gradient-to-tr from-brand to-green-600 text-white shadow-md">
@@ -40,27 +32,28 @@ const BrandIcon: React.FC = () => (
   </div>
 );
 
+const linkBaseClasses =
+  "tracking-widest font-semibold uppercase py-1 px-3 rounded-full transition duration-300 ease-in-out";
+
 export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
   const { isOpen, openModal } = useSearchModal();
-  const { data: session, status } = useSession();
+  const {
+    session,
+    status,
+    isCustomer,
+  } = useAuthSession();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const {
     data: categories = [],
     isLoading: categoriesLoading,
     isError,
-    error,
   } = useCategories();
 
-  // build nav items (memoized)
-  const navItems = useMemo<
-    { label: string; href: string }[]
-  >(
+  const navItems = useMemo<{ label: string; href: string }[]>(
     () => [
       { label: "All Products", href: "/all-products" },
       ...categories.map((cat: Category) => ({
@@ -71,18 +64,6 @@ export const Header: React.FC = () => {
     [categories]
   );
 
-  // user menu outside click
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [menuOpen]);
-
-  // collapse header on scroll
   useEffect(() => {
     const onScroll = () => setIsCollapsed(window.scrollY > 2);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -90,109 +71,7 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // motion variants
-  const headerVariants = {
-    expanded: { height: "auto", backgroundColor: "#ffffff" },
-    collapsed: { height: "4rem", backgroundColor: "#ffffff" },
-  };
-  const logoTextVariants = {
-    expanded: { opacity: 1, x: 0, transition: { duration: 0.2 } },
-    collapsed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
-  };
-  const logoIconVariants = {
-    expanded: { opacity: 0, x: 20, transition: { duration: 0.2 } },
-    collapsed: { opacity: 1, x: 0, transition: { duration: 0.2 } },
-  };
-  const searchInputVariants = {
-    expanded: { opacity: 1, width: "40vw", transition: { duration: 0.3 } },
-    collapsed: { opacity: 0, width: 0, transition: { duration: 0.2 } },
-  };
-  const searchIconVariants = {
-    expanded: { opacity: 0, x: 10 },
-    collapsed: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-  };
-  const topNavVariants = {
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.2 },
-      display: "block",
-    },
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      y: -20,
-      transition: { duration: 0.2 },
-      transitionEnd: { display: "none" },
-    },
-  };
-
-  const linkBaseClasses =
-    "tracking-widest font-semibold uppercase py-1 px-3 rounded-full transition duration-300 ease-in-out";
-
-  // user menu UI
-  const UserMenu = () => {
-    if (status === "loading") {
-      return <Skeleton className="h-8 w-8 rounded-full" />;
-    }
-    if (!session) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href="/auth/login"
-              className="p-2 text-gray-600 hover:text-gray-800"
-            >
-              <UserRound className="w-5 h-5" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Login to your account</p>
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-    return (
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          className="p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-          aria-label="User menu"
-        >
-          <UserRound className="w-5 h-5" />
-        </button>
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
-            >
-              <Link
-                href="/account"
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                <UserIcon className="w-4 h-4" />
-                <span>Profile</span>
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100"
-              >
-                <LogoutIcon className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
-
-  const renderNavItems = (isCompact: boolean = false) => {
+  function renderNavItems(isCompact = false) {
     if (categoriesLoading) {
       return <FuturisticSkeleton count={isCompact ? 3 : 5} height={28} />;
     }
@@ -206,7 +85,7 @@ export const Header: React.FC = () => {
     return (
       <ul className="flex flex-wrap justify-center gap-x-12 gap-y-2">
         {navItems.map((item, i) => {
-          const isActive = pathname === item.href;
+          const active = pathname === item.href;
           return (
             <motion.li
               key={item.href}
@@ -216,8 +95,7 @@ export const Header: React.FC = () => {
               variants={{
                 hidden: { opacity: 0, y: 6 },
                 visible: {
-                  opacity: 1,
-                  y: 0,
+                  opacity: 1, y: 0,
                   transition: { duration: 0.25, delay: 0.04 * i },
                 },
               }}
@@ -225,8 +103,9 @@ export const Header: React.FC = () => {
               <Link
                 href={item.href}
                 className={`${linkBaseClasses} text-[0.85rem] text-gray-700 hover:bg-brand hover:text-white ${
-                  isActive ? "bg-brand text-white" : ""
+                  active ? "bg-brand text-white" : ""
                 }`}
+                aria-current={active ? "page" : undefined}
               >
                 {item.label}
               </Link>
@@ -235,6 +114,72 @@ export const Header: React.FC = () => {
         })}
       </ul>
     );
+  }
+
+  const UserIndicator: React.FC = () => {
+    if (status === "loading") {
+      return <Skeleton className="h-8 w-8 rounded-full" />;
+    }
+    if (session && isCustomer) {
+      const name = session.user.name || "Account";
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/account" 
+              className="flex items-center p-2 text-gray-600 hover:text-gray-800 rounded"
+              aria-label="Account"
+            >
+              <UserRound className="w-5 h-5" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="whitespace-nowrap">Account: {name}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href="/auth/login"
+            className="p-2 text-gray-600 hover:text-gray-800 rounded"
+            aria-label="Login"
+          >
+            <UserRound className="w-5 h-5" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Login to your account</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  const headerVariants = {
+    expanded:  { height: "auto", backgroundColor: "#ffffff" },
+    collapsed: { height: "4rem", backgroundColor: "#ffffff" },
+  };
+  const logoTextVariants = {
+    expanded:  { opacity: 1, x: 0, transition: { duration: 0.2 } },
+    collapsed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
+  };
+  const logoIconVariants = {
+    expanded:  { opacity: 0, x: 20, transition: { duration: 0.2 } },
+    collapsed: { opacity: 1, x: 0,  transition: { duration: 0.2 } },
+  };
+  const searchInputVariants = {
+    expanded:  { opacity: 1,  width: "40vw", transition: { duration: 0.3 } },
+    collapsed: { opacity: 0,  width: 0,     transition: { duration: 0.2 } },
+  };
+  const searchIconVariants = {
+    expanded:  { opacity: 0, x: 10 },
+    collapsed: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  };
+  const topNavVariants = {
+    expanded:  { height: "auto", opacity: 1,  y: 0, transition: { duration: 0.2 }, display: "block" },
+    collapsed: { height: 0,     opacity: 0,  y: -20, transition: { duration: 0.2 }, transitionEnd: { display: "none" as const } },
   };
 
   return (
@@ -251,9 +196,7 @@ export const Header: React.FC = () => {
           <div className="hidden lg:block">
             {/* Collapsed */}
             <motion.div
-              className={`${
-                isCollapsed ? "flex" : "hidden"
-              } items-center justify-between h-16`}
+              className={`${isCollapsed ? "flex" : "hidden"} items-center justify-between h-16`}
               initial={false}
               animate={isCollapsed ? "collapsed" : "expanded"}
             >
@@ -264,34 +207,33 @@ export const Header: React.FC = () => {
                   animate={isCollapsed ? "collapsed" : "expanded"}
                   className="flex items-center"
                 >
-                  <Link href="/">
-                    <BrandIcon />
-                  </Link>
+                  <Link href="/"><BrandIcon /></Link>
                 </motion.div>
                 <div className="flex items-center space-x-3">
-                  {categoriesLoading ? (
-                    <FuturisticSkeleton count={3} height={24} />
-                  ) : (
-                    navItems.map((item) => {
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={`${linkBaseClasses} text-[0.75rem] text-gray-700 hover:bg-brand hover:text-white ${
-                            isActive ? "bg-brand text-white" : ""
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })
-                  )}
+                  {categoriesLoading
+                    ? <FuturisticSkeleton count={3} height={24} />
+                    : navItems.map(item => {
+                        const active = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`${linkBaseClasses} text-[0.75rem] text-gray-700 hover:bg-brand hover:text-white ${
+                              active ? "bg-brand text-white" : ""
+                            }`}
+                            aria-current={active ? "page" : undefined}
+                          >
+                            {item.label}
+                          </Link>
+                        );
+                      })
+                  }
                 </div>
               </div>
 
               <div className="flex items-center space-x-6">
                 <CurrencySelector />
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <motion.div
@@ -300,7 +242,6 @@ export const Header: React.FC = () => {
                       animate={isCollapsed ? "collapsed" : "expanded"}
                     >
                       <button
-                        type="button"
                         onClick={openModal}
                         className="text-gray-600 hover:text-gray-800 p-2"
                         aria-label="Search products"
@@ -309,9 +250,7 @@ export const Header: React.FC = () => {
                       </button>
                     </motion.div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Search Products</p>
-                  </TooltipContent>
+                  <TooltipContent><p>Search Products</p></TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -319,26 +258,21 @@ export const Header: React.FC = () => {
                     <button
                       onClick={openSizeChart}
                       className="text-gray-600 hover:text-gray-800 p-2"
+                      aria-label="View size chart"
                     >
                       <PencilRuler className="w-5 h-5" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Size Chart</p>
-                  </TooltipContent>
+                  <TooltipContent><p>View Size Chart</p></TooltipContent>
                 </Tooltip>
 
-                <UserMenu />
+                <UserIndicator />
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div>
-                      <CartSheet />
-                    </div>
+                    <div><CartSheet /></div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View Cart</p>
-                  </TooltipContent>
+                  <TooltipContent><p>View Cart</p></TooltipContent>
                 </Tooltip>
               </div>
             </motion.div>
@@ -376,26 +310,21 @@ export const Header: React.FC = () => {
                       <button
                         onClick={openSizeChart}
                         className="text-gray-600 hover:text-gray-800 p-2"
+                        aria-label="View size chart"
                       >
                         <PencilRuler className="w-5 h-5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>View Size Chart</p>
-                    </TooltipContent>
+                    <TooltipContent><p>View Size Chart</p></TooltipContent>
                   </Tooltip>
 
-                  <UserMenu />
+                  <UserIndicator />
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div>
-                        <CartSheet />
-                      </div>
+                      <div><CartSheet /></div>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>View Cart</p>
-                    </TooltipContent>
+                    <TooltipContent><p>View Cart</p></TooltipContent>
                   </Tooltip>
                 </div>
               </div>
@@ -416,9 +345,7 @@ export const Header: React.FC = () => {
 
           {/* Mobile */}
           <div className="flex lg:hidden items-center justify-between h-16">
-            <Link href="/">
-              <BrandIcon />
-            </Link>
+            <Link href="/"><BrandIcon /></Link>
             <div className="flex items-center space-x-2">
               <CurrencySelector />
               <Tooltip>
@@ -431,9 +358,7 @@ export const Header: React.FC = () => {
                     <SearchIcon className="w-5 h-5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>Search Products</p>
-                </TooltipContent>
+                <TooltipContent><p>Search Products</p></TooltipContent>
               </Tooltip>
               <CartSheet />
               <MobileMenuSheet />

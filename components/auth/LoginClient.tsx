@@ -1,58 +1,57 @@
-"use client"
-
-import React, { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { FaArrowLeftLong, FaEye, FaEyeSlash } from "react-icons/fa6"
-import { Toaster, toast } from "react-hot-toast"
+// components/LoginClient.tsx
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Toaster, toast } from "react-hot-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useAuthSession } from "@/lib/hooks/useAuthSession";
 
 export default function LoginClient() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const { signInCustomer } = useAuthSession();
+
+  const [email,    setEmail]    = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw,   setShowPw]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    const toastId = toast.loading("Signing in…")
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    const toastId = toast.loading("Signing in…");
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
+    const res = await signInCustomer(
+      email.trim().toLowerCase(),
       password,
-      role: "customer",
-    })
+      "/"
+    );
 
     if (res?.error) {
-      toast.error(res.error, { id: toastId })
-      setLoading(false)
+      toast.error(res.error, { id: toastId });
+      setLoading(false);
     } else {
-      toast.success("Logged in successfully!", { id: toastId })
-      // allow toast to show briefly
-      setTimeout(() => {
-        router.push("/") // or your dashboard
-      }, 800)
+      toast.success("Logged in!", { id: toastId });
+      router.push(res?.url || "/");
     }
-  }
+  };
 
   return (
     <>
       <Toaster position="top-right" />
-      <div className="w-full max-w-xl mx-auto py-16 px-6">
-        <Link
-          href="/"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
-        >
-          <FaArrowLeftLong className="mr-2" /> Back
-        </Link>
 
-        <h1 className="text-2xl font-semibold mb-8">Login</h1>
+      <div className="w-full sm:w-3/4 lg:w-1/2 mx-auto py-16 space-y-6">
+        {/* Back to home */}
+        <div className="flex justify-start">
+          <Link href="/" className="text-gray-600 hover:text-gray-900">
+            ← Back to Home
+          </Link>
+        </div>
+
+        <h2 className="text-2xl font-semibold text-center">Customer Login</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -60,46 +59,35 @@ export default function LoginClient() {
             <Input
               id="email"
               type="email"
-              placeholder="Enter email address"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               disabled={loading}
-              className="mt-2 w-full"
+              className="mt-1 w-full"
             />
           </div>
 
           <div>
             <Label htmlFor="password">Password</Label>
-            <div className="relative mt-2">
+            <div className="relative mt-1">
               <Input
                 id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter password"
+                type={showPw ? "text" : "password"}
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 disabled={loading}
-                className="w-full"
+                className="pr-10 w-full"
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                aria-label={showPw ? "Hide password" : "Show password"}
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPw ? "🙈" : "👁️"}
               </button>
             </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm font-medium text-brand hover:underline"
-            >
-              Forgot password?
-            </Link>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
@@ -107,13 +95,15 @@ export default function LoginClient() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm">
-          Don’t have an account?{" "}
-          <Link href="/auth/register" className="font-semibold hover:underline">
-            Register
+        <p className="text-center text-sm">
+          <Link
+            href="/(USER-END)/auth/forgot-password"
+            className="underline text-gray-600 hover:text-gray-800"
+          >
+            Forgot password?
           </Link>
         </p>
       </div>
     </>
-  )
+  );
 }

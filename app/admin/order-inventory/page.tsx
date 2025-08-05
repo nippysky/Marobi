@@ -1,4 +1,3 @@
-// file: app/admin/order-inventory/page.tsx
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";

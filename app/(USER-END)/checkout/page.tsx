@@ -1,10 +1,9 @@
 import React from "react";
-import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import Header from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
 import CheckoutContent from "./CheckOutContent";
-import { authOptions } from "@/lib/authOptions";
+import { getCustomerSession } from "@/lib/getCustomerSession";
 
 export interface CheckoutUser {
   id: string;
@@ -19,10 +18,10 @@ export interface CheckoutUser {
 }
 
 export default async function CheckoutPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCustomerSession();
   let user: CheckoutUser | null = null;
 
-  if (session?.user?.email) {
+  if (session?.user?.email && session.user.role === "customer") {
     const cust = await prisma.customer.findUnique({
       where: { email: session.user.email },
       select: {
@@ -37,6 +36,7 @@ export default async function CheckoutPage() {
         billingAddress: true,
       },
     });
+
     if (cust) {
       user = {
         id: cust.id,
