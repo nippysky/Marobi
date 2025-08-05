@@ -27,7 +27,7 @@ export default function LoginClient() {
     const res = await signInCustomer(
       email.trim().toLowerCase(),
       password,
-      "/"
+      "/account"
     );
 
     if (res?.error) {
@@ -97,7 +97,7 @@ export default function LoginClient() {
 
         <p className="text-center text-sm">
           <Link
-            href="/(USER-END)/auth/forgot-password"
+            href="/auth/forgot-password"
             className="underline text-gray-600 hover:text-gray-800"
           >
             Forgot password?

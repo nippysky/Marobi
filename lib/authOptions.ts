@@ -1,4 +1,3 @@
-// lib/authOptions.ts
 import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
@@ -36,19 +35,18 @@ export const authOptions: NextAuthOptions = {
         role:     { label: "Role",     type: "text" },
       },
       async authorize(credentials, req) {
-        // Rate-limit by IP (safe access to headers)
+        // Rate-limit by IP
         const ip =
           req && typeof (req as any).headers?.get === "function"
             ? (req as any).headers.get("x-forwarded-for") ?? "unknown"
             : "unknown";
-
         const { ok, reset } = rateLimit(ip);
         if (!ok) {
           const wait = Math.ceil((reset - Date.now()) / 1000);
           throw new Error(`Too many login attempts. Try again in ${wait}s.`);
         }
 
-        // Validate incoming shape
+        // Validate shape
         const parsed = CredsSchema.safeParse(credentials);
         if (!parsed.success) {
           throw new Error(parsed.error.issues.map(i => i.message).join("; "));
@@ -62,8 +60,9 @@ export const authOptions: NextAuthOptions = {
           if (!user) throw new Error("No account found with that email.");
           if (!user.emailVerified) throw new Error("Please verify your email first.");
           if (!user.passwordHash) throw new Error("Password not set. Reset first.");
-          const valid = await bcrypt.compare(password, user.passwordHash);
-          if (!valid) throw new Error("Incorrect password.");
+          if (!(await bcrypt.compare(password, user.passwordHash))) {
+            throw new Error("Incorrect password.");
+          }
           return {
             id:       user.id,
             name:     `${user.firstName} ${user.lastName}`,
@@ -73,18 +72,19 @@ export const authOptions: NextAuthOptions = {
           };
         }
 
-        // Staff flow
+        // staff flow
         const staff = await prisma.staff.findUnique({ where: { email } });
-        if (!staff) throw new Error("Staff account not found.");
+        if (!staff)             throw new Error("Staff account not found.");
         if (!staff.emailVerified) throw new Error("Staff email not verified.");
-        if (!staff.passwordHash) throw new Error("Password not set. Contact admin.");
-        const staffValid = await bcrypt.compare(password, staff.passwordHash);
-        if (!staffValid) throw new Error("Incorrect password.");
+        if (!staff.passwordHash)  throw new Error("Password not set. Contact admin.");
+        if (!(await bcrypt.compare(password, staff.passwordHash))) {
+          throw new Error("Incorrect password.");
+        }
         return {
           id:       staff.id,
           name:     `${staff.firstName} ${staff.lastName}`,
           email:    staff.email,
-          role:     staff.access, // e.g., "SuperAdmin"
+          role:     staff.access,
           jobRoles: staff.jobRoles,
         };
       },
@@ -113,13 +113,17 @@ export const authOptions: NextAuthOptions = {
       };
       return session;
     },
+    // ◀️ Here’s the fix: if the URL starts with “/”, prefix baseUrl,
+    // otherwise if it’s already an absolute URL on your origin, just use it.
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
       try {
         const dest = new URL(url);
         if (dest.origin === baseUrl) return url;
       } catch {
-        // fallthrough
+        /* fall through */
       }
       return baseUrl;
     },

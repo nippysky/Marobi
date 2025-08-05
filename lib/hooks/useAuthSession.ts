@@ -1,4 +1,3 @@
-// lib/hooks/useAuthSession.ts
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -16,11 +15,11 @@ export function useAuthSession() {
     isCustomer: session?.user?.role === "customer",
     isAdmin:    !!session?.user?.role && session.user.role !== "customer",
 
-    // sign-in helpers
+    // sign‐in helpers default to the correct landing page
     signInCustomer: (
       email: string,
       password: string,
-      callbackUrl = "/"
+      callbackUrl = "/account"
     ) =>
       signIn("credentials", {
         redirect:    false,
@@ -45,7 +44,7 @@ export function useAuthSession() {
         json:        true,
       }),
 
-    // sign-out helpers
+    // sign‐out helpers
     signOutCustomer: () => signOut({ callbackUrl: "/" }),
     signOutAdmin:    () => signOut({ callbackUrl: "/admin-login" }),
   };
