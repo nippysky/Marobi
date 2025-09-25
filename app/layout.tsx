@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster as HotToaster } from "react-hot-toast"
 import React from "react";
@@ -11,8 +11,8 @@ import NextAuthSessionProvider from "@/components/shared/SessionProvider";
 import { UserProvider } from "@/lib/context/UserContext";
 import ReactQueryProvider from "@/components/ReactQueryProvider";
 
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const nunito = Nunito_Sans({
+  variable: "--font-nunito",
   subsets: ["latin"],
 });
 
@@ -85,7 +85,7 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
-        className={`${openSans.variable} antialiased w-full max-w-[1920px] mx-auto`}
+        className={`${nunito.variable} antialiased w-full max-w-[1920px] mx-auto`}
       >
         <NextAuthSessionProvider>
           <ReactQueryProvider>

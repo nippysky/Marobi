@@ -16,41 +16,40 @@ import { useSession, signOut } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import type { Category } from "@/lib/categories";
+import clsx from "clsx";
 
-export const MobileMenuSheet: React.FC = () => {
+export const MobileMenuSheet: React.FC<{ tone?: "light" | "dark" }> = ({ tone = "dark" }) => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
   const { data: session, status } = useSession();
 
-  // Fetch categories from our new API
   const {
     data: categories = [],
     isLoading: categoriesLoading,
   } = useQuery<Category[], Error>({
     queryKey: ["categories"],
     queryFn: () =>
-      fetch("/api/categories")
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to load categories");
-          return res.json();
-        })
-        .then((data) => data as Category[]),
-    staleTime: 300_000, // 5 minutes
+      fetch("/api/categories").then((res) => {
+        if (!res.ok) throw new Error("Failed to load categories");
+        return res.json() as Promise<Category[]>;
+      }),
+    staleTime: 300_000,
   });
 
-  // Build nav items dynamically
   const navItems: { label: string; href: string }[] = [
     { label: "All Products", href: "/all-products" },
-    ...categories.map((cat) => ({
-      label: cat.name,
-      href: `/categories/${cat.slug}`,
-    })),
+    ...categories.map((cat) => ({ label: cat.name, href: `/categories/${cat.slug}` })),
   ];
+
+  const triggerClass = clsx(
+    "w-5 h-5 cursor-pointer",
+    tone === "light" ? "text-white" : "text-gray-600 dark:text-gray-300"
+  );
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <AlignJustify className="w-5 h-5 cursor-pointer text-gray-600 dark:text-gray-300" />
+        <AlignJustify className={triggerClass} aria-label="Open menu" />
       </SheetTrigger>
 
       <SheetContent side="right" className="w-72">
@@ -58,7 +57,6 @@ export const MobileMenuSheet: React.FC = () => {
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
 
-        {/* ─── Primary navigation ─── */}
         <nav className="mt-8 px-4 space-y-6">
           {categoriesLoading ? (
             <Skeleton className="h-4 w-32" />
@@ -82,7 +80,6 @@ export const MobileMenuSheet: React.FC = () => {
 
         <div className="my-8 border-t border-gray-200 dark:border-gray-700" />
 
-        {/* ─── Account & utilities ─── */}
         <div className="px-4 space-y-6">
           {status === "loading" ? (
             <Skeleton className="h-8 w-32" />
@@ -113,7 +110,6 @@ export const MobileMenuSheet: React.FC = () => {
             </>
           )}
 
-          {/* Size Chart */}
           <button
             onClick={openSizeChart}
             className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"

@@ -34,7 +34,7 @@ export default async function Home() {
     products: Product[];
   }[] = await Promise.all(
     categories.map(async ({ slug, name }) => {
-      const products = await getProductsByCategory(slug, 4);
+      const products = await getProductsByCategory(slug, 5);
       return {
         name,
         viewMoreHref: `/categories/${slug}`,

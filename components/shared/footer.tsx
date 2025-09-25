@@ -8,54 +8,76 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full py-20 lg:px-20 md:px-10 px-5 bg-brand text-white relative mt-10">
-      <section className="w-full flex flex-col lg:flex-row gap-20 justify-between items-start lg:items-center">
-        {/* About Marob! + Social Icons */}
-        <div className="w-full lg:w-[28%] flex flex-col gap-6">
-          <h1 className="text-2xl font-bold mb-2">About Marob!</h1>
-          <p className="text-sm">
-            Marob! is a growing fashion styling platform dedicated to showcasing
-            luxury fashion through the lens of modesty.
-          </p>
-
-          {/* Social icons under About */}
-          <div className="flex items-center gap-6 text-gray-300 transition duration-300 ease-in-out">
-            <Link href="/" aria-label="Instagram" className="hover:text-white">
-              <FaInstagram size={20} />
-            </Link>
-            <Link href="/" aria-label="WhatsApp" className="hover:text-white">
-              <FaWhatsapp size={20} />
-            </Link>
-            <Link href="/" aria-label="TikTok" className="hover:text-white">
-              <FaTiktok size={20} />
-            </Link>
+    <footer className="w-full bg-brand text-white mt-10">
+      <div className="mx-auto max-w-[1920px] px-5 md:px-10 lg:px-40 py-8">
+        {/* ── Top: About (left) • Socials (right) ─────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* About */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold">About Marob!</h2>
+            <p className="text-sm/6 text-white/80 max-w-prose">
+              Marob! is a growing fashion styling platform dedicated to
+              showcasing luxury fashion through the lens of modesty.
+            </p>
           </div>
-        </div>
 
-        {/* Links & Copyright */}
-        <div className="flex flex-col flex-1 gap-5 items-start lg:items-end">
-          {/* Foot links */}
-          <div className="flex flex-wrap gap-6">
+          {/* Socials on the other side */}
+          <div className="md:justify-end flex items-start md:items-center gap-3">
             <Link
               href="/"
-              className="hover:underline tracking-widest text-[0.85rem] uppercase transition-all duration-500 ease-linear"
+              aria-label="Instagram"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-white/15 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
             >
-              Home
+              <FaInstagram size={18} />
             </Link>
             <Link
-              href="/privacy-policy"
-              className="hover:underline tracking-widest text-[0.85rem] uppercase transition-all duration-500 ease-linear"
+              href="/"
+              aria-label="WhatsApp"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-white/15 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
             >
-              Privacy Policy
+              <FaWhatsapp size={18} />
+            </Link>
+            <Link
+              href="/"
+              aria-label="TikTok"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-white/15 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
+            >
+              <FaTiktok size={18} />
             </Link>
           </div>
+        </div>
 
-          {/* Copyright */}
-          <p className="text-xs text-gray-400">
+        {/* ── Divider ─────────────────────────────────────────────────────── */}
+        <div className="mt-6 border-t border-white/10" />
+
+        {/* ── Bottom: Copyright (left) • Links (right, same line) ─────────── */}
+        <div className="pt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <p className="text-xs text-white/70">
             &copy; {currentYear} Marob! All rights reserved.
           </p>
+
+          <nav>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 md:justify-end">
+              <li>
+                <Link
+                  href="/"
+                  className="uppercase tracking-widest text-[0.78rem] text-white/85 hover:text-white hover:underline underline-offset-4 transition"
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy-policy"
+                  className="uppercase tracking-widest text-[0.78rem] text-white/85 hover:text-white hover:underline underline-offset-4 transition"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+            </ul>
+          </nav>
         </div>
-      </section>
+      </div>
     </footer>
   );
 }
