@@ -1,30 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+// app/api/product/[id]/reviews/route.ts
+export const dynamic = "force-dynamic";
 
+import { NextRequest, NextResponse } from "next/server";
+import prisma, { prismaReady } from "@/lib/db";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params
+  await prismaReady;
 
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
+
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let bodyJson: any;
+  try {
+    bodyJson = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
   const productId = id;
-  const bodyJson = await req.json();
   const rating = Number(bodyJson.rating);
   const reviewText = (bodyJson.body ?? "").trim();
 
-  if (
-    !Number.isInteger(rating) ||
-    rating < 1 ||
-    rating > 5
-  ) {
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return NextResponse.json(
       { error: "Rating must be an integer between 1 and 5." },
       { status: 400 }
@@ -63,6 +69,7 @@ export async function POST(
       },
     });
 
+    // Recompute aggregates for the product
     const agg = await prisma.review.aggregate({
       where: { productId },
       _avg: { rating: true },
@@ -86,12 +93,21 @@ export async function POST(
       { status: 201 }
     );
   } catch (err: any) {
+    // Unique constraint (one review per (product, customer))
     if (err?.code === "P2002") {
       return NextResponse.json(
         { error: "You have already reviewed this product." },
         { status: 409 }
       );
     }
+    // FK error (product not found)
+    if (err?.code === "P2003") {
+      return NextResponse.json(
+        { error: "Product not found." },
+        { status: 404 }
+      );
+    }
+
     console.error("Review create error:", err);
     return NextResponse.json(
       { error: "Could not submit review." },
@@ -101,10 +117,12 @@ export async function POST(
 }
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params
+  await prismaReady;
+
+  const { id } = await context.params;
   const productId = id;
 
   const reviews = await prisma.review.findMany({
@@ -119,5 +137,5 @@ export async function GET(
     },
   });
 
-  return NextResponse.json(reviews);
+  return NextResponse.json(reviews, { status: 200 });
 }

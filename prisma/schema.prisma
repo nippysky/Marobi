@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -8,6 +9,7 @@ generator client {
   output   = "../lib/generated/prisma-client"
 }
 
+/* ─────────────────────────── Enums ─────────────────────────── */
 enum ProductStatus {
   Draft
   Published
@@ -29,8 +31,8 @@ enum Currency {
 }
 
 enum OrderChannel {
-  ONLINE 
-  OFFLINE 
+  ONLINE
+  OFFLINE
 }
 
 enum JobRole {
@@ -49,16 +51,19 @@ enum UserRole {
   SupportUser
 }
 
-enum DeliveryType {
-  COURIER
-  PICKUP
-}
-
 enum RefundStatus {
   Pending
   Completed
   Failed
 }
+
+/** How delivery is priced */
+enum DeliveryPricingMode {
+  FIXED     // static fee stored on DeliveryOption.baseFee
+  EXTERNAL  // fee is fetched from an external provider at checkout
+}
+
+/* ─────────────────────────── Models ─────────────────────────── */
 
 model Customer {
   id                       String         @id @default(cuid())
@@ -73,9 +78,11 @@ model Customer {
   state                    String?
   registeredAt             DateTime       @default(now())
   lastLogin                DateTime?
+
   orders                   Order[]
   wishlistItems            WishlistItem[]
   reviews                  Review[]
+
   emailVerified            Boolean        @default(false)
   verificationToken        String?
   verificationTokenExpiry  DateTime?
@@ -111,10 +118,19 @@ model Staff {
 }
 
 model Category {
-  slug        String     @id
+  slug        String    @id
   name        String
   description String?
-  products    Product[]  @relation("ProductToCategory")
+  bannerImage String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[] @relation("ProductToCategory")
+
+  @@index([isActive, sortOrder])
+  @@index([name])
 }
 
 model Product {
@@ -137,11 +153,14 @@ model Product {
   ratingCount    Int             @default(0)
   wishlistItems  WishlistItem[]
   createdAt      DateTime        @default(now())
+
+  @@index([categorySlug])
+  @@index([status, createdAt])
 }
 
 model Variant {
   id         String     @id @default(cuid())
-  product    Product    @relation(fields: [productId], references: [id])
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId  String
   color      String
   size       String
@@ -152,6 +171,7 @@ model Variant {
   orderItems OrderItem[]
 
   @@unique([productId, color, size], name: "product_color_size")
+  @@index([productId])
 }
 
 model Review {
@@ -171,18 +191,27 @@ model Review {
   @@index([rating])
 }
 
+/**
+ * Only courier options exist (no pickup).
+ * - FIXED: charge baseFee (optionally in baseCurrency).
+ * - EXTERNAL: fetch from provider (DHL/FedEx/etc) at checkout.
+ */
 model DeliveryOption {
-  id          String      @id @default(cuid())
-  name        String      // e.g., "DHL Express", "FedEx", "Walk-in Pickup"
-  provider    String?     // e.g., "DHL", "FedEx"; null for generic/pickup
-  type        DeliveryType
-  active      Boolean     @default(true)
-  baseFee     Float       // default delivery/pickup fee
-  metadata    Json?       // extensibility (zones, rules, external IDs, etc.)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id           String               @id @default(cuid())
+  name         String               // e.g., "Local Courier", "International Courier"
+  provider     String?              // e.g., "LocalCourier", "DHL", "FedEx"
+  pricingMode  DeliveryPricingMode  @default(FIXED)
+  baseFee      Float?               // used when pricingMode = FIXED
+  baseCurrency Currency?            // currency of baseFee (optional; omit for EXTERNAL)
+  active       Boolean              @default(true)
+  metadata     Json?                // zones, rules, external IDs, etc.
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
-  orders      Order[]     @relation("OrderDeliveryOption")
+  orders       Order[]              @relation("OrderDeliveryOption")
+
+  @@index([active, pricingMode])
+  @@index([provider])
 }
 
 model Order {
@@ -192,32 +221,42 @@ model Order {
   totalAmount         Float
   totalNGN            Int
   paymentMethod       String
-  paymentReference    String?               @unique // idempotency key from provider
-  paymentProviderId   String?               // e.g., Paystack transaction ID
+  paymentReference    String?               @unique
+  paymentProviderId   String?
   paymentVerified     Boolean               @default(false)
   createdAt           DateTime              @default(now())
+
   customer            Customer?             @relation(fields: [customerId], references: [id])
   customerId          String?
   guestInfo           Json?
+
   staff               Staff?                @relation(fields: [staffId], references: [id])
   staffId             String?
+
   items               OrderItem[]
   offlineSale         OfflineSale?
+
   channel             OrderChannel          @default(ONLINE)
+
   receiptEmailStatus  ReceiptEmailStatus?
+
   deliveryOption      DeliveryOption?       @relation("OrderDeliveryOption", fields: [deliveryOptionId], references: [id])
   deliveryOptionId    String?
-  deliveryFee         Float?                // actual fee charged (can override baseFee)
-  deliveryDetails     Json?                 // e.g., tracking number, pickup notes, aggregated weight, etc.
+  deliveryFee         Float?
+  deliveryDetails     Json?                 // tracking, weight, zone, provider quote payload, etc.
+
   refundedAt          DateTime?
   refundReason        String?
   refundTransactionId String?
   refundStatus        RefundStatus?
+
+  @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
   id         String   @id @default(cuid())
-  order      Order    @relation(fields: [orderId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId    String
   variant    Variant  @relation(fields: [variantId], references: [id])
   variantId  String
@@ -245,9 +284,9 @@ model OfflineSale {
 
 model WishlistItem {
   id          String    @id @default(cuid())
-  customer    Customer  @relation(fields: [customerId], references: [id])
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId  String
-  product     Product   @relation(fields: [productId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId   String
   addedAt     DateTime  @default(now())
 
@@ -255,19 +294,19 @@ model WishlistItem {
 }
 
 model ReceiptEmailStatus {
-  order        Order     @relation(fields: [orderId], references: [id])
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId      String    @id
   attempts     Int       @default(0)
   lastError    String?
   nextRetryAt  DateTime?
   sent         Boolean   @default(false)
-  deliveryFee  Float? 
+  deliveryFee  Float?
   updatedAt    DateTime  @updatedAt
 }
 
 model WebhookEvent {
   id         String   @id @default(cuid())
-  provider   String   // e.g., "paystack"
+  provider   String
   eventId    String   @unique
   payload    Json
   createdAt  DateTime @default(now())
@@ -276,15 +315,16 @@ model WebhookEvent {
 model OrphanPayment {
   id             String   @id @default(cuid())
   reference      String   @unique
-  amount         Int      // lowest denomination (e.g., kobo)
+  amount         Int
   currency       String
   payload        Json
   firstSeenAt    DateTime @default(now())
   reconciled     Boolean  @default(false)
   reconciledAt   DateTime?
-  resolutionNote String?  // e.g., "Pending manual review" or "Order created"
+  resolutionNote String?
 }
 
+/** Homepage hero */
 model HeroSlide {
   id          String   @id @default(cuid())
   imageUrl    String
@@ -295,11 +335,12 @@ model HeroSlide {
   order       Int      @default(0)
 }
 
+/** Size chart */
 model SizeChart {
-  id        String             @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
   entries   SizeChartEntry[]
-  updatedAt DateTime           @updatedAt
+  updatedAt DateTime      @updatedAt
 }
 
 model SizeChartEntry {
@@ -311,6 +352,6 @@ model SizeChartEntry {
   waistMax   Int
   hipMin     Int
   hipMax     Int
-  chart      SizeChart @relation(fields: [chartId], references: [id])
+  chart      SizeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
   chartId    String
 }

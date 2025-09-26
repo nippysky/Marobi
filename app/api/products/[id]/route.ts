@@ -1,10 +1,11 @@
+// app/api/products/[id]/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import prisma, { prismaReady } from "@/lib/db";
 
 const PRODUCT_STATUSES = ["Draft", "Published", "Archived"] as const;
-type ProductStatus = typeof PRODUCT_STATUSES[number];
+type ProductStatus = (typeof PRODUCT_STATUSES)[number];
 const isProductStatus = (v: unknown): v is ProductStatus =>
   typeof v === "string" && PRODUCT_STATUSES.includes(v as any);
 
@@ -50,7 +51,10 @@ function cleanSizeStocks(raw: unknown): Record<string, string> {
   }
   return out;
 }
-function safePositiveInt(str: string, { min = 0, max = 1_000_000 }: { min?: number; max?: number } = {}): number | null {
+function safePositiveInt(
+  str: string,
+  { min = 0, max = 1_000_000 }: { min?: number; max?: number } = {}
+): number | null {
   const n = parseInt(str, 10);
   if (!Number.isFinite(n)) return null;
   if (n < min) return null;
@@ -68,12 +72,14 @@ function jsonError(message: string, status = 400) {
 }
 
 // ────────────────────────────────────────────────────────
-// PUT /api/products/[id]
+/** PUT /api/products/[id] */
 // ────────────────────────────────────────────────────────
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  await prismaReady;
+
   const { id: productId } = await context.params;
 
   let body: any;
@@ -90,15 +96,17 @@ export async function PUT(
 
   const name = body.name.trim().slice(0, 200);
   const categorySlug = body.category.trim().slice(0, 120);
-  const description = typeof body.description === "string"
-    ? body.description.trim().slice(0, 10_000) || null
-    : null;
+  const description =
+    typeof body.description === "string"
+      ? body.description.trim().slice(0, 10_000) || null
+      : null;
   const images = cleanStringArray(body.images, { max: 20, maxLen: 500 });
   const colors = cleanStringArray(body.colors, { max: 50, maxLen: 120 });
   const sizeMods = !!body.sizeMods;
-  const videoUrl = typeof body.videoUrl === "string" && body.videoUrl.trim() !== ""
-    ? body.videoUrl.trim()
-    : null;
+  const videoUrl =
+    typeof body.videoUrl === "string" && body.videoUrl.trim() !== ""
+      ? body.videoUrl.trim()
+      : null;
 
   const priceNGN = numOrNull(body.price?.NGN);
   const priceUSD = numOrNull(body.price?.USD);
@@ -111,14 +119,25 @@ export async function PUT(
     return jsonError("At least one size/stock entry is required to publish.");
   }
 
-  const weight = safePositiveFloat(body.weight); // new default variant weight
+  const weight = safePositiveFloat(body.weight); // default variant weight
   if (body.status === "Published" && weight == null) {
     return jsonError("Weight is required to publish.");
   }
 
+  // ensure category exists (cleaner error than FK failure)
+  const categoryExists = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    select: { slug: true, isActive: true },
+  });
+  if (!categoryExists) return jsonError("Category not found.", 404);
+  if (!categoryExists.isActive) return jsonError("Category is not active.", 400);
+
   // build desired variants
   const effectiveColors = colors.length ? colors : [""];
-  const desiredMap = new Map<string, { color: string; size: string; stock: number; weight?: number }>();
+  const desiredMap = new Map<
+    string,
+    { color: string; size: string; stock: number; weight?: number }
+  >();
   for (const size of sizeLabels) {
     const stock = safePositiveInt(rawSizeStocks[size]);
     if (stock == null) continue;
@@ -128,9 +147,7 @@ export async function PUT(
         size: size.trim(),
         stock,
       };
-      if (weight != null) {
-        entry.weight = weight;
-      }
+      if (weight != null) entry.weight = weight;
       desiredMap.set(comboKey(color, size), entry);
     }
   }
@@ -141,7 +158,10 @@ export async function PUT(
   try {
     // 1) transaction
     await prisma.$transaction(async (tx) => {
-      const exists = await tx.product.findUnique({ where: { id: productId }, select: { id: true } });
+      const exists = await tx.product.findUnique({
+        where: { id: productId },
+        select: { id: true },
+      });
       if (!exists) throw new Error("NOT_FOUND");
 
       // update main record
@@ -149,6 +169,7 @@ export async function PUT(
         where: { id: productId },
         data: {
           name,
+          // we keep your scalar update style to match existing code paths
           categorySlug,
           description,
           images,
@@ -162,12 +183,14 @@ export async function PUT(
         },
       });
 
+      // sync variants
       const existing = await tx.variant.findMany({
         where: { productId },
         select: { id: true, color: true, size: true },
       });
-      const existingMap = new Map(existing.map(v => [comboKey(v.color, v.size), v]));
+      const existingMap = new Map(existing.map((v) => [comboKey(v.color, v.size), v]));
 
+      // upsert/update desired
       for (const desired of desiredMap.values()) {
         const key = comboKey(desired.color, desired.size);
         if (existingMap.has(key)) {
@@ -192,6 +215,8 @@ export async function PUT(
           });
         }
       }
+
+      // delete stale variants
       for (const stale of existingMap.values()) {
         await tx.variant.delete({ where: { id: stale.id } });
       }
@@ -229,28 +254,41 @@ export async function PUT(
       },
     });
   } catch (err: any) {
-    if (err.message === "NOT_FOUND") return jsonError("Product not found.", 404);
+    if (err?.message === "NOT_FOUND") return jsonError("Product not found.", 404);
     console.error("PUT /api/products/[id] error:", err);
     return jsonError("Update failed", 500);
   }
 }
 
 // ────────────────────────────────────────────────────────
-// DELETE /api/products/[id]
+/** DELETE /api/products/[id] */
 // ────────────────────────────────────────────────────────
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  await prismaReady;
+
   const { id: productId } = await context.params;
   try {
+    // if variants are referenced by OrderItem, this may fail with P2003 (FK)
     await prisma.variant.deleteMany({ where: { productId } });
     await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("DELETE /api/products/[id] error:", err);
-    if (err.code === "P2025") {
+    if (err?.code === "P2025") {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    if (err?.code === "P2003") {
+      // FK constraint violation (e.g., order items referencing variants)
+      return NextResponse.json(
+        {
+          error:
+            "Cannot delete this product because it has related records (e.g., past orders).",
+        },
+        { status: 409 }
+      );
     }
     return NextResponse.json({ error: "Could not delete product" }, { status: 500 });
   }

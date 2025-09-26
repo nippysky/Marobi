@@ -1,11 +1,17 @@
+// app/api/products/route.ts
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import prisma, { prismaReady } from "@/lib/db";
 import { z } from "zod";
 
+/* ────────────────────────────────────────────────────────────
+   Validation schema for incoming product payloads
+   ──────────────────────────────────────────────────────────── */
 const ProductPayload = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1),
-  category: z.string().min(1),
+  id: z.string().optional(), // accepted but unused in POST (create only)
+  name: z.string().min(1, "Product name is required"),
+  category: z.string().min(1, "Category (slug) is required"),
   description: z.string().optional().nullable(),
   price: z.object({
     NGN: z.number(),
@@ -16,24 +22,42 @@ const ProductPayload = z.object({
   status: z.enum(["Draft", "Published", "Archived"]),
   sizeMods: z.boolean(),
   colors: z.array(z.string()),
-  sizeStocks: z.record(z.string(), z.string()),
-  customSizes: z.array(z.string()),
+  sizeStocks: z.record(z.string(), z.string()), // { "S": "10", "M": "5" }
+  customSizes: z.array(z.string()), // accepted for future use (ignored on write)
   images: z.array(z.string()),
-  videoUrl: z.url().optional().nullable(),
-  weight: z.number().min(0.0001), 
+  videoUrl: z.string().url().optional().nullable(),
+  weight: z.number().min(0.0001, "Weight must be > 0"),
 });
 
+/* ────────────────────────────────────────────────────────────
+   Utility: generate a compact branded product id, and ensure uniqueness
+   ──────────────────────────────────────────────────────────── */
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 function generateBrandedId(len = 10) {
   let s = "";
-  for (let i = 0; i < len; i++) {
-    s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
-  }
+  for (let i = 0; i < len; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
   return s;
 }
 
-export async function GET(req: NextRequest) {
+async function generateUniqueProductId() {
+  // Very low collision probability; still check DB to be safe.
+  // Prefix optional; keeping plain alphanumeric to match your examples.
+  // If you prefer, switch to `P-` + random for readability.
+  while (true) {
+    const id = generateBrandedId(10);
+    const exists = await prisma.product.findUnique({ where: { id } });
+    if (!exists) return id;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   GET /api/products
+   Returns all Published products in a shaped format.
+   ──────────────────────────────────────────────────────────── */
+export async function GET(_req: NextRequest) {
   try {
+    await prismaReady;
+
     const products = await prisma.product.findMany({
       where: { status: "Published" },
       select: {
@@ -87,20 +111,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(shaped, {
       status: 200,
       headers: {
+        // Public cache (CDN) 60s, allow SWR for 120s
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
       },
     });
   } catch (err) {
     console.error("GET /api/products error:", err);
-    return NextResponse.json(
-      { error: "Failed to load products" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load products" }, { status: 500 });
   }
 }
 
+/* ────────────────────────────────────────────────────────────
+   POST /api/products
+   Creates a product under an existing Category (by slug).
+   Builds variants as the cartesian product of colors × sizes in `sizeStocks`.
+   Each variant receives the same `weight` provided.
+   ──────────────────────────────────────────────────────────── */
 export async function POST(request: NextRequest) {
   try {
+    await prismaReady;
+
     const json = await request.json();
     const parsed = ProductPayload.safeParse(json);
     if (!parsed.success) {
@@ -109,6 +139,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
     const {
       name,
       category: slug,
@@ -118,42 +149,73 @@ export async function POST(request: NextRequest) {
       sizeMods,
       colors,
       sizeStocks,
-      customSizes,
+      // customSizes, // (accepted; currently not persisted in schema)
       images,
       videoUrl,
       weight,
     } = parsed.data;
 
-    // build variants (all get the same weight)
-    const variants: { color: string; size: string; stock: number; weight: number }[] = [];
+    // Require at least one color or one size
     const sizes = Object.keys(sizeStocks);
-    if (colors.length) {
+    if (colors.length === 0 && sizes.length === 0) {
+      return NextResponse.json(
+        { error: "Provide at least one color or one size" },
+        { status: 400 }
+      );
+    }
+
+    // Ensure category exists and is active
+    const category = await prisma.category.findUnique({
+      where: { slug },
+      select: { slug: true, isActive: true },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { error: `Category '${slug}' not found. Create it first.` },
+        { status: 404 }
+      );
+    }
+    if (!category.isActive) {
+      return NextResponse.json(
+        { error: `Category '${slug}' is not active.` },
+        { status: 400 }
+      );
+    }
+
+    // Build variants (apply a single `weight` to all)
+    // When both colors & sizes exist, produce full cartesian product.
+    // If only colors exist, create one row per color with empty size.
+    // If only sizes exist, create one row per size with empty color.
+    const variants: Array<{ color: string; size: string; stock: number; weight: number }> = [];
+
+    if (colors.length && sizes.length) {
       for (const color of colors) {
-        if (sizes.length) {
-          for (const size of sizes) {
-            variants.push({
-              color,
-              size,
-              stock: Number(sizeStocks[size]) || 0,
-              weight,
-            });
-          }
-        } else {
-          variants.push({ color, size: "", stock: 0, weight });
+        for (const size of sizes) {
+          variants.push({
+            color,
+            size,
+            stock: Number(sizeStocks[size] ?? "0") || 0,
+            weight,
+          });
         }
+      }
+    } else if (colors.length) {
+      for (const color of colors) {
+        variants.push({ color, size: "", stock: 0, weight });
       }
     } else {
       for (const size of sizes) {
         variants.push({
           color: "",
           size,
-          stock: Number(sizeStocks[size]) || 0,
+          stock: Number(sizeStocks[size] ?? "0") || 0,
           weight,
         });
       }
     }
 
-    const brandedId = generateBrandedId(10);
+    // Generate a unique branded product id
+    const brandedId = await generateUniqueProductId();
 
     const product = await prisma.product.create({
       data: {
@@ -166,8 +228,8 @@ export async function POST(request: NextRequest) {
         priceEUR: price.EUR,
         priceGBP: price.GBP,
         sizeMods,
-        status,
-        videoUrl,
+        status, // "Draft" | "Published" | "Archived" (matches Prisma enum)
+        videoUrl: videoUrl ?? null,
         category: { connect: { slug } },
         variants: variants.length
           ? {
@@ -230,9 +292,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(shaped, { status: 201 });
   } catch (err) {
     console.error("POST /api/products error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

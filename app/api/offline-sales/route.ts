@@ -1,20 +1,21 @@
+// app/api/offline-sales/route.ts
 export const dynamic = "force-dynamic";
 
-import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import prisma, { prismaReady } from "@/lib/db";
 import {
-  Currency,
-  OrderChannel,
-  OrderStatus,
-  Variant,
-  Product,
+  Prisma,
+  Currency as PrismaCurrency,
+  OrderChannel as PrismaOrderChannel,
+  OrderStatus as PrismaOrderStatus,
 } from "@/lib/generated/prisma-client";
 import { sendGenericEmail } from "@/lib/mail";
 
+/** Request payload shapes */
 type IncomingItem = {
   productId: string;
-  color: string;
-  size: string;
+  color: string;   // "N/A" allowed
+  size: string;    // "N/A" allowed
   quantity: number;
   hasSizeMod?: boolean;
   customSize?: {
@@ -26,16 +27,17 @@ type IncomingItem = {
 };
 
 type IncomingCustomer = {
-  id?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
+  id?: string;          // existing customer id (optional)
+  firstName?: string;   // required for guests
+  lastName?: string;    // required for guests
+  email?: string;       // required for guests
+  phone?: string;       // required for guests
   address?: string;
   country?: string;
   state?: string;
 };
 
+/** Branded order id like M-ORDXXXXXXX */
 function generateOrderId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   return (
@@ -46,8 +48,31 @@ function generateOrderId(): string {
   );
 }
 
+/** Allowed currency codes for validation */
+const CURRENCIES = ["NGN", "USD", "EUR", "GBP"] as const;
+type CurrencyCode = (typeof CURRENCIES)[number];
+
+/** Safely coerce unknown to Prisma JSON input */
+function toPrismaJson(
+  value: unknown
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return Prisma.DbNull; // set DB NULL (not JSON null)
+  // assume it’s JSON-serializable; if not, stringify as a last resort
+  try {
+    JSON.stringify(value);
+    return value as Prisma.InputJsonValue;
+  } catch {
+    return JSON.parse(
+      JSON.stringify({ invalid: true, original: String(value) })
+    ) as Prisma.InputJsonValue;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
+    await prismaReady;
+
     const {
       items,
       customer,
@@ -58,38 +83,40 @@ export async function POST(req: NextRequest) {
       deliveryOptionId,
       deliveryFee: incomingDeliveryFee,
       deliveryDetails,
+    }: {
+      items: IncomingItem[];
+      customer?: IncomingCustomer;
+      paymentMethod: string;
+      currency: string;
+      staffId: string;
+      timestamp?: string | number | Date;
+      deliveryOptionId?: string;
+      deliveryFee?: number;
+      deliveryDetails?: unknown;
     } = await req.json();
 
-    // Validate required fields
+    // --- Basic validations
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
     if (!paymentMethod || typeof paymentMethod !== "string") {
-      return NextResponse.json(
-        { error: "paymentMethod is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "paymentMethod is required" }, { status: 400 });
     }
     if (!staffId || typeof staffId !== "string") {
-      return NextResponse.json(
-        { error: "staffId is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "staffId is required" }, { status: 400 });
     }
-    if (!currency || !Object.values(Currency).includes(currency)) {
-      return NextResponse.json(
-        { error: "Invalid or missing currency" },
-        { status: 400 }
-      );
+    if (!CURRENCIES.includes(currency as CurrencyCode)) {
+      return NextResponse.json({ error: "Invalid or missing currency" }, { status: 400 });
     }
+    const currencyEnum = currency as PrismaCurrency;
 
-    // Validate staff
+    // --- Validate staff
     const staff = await prisma.staff.findUnique({ where: { id: staffId } });
     if (!staff) {
       return NextResponse.json({ error: "Staff not found" }, { status: 400 });
     }
 
-    // Resolve customer / guest
+    // --- Resolve customer (existing or guest)
     let customerId: string | null = null;
     let existingCustomer:
       | { firstName: string; lastName: string; email: string }
@@ -101,10 +128,7 @@ export async function POST(req: NextRequest) {
         where: { id: customer.id },
       });
       if (!found) {
-        return NextResponse.json(
-          { error: "Customer not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Customer not found" }, { status: 404 });
       }
       customerId = found.id;
       existingCustomer = {
@@ -113,16 +137,14 @@ export async function POST(req: NextRequest) {
         email: found.email,
       };
     } else {
+      // Guest must include complete basics
       if (
         !customer?.firstName ||
         !customer?.lastName ||
         !customer?.email ||
         !customer?.phone
       ) {
-        return NextResponse.json(
-          { error: "Guest customer info incomplete" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Guest customer info incomplete" }, { status: 400 });
       }
       guestInfo = {
         firstName: customer.firstName,
@@ -135,171 +157,150 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // If deliveryOptionId provided, validate it exists and is active
-    let deliveryOptionRecord:
-      | { id: string; baseFee: number }
-      | null = null;
+    // --- Optional delivery option
+    let deliveryOptionRecord: { id: string; baseFee: number | null } | null = null;
     if (deliveryOptionId) {
       const opt = await prisma.deliveryOption.findUnique({
         where: { id: deliveryOptionId },
       });
       if (!opt || !opt.active) {
-        return NextResponse.json(
-          { error: "Invalid or inactive delivery option" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid or inactive delivery option" }, { status: 400 });
       }
-      deliveryOptionRecord = { id: opt.id, baseFee: opt.baseFee };
+      deliveryOptionRecord = { id: opt.id, baseFee: opt.baseFee ?? null };
     }
 
-    // Transactional work
+    // Pre-normalize JSON input for Prisma
+    const deliveryDetailsInput = toPrismaJson(deliveryDetails);
+
+    // --- Transaction: stock checks, item creation, order creation, offline sale
     const { order, lineItems } = await prisma.$transaction(
       async (tx) => {
         let totalAmount = 0; // in selected currency (items only)
-        let totalNGN = 0; // accumulate in NGN (items only)
+        let totalNGN = 0;    // in NGN, items only
 
-        // Basic incoming item validation
-        for (const rawItem of items as IncomingItem[]) {
+        // Validate items input format
+        for (const it of items) {
           if (
-            !rawItem.productId ||
-            typeof rawItem.quantity !== "number" ||
-            rawItem.quantity <= 0 ||
-            typeof rawItem.color !== "string" ||
-            typeof rawItem.size !== "string"
+            !it.productId ||
+            typeof it.quantity !== "number" ||
+            it.quantity <= 0 ||
+            typeof it.color !== "string" ||
+            typeof it.size !== "string"
           ) {
             throw new Error("Invalid item format");
           }
         }
 
-        // Build batch filters (include color/size only if not "N/A")
-        const variantFilters: any[] = [];
-        for (const rawItem of items as IncomingItem[]) {
-          const whereClause: any = { productId: rawItem.productId };
-          if (rawItem.color !== "N/A") whereClause.color = rawItem.color;
-          if (rawItem.size !== "N/A") whereClause.size = rawItem.size;
-          variantFilters.push(whereClause);
-        }
+        // Build OR filters to load all variants at once
+        const variantFilters: any[] = items.map((it) => {
+          const where: any = { productId: it.productId };
+          if (it.color !== "N/A") where.color = it.color;
+          if (it.size !== "N/A") where.size = it.size;
+          return where;
+        });
 
-        // Fetch all matching variants with their products
         const variants = await tx.variant.findMany({
           where: { OR: variantFilters },
           include: { product: true },
         });
 
-        type VariantWithProduct = Variant & { product: Product };
-        const variantMap = new Map<string, VariantWithProduct>();
-        for (const v of variants as VariantWithProduct[]) {
-          const colorKey = v.color.trim() || "N/A";
-          const sizeKey = v.size.trim() || "N/A";
-          const normalizedKey = `${v.productId}|${colorKey}|${sizeKey}`;
-          variantMap.set(normalizedKey, v);
+        // Index variants by normalized key: productId|color|size
+        const variantMap = new Map<string, (typeof variants)[number]>();
+        for (const v of variants) {
+          const colorKey = v.color?.trim() || "N/A";
+          const sizeKey = v.size?.trim() || "N/A";
+          variantMap.set(`${v.productId}|${colorKey}|${sizeKey}`, v);
         }
 
-        // Build order items
         const itemsCreateData: any[] = [];
-        for (const rawItem of items as IncomingItem[]) {
-          const lookupColor = rawItem.color || "N/A";
-          const lookupSize = rawItem.size || "N/A";
-          const key = `${rawItem.productId}|${lookupColor}|${lookupSize}`;
 
+        for (const raw of items) {
+          const key = `${raw.productId}|${raw.color || "N/A"}|${raw.size || "N/A"}`;
           const variant = variantMap.get(key);
           if (!variant) {
-            throw new Error(
-              `Variant not found: ${rawItem.productId} ${rawItem.color}/${rawItem.size}`
-            );
+            throw new Error(`Variant not found: ${raw.productId} ${raw.color}/${raw.size}`);
           }
-
-          if (variant.stock < rawItem.quantity) {
+          if (variant.stock < raw.quantity) {
             throw new Error(`Insufficient stock for ${variant.product.name}`);
           }
 
           // Decrement stock
           await tx.variant.update({
             where: { id: variant.id },
-            data: { stock: { decrement: rawItem.quantity } },
+            data: { stock: { decrement: raw.quantity } },
           });
 
-          // Determine base price in sale currency
+          // Determine unit price in selected currency
           let unitPrice = 0;
-          switch (currency as Currency) {
-            case Currency.USD:
+          switch (currencyEnum) {
+            case "USD":
               unitPrice = variant.product.priceUSD ?? 0;
               break;
-            case Currency.EUR:
+            case "EUR":
               unitPrice = variant.product.priceEUR ?? 0;
               break;
-            case Currency.GBP:
+            case "GBP":
               unitPrice = variant.product.priceGBP ?? 0;
               break;
-            case Currency.NGN:
+            case "NGN":
             default:
               unitPrice = variant.product.priceNGN ?? 0;
               break;
           }
 
-          // Line total before size modification
-          let lineTotal = unitPrice * rawItem.quantity;
-
-          // Size modification (5%) if applicable
-          const wantsSizeMod = !!rawItem.hasSizeMod;
-          const applicableSizeMod =
-            wantsSizeMod && variant.product.sizeMods ? true : false;
+          // Line total + optional size mod (5%)
+          let lineTotal = unitPrice * raw.quantity;
+          const wantsSizeMod = !!raw.hasSizeMod;
+          const applicableSizeMod = wantsSizeMod && !!variant.product.sizeMods;
           const sizeModFee = applicableSizeMod
-            ? +(unitPrice * rawItem.quantity * 0.05).toFixed(2)
+            ? +(unitPrice * raw.quantity * 0.05).toFixed(2)
             : 0;
-          if (applicableSizeMod) {
-            lineTotal += sizeModFee;
-          }
+          if (applicableSizeMod) lineTotal += sizeModFee;
 
           totalAmount += lineTotal;
-          const ngnUnitPrice = variant.product.priceNGN ?? 0;
-          totalNGN += ngnUnitPrice * rawItem.quantity;
+          const ngnUnit = variant.product.priceNGN ?? 0;
+          totalNGN += ngnUnit * raw.quantity;
 
           const orderItemData: any = {
             variantId: variant.id,
             name: variant.product.name,
-            image: variant.product.images[0] ?? null,
+            image: Array.isArray(variant.product.images) ? variant.product.images[0] ?? null : null,
             category: variant.product.categorySlug,
-            quantity: rawItem.quantity,
-            currency: currency as Currency,
+            quantity: raw.quantity,
+            currency: currencyEnum,
             lineTotal,
             color: variant.color,
             size: variant.size,
             hasSizeMod: applicableSizeMod,
             sizeModFee,
           };
-
-          if (applicableSizeMod && rawItem.customSize) {
-            orderItemData.customSize = rawItem.customSize;
+          if (applicableSizeMod && raw.customSize) {
+            orderItemData.customSize = raw.customSize;
           }
-
           itemsCreateData.push(orderItemData);
         }
 
-        // Determine final delivery fee (override if provided, else baseFee, else 0)
+        // Resolve delivery fee: request override > option.baseFee > 0
         const resolvedDeliveryFee =
           typeof incomingDeliveryFee === "number"
             ? incomingDeliveryFee
-            : deliveryOptionRecord
-            ? deliveryOptionRecord.baseFee
-            : 0;
+            : deliveryOptionRecord?.baseFee ?? 0;
 
-        // Total amount including delivery (for display/receipt, keep totalAmount as items-only and store deliveryFee separately)
-        const newOrderId = generateOrderId();
+        const orderId = generateOrderId();
         const order = await tx.order.create({
           data: {
-            id: newOrderId,
-            status: OrderStatus.Processing,
-            currency: currency as Currency,
-            totalAmount, // items only
+            id: orderId,
+            status: PrismaOrderStatus.Processing,
+            currency: currencyEnum,
+            totalAmount,                   // items only
             totalNGN: Math.round(totalNGN),
             paymentMethod,
             createdAt: timestamp ? new Date(timestamp) : new Date(),
-            customerId,
+            ...(customerId ? { customerId } : {}),
             staffId,
-            channel: OrderChannel.OFFLINE,
+            channel: PrismaOrderChannel.OFFLINE,
             items: { create: itemsCreateData },
-            ...(guestInfo && { guestInfo }),
+            ...(guestInfo ? { guestInfo } : {}),
             receiptEmailStatus: {
               create: {
                 attempts: 0,
@@ -307,15 +308,14 @@ export async function POST(req: NextRequest) {
                 deliveryFee: resolvedDeliveryFee,
               },
             },
-            ...(deliveryOptionRecord && {
-              deliveryOptionId: deliveryOptionRecord.id,
-            }),
+            ...(deliveryOptionRecord ? { deliveryOptionId: deliveryOptionRecord.id } : {}),
             deliveryFee: resolvedDeliveryFee,
-            ...(deliveryDetails && { deliveryDetails }),
+            ...(deliveryDetailsInput !== undefined
+              ? { deliveryDetails: deliveryDetailsInput }
+              : {}),
           },
         });
 
-        // Record offline sale
         await tx.offlineSale.create({
           data: {
             orderId: order.id,
@@ -326,12 +326,10 @@ export async function POST(req: NextRequest) {
 
         return { order, lineItems: itemsCreateData };
       },
-      {
-        timeout: 15_000,
-      }
+      { timeout: 15_000 }
     );
 
-    // Email (best-effort)
+    // --- Best-effort receipt email (updates ReceiptEmailStatus if present)
     let to: string | undefined, name: string | undefined;
     if (existingCustomer) {
       to = existingCustomer.email;
@@ -342,7 +340,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (to && name) {
-      const receiptStatusExists = await prisma.receiptEmailStatus.findUnique({
+      const receiptStatus = await prisma.receiptEmailStatus.findUnique({
         where: { orderId: order.id },
       });
 
@@ -353,13 +351,9 @@ export async function POST(req: NextRequest) {
         const deliveryCharge = order.deliveryFee ?? 0;
         const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2);
         const sym =
-          order.currency === Currency.NGN
-            ? "₦"
-            : order.currency === Currency.USD
-            ? "$"
-            : order.currency === Currency.EUR
-            ? "€"
-            : "£";
+          order.currency === "NGN" ? "₦" :
+          order.currency === "USD" ? "$"  :
+          order.currency === "EUR" ? "€"  : "£";
 
         const bodyHtml = `
           <div style="font-family:Arial,sans-serif;line-height:1.5;color:#333">
@@ -373,27 +367,18 @@ export async function POST(req: NextRequest) {
                   (p: any) => `
                 <tr style="border-bottom:1px solid #e1e1e1">
                   <td style="vertical-align:middle">
-                    <img
-                      src="${p.image ?? ""}"
-                      width="40"
-                      alt=""
-                      style="vertical-align:middle;border-radius:4px;margin-right:8px"
-                    />
+                    ${
+                      p.image
+                        ? `<img src="${p.image}" width="40" alt="" style="vertical-align:middle;border-radius:4px;margin-right:8px" />`
+                        : ""
+                    }
                     ${p.name} × ${p.quantity}<br/>
                     <small>
                       Color: ${p.color} &bull; Size: ${p.size}
-                      ${
-                        p.hasSizeMod
-                          ? `&bull; Custom Size (5%): ${sym}${p.sizeModFee.toFixed(
-                              2
-                            )}`
-                          : ""
-                      }
+                      ${p.hasSizeMod ? `&bull; Custom Size (5%): ${sym}${p.sizeModFee.toFixed(2)}` : ""}
                       ${
                         p.customSize
-                          ? `&bull; Measurements: ${Object.entries(
-                              p.customSize
-                            )
+                          ? `&bull; Measurements: ${Object.entries(p.customSize)
                               .map(([k, v]) => `${k}:${v}`)
                               .join(", ")}`
                           : ""
@@ -401,7 +386,7 @@ export async function POST(req: NextRequest) {
                     </small>
                   </td>
                   <td align="right" style="font-family:monospace">
-                    ${sym}${p.lineTotal.toLocaleString()}
+                    ${sym}${Number(p.lineTotal).toLocaleString()}
                   </td>
                 </tr>`
                 )
@@ -409,18 +394,10 @@ export async function POST(req: NextRequest) {
             </table>
 
             <div style="margin-top:24px;font-family:monospace">
-              <p style="margin:6px 0">
-                Subtotal:&nbsp;<strong>${sym}${subtotal.toLocaleString()}</strong>
-              </p>
-              <p style="margin:6px 0">
-                VAT (7.5%):&nbsp;<strong>${sym}${vat.toLocaleString()}</strong>
-              </p>
-              <p style="margin:6px 0">
-                Delivery:&nbsp;<strong>${sym}${deliveryCharge.toLocaleString()}</strong>
-              </p>
-              <p style="margin:6px 0">
-                Grand Total:&nbsp;<strong>${sym}${grandTotal.toLocaleString()}</strong>
-              </p>
+              <p style="margin:6px 0">Subtotal: <strong>${sym}${subtotal.toLocaleString()}</strong></p>
+              <p style="margin:6px 0">VAT (7.5%): <strong>${sym}${vat.toLocaleString()}</strong></p>
+              <p style="margin:6px 0">Delivery: <strong>${sym}${deliveryCharge.toLocaleString()}</strong></p>
+              <p style="margin:6px 0">Grand Total: <strong>${sym}${grandTotal.toLocaleString()}</strong></p>
             </div>
 
             <p style="margin-top:32px;font-size:12px;color:#777">
@@ -443,7 +420,7 @@ export async function POST(req: NextRequest) {
           footerNote: "If you have any questions, just reply to this email.",
         });
 
-        if (receiptStatusExists) {
+        if (receiptStatus) {
           await prisma.receiptEmailStatus.update({
             where: { orderId: order.id },
             data: {
@@ -456,11 +433,14 @@ export async function POST(req: NextRequest) {
         }
       } catch (emailErr: any) {
         console.warn("Failed to send receipt email:", emailErr);
-        if (receiptStatusExists) {
-          const existingAttempts = receiptStatusExists.attempts;
+        const receiptStatus = await prisma.receiptEmailStatus.findUnique({
+          where: { orderId: order.id },
+        });
+        if (receiptStatus) {
+          const attempts = receiptStatus.attempts;
           const delayMs = Math.min(
             24 * 60 * 60 * 1000,
-            60 * 60 * 1000 * Math.pow(2, existingAttempts)
+            60 * 60 * 1000 * Math.pow(2, attempts)
           );
           const nextRetryAt = new Date(Date.now() + delayMs);
           await prisma.receiptEmailStatus.update({
@@ -476,14 +456,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(
-      { success: true, orderId: order.id },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, orderId: order.id }, { status: 201 });
   } catch (err: any) {
-    console.error("Offline‐sale POST error:", err);
+    console.error("Offline-sale POST error:", err);
     const msg =
-      typeof err.message === "string" && err.message.startsWith("Insufficient")
+      typeof err?.message === "string" && err.message.startsWith("Insufficient")
         ? err.message
         : "Internal Server Error";
     const status = msg === "Internal Server Error" ? 500 : 400;

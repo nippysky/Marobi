@@ -1,9 +1,12 @@
+// app/api/staff/route.ts
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import prisma, { prismaReady } from "@/lib/db";
 import { JobRole, UserRole } from "@/lib/generated/prisma-client";
 
-
+/** Generate a readable/strong password if requested */
 function randomPassword(len = 12) {
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -13,6 +16,9 @@ function randomPassword(len = 12) {
 }
 
 export async function POST(req: Request) {
+  await prismaReady;
+
+  // Parse JSON
   let body: any;
   try {
     body = await req.json();
@@ -20,7 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const requiredString = (v: any) => typeof v === "string" && v.trim().length;
+  const requiredString = (v: any) => typeof v === "string" && v.trim().length > 0;
 
   const {
     firstName,
@@ -51,54 +57,70 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "email required" }, { status: 400 });
   if (!requiredString(phone))
     return NextResponse.json({ error: "phone required" }, { status: 400 });
-  if (
-    !Array.isArray(jobRoles) ||
-    jobRoles.length === 0 ||
-    !jobRoles.every(r => typeof r === "string")
-  )
+  if (!Array.isArray(jobRoles) || jobRoles.length === 0)
     return NextResponse.json(
-      { error: "jobRoles must be non-empty string array" },
+      { error: "jobRoles must be a non-empty array" },
       { status: 400 }
     );
   if (!requiredString(access))
     return NextResponse.json({ error: "access required" }, { status: 400 });
 
-  let rawPassword: string =
+  // Runtime enum checks (prevents invalid values hitting the DB)
+  const validJobRoles = jobRoles.filter((r: unknown) =>
+    typeof r === "string" && Object.values(JobRole).includes(r as JobRole)
+  ) as JobRole[];
+
+  if (validJobRoles.length === 0) {
+    return NextResponse.json(
+      { error: "jobRoles contains no valid roles" },
+      { status: 400 }
+    );
+  }
+
+  if (!Object.values(UserRole).includes(access as UserRole)) {
+    return NextResponse.json(
+      { error: "access must be a valid UserRole" },
+      { status: 400 }
+    );
+  }
+
+  // Password handling
+  const chosenPassword: string =
     generatePassword ? randomPassword() : (password as string);
 
-  if (!rawPassword || rawPassword.length < 6) {
+  if (!chosenPassword || chosenPassword.length < 6) {
     return NextResponse.json(
       { error: "Password must be at least 6 characters." },
       { status: 400 }
     );
   }
 
-  const passwordHash = await bcrypt.hash(rawPassword, 10);
+  const passwordHash = await bcrypt.hash(chosenPassword, 10);
+
+  // Coerce/normalize inputs
+  const data = {
+    firstName: String(firstName).trim(),
+    middleName: (middleName ?? "").toString().trim() || "",
+    lastName: String(lastName).trim(),
+    email: String(email).trim().toLowerCase(),
+    emailPersonal: emailPersonal ? String(emailPersonal).trim() : null,
+    phone: String(phone).trim(),
+    address: address ? String(address).trim() : null,
+    jobRoles: validJobRoles,
+    access: access as UserRole,
+    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+    // Let default(now()) apply if omitted
+    dateOfEmployment: dateOfEmployment ? new Date(dateOfEmployment) : undefined,
+    dateOfResignation: dateOfResignation ? new Date(dateOfResignation) : null,
+    guarantorName: guarantorName ? String(guarantorName).trim() : null,
+    guarantorAddress: guarantorAddress ? String(guarantorAddress).trim() : null,
+    guarantorPhone: guarantorPhone ? String(guarantorPhone).trim() : null,
+    passwordHash,
+  } as const;
 
   try {
     const created = await prisma.staff.create({
-      data: {
-        firstName: firstName.trim(),
-        middleName: middleName?.trim() || "",
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        emailPersonal: emailPersonal?.trim() || null,
-        phone: phone.trim(),
-        address: address?.trim() || null,
-        jobRoles: jobRoles as JobRole[],
-        access: access as UserRole,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        dateOfEmployment: dateOfEmployment
-          ? new Date(dateOfEmployment)
-          : undefined,
-        dateOfResignation: dateOfResignation
-          ? new Date(dateOfResignation)
-          : null,
-        guarantorName: guarantorName?.trim() || null,
-        guarantorAddress: guarantorAddress?.trim() || null,
-        guarantorPhone: guarantorPhone?.trim() || null,
-        passwordHash,
-      },
+      data,
       select: {
         id: true,
         firstName: true,
@@ -111,16 +133,23 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      staff: created,
-      generatedPassword: generatePassword ? rawPassword : undefined,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        staff: created,
+        // Only return the raw password if it was auto-generated
+        generatedPassword: generatePassword ? chosenPassword : undefined,
+      },
+      { status: 201 }
+    );
   } catch (e: any) {
     console.error("Create staff error:", e);
-    if (e.code === "P2002") {
+    if (e?.code === "P2002") {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: "Failed to create staff" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create staff" },
+      { status: 500 }
+    );
   }
 }

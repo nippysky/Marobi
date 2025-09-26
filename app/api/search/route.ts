@@ -1,10 +1,16 @@
+// app/api/search/route.ts
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import prisma, { prismaReady } from "@/lib/db";
 
 /**
- * Search endpoint for published products by name or category name/slug.
+ * Search endpoint for published products by name or category (name/slug).
+ * Query: ?query=...   (case-insensitive, partial)
  */
 export async function GET(req: NextRequest) {
+  await prismaReady;
+
   try {
     const url = new URL(req.url);
     const rawQuery = url.searchParams.get("query") || "";
@@ -14,18 +20,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([], { status: 200 });
     }
 
-    // Search by product name OR category name OR categorySlug (case-insensitive, partial)
     const products = await prisma.product.findMany({
       where: {
         status: "Published",
         OR: [
+          // product name
           { name: { contains: q, mode: "insensitive" } },
+          // category name (through relation)
           {
             category: {
-              // search category name
-              name: { contains: q, mode: "insensitive" },
+              is: { name: { contains: q, mode: "insensitive" } },
             },
           },
+          // category slug
           { categorySlug: { contains: q, mode: "insensitive" } },
         ],
       },
@@ -43,7 +50,6 @@ export async function GET(req: NextRequest) {
         status: true,
         videoUrl: true,
         categorySlug: true,
-        // variants omitted to keep payload small for search preview
       },
       orderBy: [{ createdAt: "desc" }],
     });
@@ -63,7 +69,7 @@ export async function GET(req: NextRequest) {
       status: p.status,
       videoUrl: p.videoUrl ?? null,
       category: p.categorySlug, // frontend expects `category`
-      variants: [], // minimal for search dropdown
+      variants: [], // keep payload light for search previews
     }));
 
     return NextResponse.json(shaped, {

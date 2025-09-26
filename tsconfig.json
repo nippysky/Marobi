@@ -29,7 +29,7 @@
     ".next/types/**/*.ts",
     "next-auth.d.ts",
     "types/**/*.d.ts",
-    "prisma/seed.cjs"
+    "scripts/seed.cjs"
   ],
   "exclude": ["node_modules"]
 }

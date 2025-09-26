@@ -1,40 +1,67 @@
+// lib/categories.ts
 import { prisma } from "@/lib/db";
 
 export interface Category {
   slug: string;
   name: string;
   description?: string;
+  bannerImage?: string;
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 /**
- * Fetch all categories (for nav, sidebar, etc).
+ * Fetch all *active* categories for navigation/home.
+ * Categories are dynamic; new rows appear automatically after creation.
  */
 export async function getAllCategories(): Promise<Category[]> {
   const rows = await prisma.category.findMany({
-    select: { slug: true, name: true, description: true },
-    orderBy: { name: "asc" },
+    where: { isActive: true },
+    select: {
+      slug: true,
+      name: true,
+      description: true,
+      bannerImage: true,
+      isActive: true,
+      sortOrder: true,
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
-  return rows.map(({ slug, name, description }) => ({
-    slug,
-    name,
-    description: description ?? undefined,
+
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    description: r.description ?? undefined,
+    bannerImage: r.bannerImage ?? undefined,
+    isActive: r.isActive,
+    sortOrder: r.sortOrder ?? 0,
   }));
 }
 
 /**
- * Fetch a single category by slug, or undefined if not found.
+ * Fetch a single category by slug (active or inactive).
  */
 export async function getCategoryBySlug(
   slug: string
 ): Promise<Category | undefined> {
-  const row = await prisma.category.findUnique({
+  const r = await prisma.category.findUnique({
     where: { slug },
-    select: { slug: true, name: true, description: true },
+    select: {
+      slug: true,
+      name: true,
+      description: true,
+      bannerImage: true,
+      isActive: true,
+      sortOrder: true,
+    },
   });
-  if (!row) return undefined;
+  if (!r) return undefined;
   return {
-    slug: row.slug,
-    name: row.name,
-    description: row.description ?? undefined,
+    slug: r.slug,
+    name: r.name,
+    description: r.description ?? undefined,
+    bannerImage: r.bannerImage ?? undefined,
+    isActive: r.isActive,
+    sortOrder: r.sortOrder ?? 0,
   };
 }

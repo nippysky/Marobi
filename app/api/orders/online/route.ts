@@ -1,7 +1,8 @@
+// app/api/orders/online/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import prisma, { prismaReady } from "@/lib/db";
 import {
   Currency as CurrencyEnum,
   OrderChannel,
@@ -11,11 +12,7 @@ import { sendReceiptEmailWithRetry } from "@/lib/mail";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { verifyTransaction, PaystackError } from "@/lib/paystack";
-// --- Use shared types! ---
-import type {
-  CartItemPayload,
-  CustomerPayload,
-} from "@/lib/hooks/useCheckout"; // or from "@/lib/types" if you moved them
+import type { CartItemPayload, CustomerPayload } from "@/lib/hooks/useCheckout";
 
 const ALLOWED_CURRENCIES = ["NGN", "USD", "EUR", "GBP"] as const;
 type AllowedCurrency = (typeof ALLOWED_CURRENCIES)[number];
@@ -24,7 +21,6 @@ function toLowest(amount: number): number {
   return Math.round(amount * 100);
 }
 
-// --- Match your frontend type exactly! ---
 interface OnlineOrderPayload {
   items: CartItemPayload[];
   customer: CustomerPayload;
@@ -39,14 +35,17 @@ interface OnlineOrderPayload {
 function generateOrderId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const random = Array.from({ length: 7 }, () =>
-    chars.charAt(Math.floor(Math.random() * Math.random() * chars.length))
+    chars.charAt(Math.floor(Math.random() * chars.length))
   ).join("");
   return `M-ORD-${random}`;
 }
 
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
-
 export async function POST(req: NextRequest) {
+  await prismaReady;
+
+  // hoisted so it's available in the catch block
+  let requestPaymentReference: string | undefined;
+
   try {
     const payload: OnlineOrderPayload = await req.json();
     const {
@@ -60,15 +59,23 @@ export async function POST(req: NextRequest) {
       paymentReference,
     } = payload;
 
-    // --- Validations ---
+    // keep a safe copy for later
+    requestPaymentReference = paymentReference;
+
+    // --- Validations
     if (!Array.isArray(items) || items.length === 0)
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     if (!customer || !customer.email)
-      return NextResponse.json({ error: "Customer email is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Customer email is required" },
+        { status: 400 }
+      );
     if (!paymentReference || typeof paymentReference !== "string")
-      return NextResponse.json({ error: "Missing or invalid paymentReference" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or invalid paymentReference" },
+        { status: 400 }
+      );
 
-    // Normalize and validate currency
     const normalizedCurrency = (currency || "").toString().toUpperCase();
     if (!ALLOWED_CURRENCIES.includes(normalizedCurrency as AllowedCurrency)) {
       return NextResponse.json(
@@ -77,8 +84,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Verify payment with Paystack ---
-    let paystackTx;
+    // --- Verify Paystack
+    let paystackTx: any;
     try {
       paystackTx = await verifyTransaction(paymentReference);
     } catch (err: any) {
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    if (paystackTx.currency.toUpperCase() !== normalizedCurrency) {
+    if (String(paystackTx.currency).toUpperCase() !== normalizedCurrency) {
       return NextResponse.json(
         {
           error: `Currency mismatch: expected ${normalizedCurrency}, got ${paystackTx.currency}`,
@@ -99,7 +106,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Validate delivery option ---
+    // --- Validate delivery option (courier-only system)
     if (deliveryOptionId) {
       const deliveryOpt = await prisma.deliveryOption.findUnique({
         where: { id: deliveryOptionId },
@@ -118,33 +125,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // --- Idempotency: check for existing order with this paymentReference ---
+    // --- Idempotency check by paymentReference
     const existingOrder = await prisma.order.findUnique({
       where: { paymentReference },
       include: { customer: true },
     });
 
     if (existingOrder) {
-      const updates: any = {};
+      const updates: Record<string, any> = {};
       if (!existingOrder.paymentVerified) updates.paymentVerified = true;
-      if (existingOrder.paymentReference !== paymentReference)
-        updates.paymentReference = paymentReference;
-      if (existingOrder.paymentProviderId !== String(paystackTx.id))
+      if (existingOrder.paymentProviderId !== String(paystackTx.id)) {
         updates.paymentProviderId = String(paystackTx.id);
-
+      }
       if (Object.keys(updates).length > 0) {
         await prisma.order.update({
           where: { id: existingOrder.id },
           data: updates,
-        });
-      }
-
-      const expectedLowestFromOrder = toLowest(existingOrder.totalAmount);
-      if (paystackTx.amount !== expectedLowestFromOrder) {
-        console.warn("Existing order amount mismatch vs captured payment", {
-          orderTotalLowest: expectedLowestFromOrder,
-          captured: paystackTx.amount,
-          paymentReference,
         });
       }
 
@@ -160,14 +156,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Compute expected totals ---
-    let totalAmount = 0;
+    // --- Precompute items (no reliance on i.customSize)
+    let itemsSubtotal = 0;
     let totalNGN = 0;
     let aggregatedWeight = 0;
     const itemsCreateData: any[] = [];
 
     for (const i of items) {
-      const where: any = { productId: i.productId };
+      const where: Record<string, any> = { productId: i.productId };
       if (i.color && i.color !== "N/A") where.color = i.color;
       if (i.size && i.size !== "N/A") where.size = i.size;
 
@@ -190,6 +186,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // unit price in selected currency
       let unitPrice = 0;
       switch (normalizedCurrency) {
         case "USD":
@@ -207,17 +204,27 @@ export async function POST(req: NextRequest) {
           break;
       }
 
+      // line total
       let lineTotal = unitPrice * i.quantity;
       if (i.hasSizeMod && i.sizeModFee) {
         lineTotal += i.sizeModFee * i.quantity;
       }
-      totalAmount += lineTotal;
+      itemsSubtotal += lineTotal;
 
       const ngnUnitPrice = variant.product.priceNGN ?? 0;
       totalNGN += ngnUnitPrice * i.quantity;
 
-      const unitWeight = typeof i.unitWeight === "number" ? i.unitWeight : 0;
+      const unitWeight =
+        typeof i.unitWeight === "number"
+          ? i.unitWeight
+          : typeof (variant as any).weight === "number"
+          ? (variant as any).weight
+          : 0;
       aggregatedWeight += unitWeight * i.quantity;
+
+      // Accept either `customMods` or `customSize` if present in the payload (not part of CartItemPayload type)
+      const customMeasurements =
+        (i as any).customMods ?? (i as any).customSize ?? undefined;
 
       itemsCreateData.push({
         variantId: variant.id,
@@ -227,20 +234,22 @@ export async function POST(req: NextRequest) {
         quantity: i.quantity,
         currency: normalizedCurrency as CurrencyEnum,
         lineTotal,
-        color: variant.color,
-        size: variant.size,
+        color: variant.color || "N/A",
+        size: variant.size || "N/A",
         hasSizeMod: !!i.hasSizeMod,
         sizeModFee: i.sizeModFee ?? 0,
         customSize: {
+          ...(customMeasurements ?? {}),
           unitWeight,
           totalWeight: parseFloat((unitWeight * i.quantity).toFixed(3)),
         },
       });
     }
 
-    totalAmount += deliveryFee;
+    const orderTotal = itemsSubtotal + (typeof deliveryFee === "number" ? deliveryFee : 0);
 
-    const expectedLowest = toLowest(totalAmount);
+    // Verify captured amount === expected
+    const expectedLowest = toLowest(orderTotal);
     if (paystackTx.amount !== expectedLowest) {
       console.warn("Payment amount mismatch", {
         expected: expectedLowest,
@@ -280,11 +289,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Decide customer/guest for the order ---
+    // --- Identify customer vs guest
     const session = await getServerSession(authOptions);
     let customerId: string | null = null;
-    let existingCustomer: { firstName: string; lastName: string; email: string } | undefined;
-    let guestInfo: Record<string, any> | undefined;
+    let existingCustomer:
+      | { firstName: string; lastName: string; email: string }
+      | undefined;
+    let guestInfo:
+      | {
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+          phone?: string;
+          deliveryAddress?: string | null;
+          billingAddress?: string | null;
+          country?: string | null;
+          state?: string | null;
+        }
+      | undefined;
 
     if (session?.user?.id) {
       const found = await prisma.customer.findUnique({
@@ -303,10 +325,10 @@ export async function POST(req: NextRequest) {
           lastName: customer.lastName,
           email: customer.email,
           phone: customer.phone,
-          deliveryAddress: customer.deliveryAddress,
-          billingAddress: customer.billingAddress,
-          country: customer.country,
-          state: customer.state,
+          deliveryAddress: customer.deliveryAddress ?? null,
+          billingAddress: customer.billingAddress ?? null,
+          country: customer.country ?? null,
+          state: customer.state ?? null,
         };
       }
     } else if (customer.id) {
@@ -326,10 +348,10 @@ export async function POST(req: NextRequest) {
           lastName: customer.lastName,
           email: customer.email,
           phone: customer.phone,
-          deliveryAddress: customer.deliveryAddress,
-          billingAddress: customer.billingAddress,
-          country: customer.country,
-          state: customer.state,
+          deliveryAddress: customer.deliveryAddress ?? null,
+          billingAddress: customer.billingAddress ?? null,
+          country: customer.country ?? null,
+          state: customer.state ?? null,
         };
       }
     } else {
@@ -338,18 +360,18 @@ export async function POST(req: NextRequest) {
         lastName: customer.lastName,
         email: customer.email,
         phone: customer.phone,
-        deliveryAddress: customer.deliveryAddress,
-        billingAddress: customer.billingAddress,
-        country: customer.country,
-        state: customer.state,
+        deliveryAddress: customer.deliveryAddress ?? null,
+        billingAddress: customer.billingAddress ?? null,
+        country: customer.country ?? null,
+        state: customer.state ?? null,
       };
     }
 
-    // --- Transactional creation: decrement stock & create order ---
+    // --- Create order & decrement stock atomically
     const { order } = await prisma.$transaction(async (tx) => {
-      // decrement stock
+      // Revalidate & decrement stock
       for (const i of items) {
-        const where: any = { productId: i.productId };
+        const where: Record<string, any> = { productId: i.productId };
         if (i.color && i.color !== "N/A") where.color = i.color;
         if (i.size && i.size !== "N/A") where.size = i.size;
 
@@ -367,6 +389,7 @@ export async function POST(req: NextRequest) {
             `Insufficient stock during transaction for ${variant.product.name}`
           );
         }
+
         await tx.variant.update({
           where: { id: variant.id },
           data: { stock: { decrement: i.quantity } },
@@ -375,12 +398,11 @@ export async function POST(req: NextRequest) {
 
       const newOrderId = generateOrderId();
 
-      // Build orderData with correct relation or guest info
       const orderData: any = {
         id: newOrderId,
         status: OrderStatus.Processing,
         currency: normalizedCurrency as CurrencyEnum,
-        totalAmount,
+        totalAmount: itemsSubtotal, // items only
         totalNGN: Math.round(totalNGN),
         paymentMethod,
         paymentReference,
@@ -389,7 +411,7 @@ export async function POST(req: NextRequest) {
         createdAt: timestamp ? new Date(timestamp) : new Date(),
         items: { create: itemsCreateData },
         channel: OrderChannel.ONLINE,
-        deliveryFee,
+        deliveryFee: typeof deliveryFee === "number" ? deliveryFee : 0,
         deliveryDetails: {
           aggregatedWeight: parseFloat(aggregatedWeight.toFixed(3)),
           deliveryOptionId: deliveryOptionId ?? null,
@@ -413,14 +435,15 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Sync saved addresses for logged-in customers (optional)
       if (customerId && !guestInfo) {
         await tx.customer.update({
           where: { id: customerId },
           data: {
-            deliveryAddress: customer.deliveryAddress,
-            billingAddress: customer.billingAddress,
-            country: customer.country,
-            state: customer.state,
+            deliveryAddress: customer.deliveryAddress ?? null,
+            billingAddress: customer.billingAddress ?? null,
+            country: customer.country ?? null,
+            state: customer.state ?? null,
           },
         });
       }
@@ -428,7 +451,7 @@ export async function POST(req: NextRequest) {
       return { order: createdOrder };
     });
 
-    // --- Prepare receipt recipient ---
+    // --- Receipt recipient
     const recipient = existingCustomer
       ? {
           firstName: existingCustomer.firstName,
@@ -438,16 +461,7 @@ export async function POST(req: NextRequest) {
           deliveryAddress: customer.deliveryAddress,
           billingAddress: customer.billingAddress,
         }
-      : guestInfo
-      ? {
-          firstName: guestInfo.firstName,
-          lastName: guestInfo.lastName,
-          email: guestInfo.email,
-          phone: guestInfo.phone,
-          deliveryAddress: guestInfo.deliveryAddress,
-          billingAddress: guestInfo.billingAddress,
-        }
-      : {
+      : (guestInfo as any) ?? {
           firstName: customer.firstName,
           lastName: customer.lastName,
           email: customer.email,
@@ -456,12 +470,13 @@ export async function POST(req: NextRequest) {
           billingAddress: customer.billingAddress,
         };
 
+    // Best-effort email
     try {
       await sendReceiptEmailWithRetry({
         order,
         recipient,
         currency: normalizedCurrency,
-        deliveryFee,
+        deliveryFee: typeof deliveryFee === "number" ? deliveryFee : 0,
       });
     } catch (emailErr) {
       console.warn("Failed to send receipt email:", emailErr);
@@ -471,54 +486,51 @@ export async function POST(req: NextRequest) {
       {
         success: true,
         orderId: order.id,
-        email: existingCustomer ? existingCustomer.email : guestInfo?.email,
+        email: recipient.email,
       },
       { status: 201 }
     );
   } catch (err: any) {
     console.error("Online order POST error:", err, err?.meta || "");
 
-    // Prisma unique constraint race on paymentReference
-    if (
-      err?.code === "P2002" &&
-      Array.isArray(err?.meta?.target) &&
-      (err.meta.target as string[]).includes("paymentReference")
-    ) {
-      try {
-        const fallbackOrder = await prisma.order.findUnique({
-          where: {
-            paymentReference:
-              (err as any)?.meta?.targetValue ||
-              (err as any)?.params?.paymentReference ||
-              "",
-          },
-          include: { customer: true },
-        });
-        if (fallbackOrder) {
-          return NextResponse.json(
-            {
-              success: true,
-              orderId: fallbackOrder.id,
-              email: fallbackOrder.customer
-                ? fallbackOrder.customer.email
-                : undefined,
-            },
-            { status: 200 }
-          );
+    // Unique constraint on paymentReference — return the found order if possible
+    if (err?.code === "P2002" && Array.isArray(err?.meta?.target)) {
+      if ((err.meta.target as string[]).includes("paymentReference")) {
+        try {
+          const refFromError =
+            (err as any)?.meta?.targetValue ??
+            (err as any)?.params?.paymentReference ??
+            requestPaymentReference;
+
+          if (refFromError) {
+            const fallbackOrder = await prisma.order.findUnique({
+              where: { paymentReference: refFromError as string },
+              include: { customer: true },
+            });
+            if (fallbackOrder) {
+              return NextResponse.json(
+                {
+                  success: true,
+                  orderId: fallbackOrder.id,
+                  email: fallbackOrder.customer?.email,
+                },
+                { status: 200 }
+              );
+            }
+          }
+        } catch {
+          // ignore fallback errors
         }
-      } catch {
-        // swallow fallback errors
       }
     }
 
-    // Always return full error object for dev & prod
-    let errorMessage = err?.message || "Internal Server Error";
-    let errorDetails = err?.meta || undefined;
-    let errorCode = err?.code || undefined;
-
     return NextResponse.json(
-      { error: errorMessage, code: errorCode, details: errorDetails },
-      { status: errorMessage === "Internal Server Error" ? 500 : 400 }
+      {
+        error: err?.message || "Internal Server Error",
+        code: err?.code,
+        details: err?.meta,
+      },
+      { status: err?.message === "Internal Server Error" ? 500 : 400 }
     );
   }
 }

@@ -45,7 +45,10 @@ export type Variant = $Result.DefaultSelection<Prisma.$VariantPayload>
 export type Review = $Result.DefaultSelection<Prisma.$ReviewPayload>
 /**
  * Model DeliveryOption
- * 
+ * *
+ *  * Only courier options exist (no pickup).
+ *  * - FIXED: charge baseFee (optionally in baseCurrency).
+ *  * - EXTERNAL: fetch from provider (DHL/FedEx/etc) at checkout.
  */
 export type DeliveryOption = $Result.DefaultSelection<Prisma.$DeliveryOptionPayload>
 /**
@@ -85,12 +88,12 @@ export type WebhookEvent = $Result.DefaultSelection<Prisma.$WebhookEventPayload>
 export type OrphanPayment = $Result.DefaultSelection<Prisma.$OrphanPaymentPayload>
 /**
  * Model HeroSlide
- * 
+ * * Homepage hero
  */
 export type HeroSlide = $Result.DefaultSelection<Prisma.$HeroSlidePayload>
 /**
  * Model SizeChart
- * 
+ * * Size chart
  */
 export type SizeChart = $Result.DefaultSelection<Prisma.$SizeChartPayload>
 /**
@@ -162,14 +165,6 @@ export const UserRole: {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
-export const DeliveryType: {
-  COURIER: 'COURIER',
-  PICKUP: 'PICKUP'
-};
-
-export type DeliveryType = (typeof DeliveryType)[keyof typeof DeliveryType]
-
-
 export const RefundStatus: {
   Pending: 'Pending',
   Completed: 'Completed',
@@ -177,6 +172,14 @@ export const RefundStatus: {
 };
 
 export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]
+
+
+export const DeliveryPricingMode: {
+  FIXED: 'FIXED',
+  EXTERNAL: 'EXTERNAL'
+};
+
+export type DeliveryPricingMode = (typeof DeliveryPricingMode)[keyof typeof DeliveryPricingMode]
 
 }
 
@@ -204,13 +207,13 @@ export type UserRole = $Enums.UserRole
 
 export const UserRole: typeof $Enums.UserRole
 
-export type DeliveryType = $Enums.DeliveryType
-
-export const DeliveryType: typeof $Enums.DeliveryType
-
 export type RefundStatus = $Enums.RefundStatus
 
 export const RefundStatus: typeof $Enums.RefundStatus
+
+export type DeliveryPricingMode = $Enums.DeliveryPricingMode
+
+export const DeliveryPricingMode: typeof $Enums.DeliveryPricingMode
 
 /**
  * ##  Prisma Client ʲˢ
@@ -5346,46 +5349,94 @@ export namespace Prisma {
 
   export type AggregateCategory = {
     _count: CategoryCountAggregateOutputType | null
+    _avg: CategoryAvgAggregateOutputType | null
+    _sum: CategorySumAggregateOutputType | null
     _min: CategoryMinAggregateOutputType | null
     _max: CategoryMaxAggregateOutputType | null
+  }
+
+  export type CategoryAvgAggregateOutputType = {
+    sortOrder: number | null
+  }
+
+  export type CategorySumAggregateOutputType = {
+    sortOrder: number | null
   }
 
   export type CategoryMinAggregateOutputType = {
     slug: string | null
     name: string | null
     description: string | null
+    bannerImage: string | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type CategoryMaxAggregateOutputType = {
     slug: string | null
     name: string | null
     description: string | null
+    bannerImage: string | null
+    isActive: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type CategoryCountAggregateOutputType = {
     slug: number
     name: number
     description: number
+    bannerImage: number
+    isActive: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
     _all: number
   }
 
+
+  export type CategoryAvgAggregateInputType = {
+    sortOrder?: true
+  }
+
+  export type CategorySumAggregateInputType = {
+    sortOrder?: true
+  }
 
   export type CategoryMinAggregateInputType = {
     slug?: true
     name?: true
     description?: true
+    bannerImage?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
   }
 
   export type CategoryMaxAggregateInputType = {
     slug?: true
     name?: true
     description?: true
+    bannerImage?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
   }
 
   export type CategoryCountAggregateInputType = {
     slug?: true
     name?: true
     description?: true
+    bannerImage?: true
+    isActive?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -5427,6 +5478,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: CategoryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CategorySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: CategoryMinAggregateInputType
@@ -5457,6 +5520,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: CategoryCountAggregateInputType | true
+    _avg?: CategoryAvgAggregateInputType
+    _sum?: CategorySumAggregateInputType
     _min?: CategoryMinAggregateInputType
     _max?: CategoryMaxAggregateInputType
   }
@@ -5465,7 +5530,14 @@ export namespace Prisma {
     slug: string
     name: string
     description: string | null
+    bannerImage: string | null
+    isActive: boolean
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
     _count: CategoryCountAggregateOutputType | null
+    _avg: CategoryAvgAggregateOutputType | null
+    _sum: CategorySumAggregateOutputType | null
     _min: CategoryMinAggregateOutputType | null
     _max: CategoryMaxAggregateOutputType | null
   }
@@ -5488,6 +5560,11 @@ export namespace Prisma {
     slug?: boolean
     name?: boolean
     description?: boolean
+    bannerImage?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
     products?: boolean | Category$productsArgs<ExtArgs>
     _count?: boolean | CategoryCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["category"]>
@@ -5496,21 +5573,36 @@ export namespace Prisma {
     slug?: boolean
     name?: boolean
     description?: boolean
+    bannerImage?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["category"]>
 
   export type CategorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     slug?: boolean
     name?: boolean
     description?: boolean
+    bannerImage?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["category"]>
 
   export type CategorySelectScalar = {
     slug?: boolean
     name?: boolean
     description?: boolean
+    bannerImage?: boolean
+    isActive?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"slug" | "name" | "description", ExtArgs["result"]["category"]>
+  export type CategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"slug" | "name" | "description" | "bannerImage" | "isActive" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["category"]>
   export type CategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     products?: boolean | Category$productsArgs<ExtArgs>
     _count?: boolean | CategoryCountOutputTypeDefaultArgs<ExtArgs>
@@ -5527,6 +5619,11 @@ export namespace Prisma {
       slug: string
       name: string
       description: string | null
+      bannerImage: string | null
+      isActive: boolean
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["category"]>
     composites: {}
   }
@@ -5954,6 +6051,11 @@ export namespace Prisma {
     readonly slug: FieldRef<"Category", 'String'>
     readonly name: FieldRef<"Category", 'String'>
     readonly description: FieldRef<"Category", 'String'>
+    readonly bannerImage: FieldRef<"Category", 'String'>
+    readonly isActive: FieldRef<"Category", 'Boolean'>
+    readonly sortOrder: FieldRef<"Category", 'Int'>
+    readonly createdAt: FieldRef<"Category", 'DateTime'>
+    readonly updatedAt: FieldRef<"Category", 'DateTime'>
   }
     
 
@@ -10010,9 +10112,10 @@ export namespace Prisma {
     id: string | null
     name: string | null
     provider: string | null
-    type: $Enums.DeliveryType | null
-    active: boolean | null
+    pricingMode: $Enums.DeliveryPricingMode | null
     baseFee: number | null
+    baseCurrency: $Enums.Currency | null
+    active: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -10021,9 +10124,10 @@ export namespace Prisma {
     id: string | null
     name: string | null
     provider: string | null
-    type: $Enums.DeliveryType | null
-    active: boolean | null
+    pricingMode: $Enums.DeliveryPricingMode | null
     baseFee: number | null
+    baseCurrency: $Enums.Currency | null
+    active: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -10032,9 +10136,10 @@ export namespace Prisma {
     id: number
     name: number
     provider: number
-    type: number
-    active: number
+    pricingMode: number
     baseFee: number
+    baseCurrency: number
+    active: number
     metadata: number
     createdAt: number
     updatedAt: number
@@ -10054,9 +10159,10 @@ export namespace Prisma {
     id?: true
     name?: true
     provider?: true
-    type?: true
-    active?: true
+    pricingMode?: true
     baseFee?: true
+    baseCurrency?: true
+    active?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -10065,9 +10171,10 @@ export namespace Prisma {
     id?: true
     name?: true
     provider?: true
-    type?: true
-    active?: true
+    pricingMode?: true
     baseFee?: true
+    baseCurrency?: true
+    active?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -10076,9 +10183,10 @@ export namespace Prisma {
     id?: true
     name?: true
     provider?: true
-    type?: true
-    active?: true
+    pricingMode?: true
     baseFee?: true
+    baseCurrency?: true
+    active?: true
     metadata?: true
     createdAt?: true
     updatedAt?: true
@@ -10175,9 +10283,10 @@ export namespace Prisma {
     id: string
     name: string
     provider: string | null
-    type: $Enums.DeliveryType
+    pricingMode: $Enums.DeliveryPricingMode
+    baseFee: number | null
+    baseCurrency: $Enums.Currency | null
     active: boolean
-    baseFee: number
     metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
@@ -10206,9 +10315,10 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     provider?: boolean
-    type?: boolean
-    active?: boolean
+    pricingMode?: boolean
     baseFee?: boolean
+    baseCurrency?: boolean
+    active?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -10220,9 +10330,10 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     provider?: boolean
-    type?: boolean
-    active?: boolean
+    pricingMode?: boolean
     baseFee?: boolean
+    baseCurrency?: boolean
+    active?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -10232,9 +10343,10 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     provider?: boolean
-    type?: boolean
-    active?: boolean
+    pricingMode?: boolean
     baseFee?: boolean
+    baseCurrency?: boolean
+    active?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -10244,15 +10356,16 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     provider?: boolean
-    type?: boolean
-    active?: boolean
+    pricingMode?: boolean
     baseFee?: boolean
+    baseCurrency?: boolean
+    active?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type DeliveryOptionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "provider" | "type" | "active" | "baseFee" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["deliveryOption"]>
+  export type DeliveryOptionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "provider" | "pricingMode" | "baseFee" | "baseCurrency" | "active" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["deliveryOption"]>
   export type DeliveryOptionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     orders?: boolean | DeliveryOption$ordersArgs<ExtArgs>
     _count?: boolean | DeliveryOptionCountOutputTypeDefaultArgs<ExtArgs>
@@ -10269,9 +10382,10 @@ export namespace Prisma {
       id: string
       name: string
       provider: string | null
-      type: $Enums.DeliveryType
+      pricingMode: $Enums.DeliveryPricingMode
+      baseFee: number | null
+      baseCurrency: $Enums.Currency | null
       active: boolean
-      baseFee: number
       metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
@@ -10702,9 +10816,10 @@ export namespace Prisma {
     readonly id: FieldRef<"DeliveryOption", 'String'>
     readonly name: FieldRef<"DeliveryOption", 'String'>
     readonly provider: FieldRef<"DeliveryOption", 'String'>
-    readonly type: FieldRef<"DeliveryOption", 'DeliveryType'>
-    readonly active: FieldRef<"DeliveryOption", 'Boolean'>
+    readonly pricingMode: FieldRef<"DeliveryOption", 'DeliveryPricingMode'>
     readonly baseFee: FieldRef<"DeliveryOption", 'Float'>
+    readonly baseCurrency: FieldRef<"DeliveryOption", 'Currency'>
+    readonly active: FieldRef<"DeliveryOption", 'Boolean'>
     readonly metadata: FieldRef<"DeliveryOption", 'Json'>
     readonly createdAt: FieldRef<"DeliveryOption", 'DateTime'>
     readonly updatedAt: FieldRef<"DeliveryOption", 'DateTime'>
@@ -22435,7 +22550,12 @@ export namespace Prisma {
   export const CategoryScalarFieldEnum: {
     slug: 'slug',
     name: 'name',
-    description: 'description'
+    description: 'description',
+    bannerImage: 'bannerImage',
+    isActive: 'isActive',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
@@ -22492,9 +22612,10 @@ export namespace Prisma {
     id: 'id',
     name: 'name',
     provider: 'provider',
-    type: 'type',
-    active: 'active',
+    pricingMode: 'pricingMode',
     baseFee: 'baseFee',
+    baseCurrency: 'baseCurrency',
+    active: 'active',
     metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -22763,6 +22884,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -22791,30 +22926,30 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int'
+   * Reference to a field of type 'DeliveryPricingMode'
    */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+  export type EnumDeliveryPricingModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryPricingMode'>
     
 
 
   /**
-   * Reference to a field of type 'Int[]'
+   * Reference to a field of type 'DeliveryPricingMode[]'
    */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+  export type ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryPricingMode[]'>
     
 
 
   /**
-   * Reference to a field of type 'DeliveryType'
+   * Reference to a field of type 'Currency'
    */
-  export type EnumDeliveryTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryType'>
+  export type EnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency'>
     
 
 
   /**
-   * Reference to a field of type 'DeliveryType[]'
+   * Reference to a field of type 'Currency[]'
    */
-  export type ListEnumDeliveryTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryType[]'>
+  export type ListEnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency[]'>
     
 
 
@@ -22843,20 +22978,6 @@ export namespace Prisma {
    * Reference to a field of type 'OrderStatus[]'
    */
   export type ListEnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Currency'
-   */
-  export type EnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency'>
-    
-
-
-  /**
-   * Reference to a field of type 'Currency[]'
-   */
-  export type ListEnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency[]'>
     
 
 
@@ -23162,6 +23283,11 @@ export namespace Prisma {
     slug?: StringFilter<"Category"> | string
     name?: StringFilter<"Category"> | string
     description?: StringNullableFilter<"Category"> | string | null
+    bannerImage?: StringNullableFilter<"Category"> | string | null
+    isActive?: BoolFilter<"Category"> | boolean
+    sortOrder?: IntFilter<"Category"> | number
+    createdAt?: DateTimeFilter<"Category"> | Date | string
+    updatedAt?: DateTimeFilter<"Category"> | Date | string
     products?: ProductListRelationFilter
   }
 
@@ -23169,6 +23295,11 @@ export namespace Prisma {
     slug?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    bannerImage?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     products?: ProductOrderByRelationAggregateInput
   }
 
@@ -23179,6 +23310,11 @@ export namespace Prisma {
     NOT?: CategoryWhereInput | CategoryWhereInput[]
     name?: StringFilter<"Category"> | string
     description?: StringNullableFilter<"Category"> | string | null
+    bannerImage?: StringNullableFilter<"Category"> | string | null
+    isActive?: BoolFilter<"Category"> | boolean
+    sortOrder?: IntFilter<"Category"> | number
+    createdAt?: DateTimeFilter<"Category"> | Date | string
+    updatedAt?: DateTimeFilter<"Category"> | Date | string
     products?: ProductListRelationFilter
   }, "slug">
 
@@ -23186,9 +23322,16 @@ export namespace Prisma {
     slug?: SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
+    bannerImage?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: CategoryCountOrderByAggregateInput
+    _avg?: CategoryAvgOrderByAggregateInput
     _max?: CategoryMaxOrderByAggregateInput
     _min?: CategoryMinOrderByAggregateInput
+    _sum?: CategorySumOrderByAggregateInput
   }
 
   export type CategoryScalarWhereWithAggregatesInput = {
@@ -23198,6 +23341,11 @@ export namespace Prisma {
     slug?: StringWithAggregatesFilter<"Category"> | string
     name?: StringWithAggregatesFilter<"Category"> | string
     description?: StringNullableWithAggregatesFilter<"Category"> | string | null
+    bannerImage?: StringNullableWithAggregatesFilter<"Category"> | string | null
+    isActive?: BoolWithAggregatesFilter<"Category"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"Category"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"Category"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Category"> | Date | string
   }
 
   export type ProductWhereInput = {
@@ -23465,9 +23613,10 @@ export namespace Prisma {
     id?: StringFilter<"DeliveryOption"> | string
     name?: StringFilter<"DeliveryOption"> | string
     provider?: StringNullableFilter<"DeliveryOption"> | string | null
-    type?: EnumDeliveryTypeFilter<"DeliveryOption"> | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFilter<"DeliveryOption"> | $Enums.DeliveryPricingMode
+    baseFee?: FloatNullableFilter<"DeliveryOption"> | number | null
+    baseCurrency?: EnumCurrencyNullableFilter<"DeliveryOption"> | $Enums.Currency | null
     active?: BoolFilter<"DeliveryOption"> | boolean
-    baseFee?: FloatFilter<"DeliveryOption"> | number
     metadata?: JsonNullableFilter<"DeliveryOption">
     createdAt?: DateTimeFilter<"DeliveryOption"> | Date | string
     updatedAt?: DateTimeFilter<"DeliveryOption"> | Date | string
@@ -23478,9 +23627,10 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     provider?: SortOrderInput | SortOrder
-    type?: SortOrder
+    pricingMode?: SortOrder
+    baseFee?: SortOrderInput | SortOrder
+    baseCurrency?: SortOrderInput | SortOrder
     active?: SortOrder
-    baseFee?: SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -23494,9 +23644,10 @@ export namespace Prisma {
     NOT?: DeliveryOptionWhereInput | DeliveryOptionWhereInput[]
     name?: StringFilter<"DeliveryOption"> | string
     provider?: StringNullableFilter<"DeliveryOption"> | string | null
-    type?: EnumDeliveryTypeFilter<"DeliveryOption"> | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFilter<"DeliveryOption"> | $Enums.DeliveryPricingMode
+    baseFee?: FloatNullableFilter<"DeliveryOption"> | number | null
+    baseCurrency?: EnumCurrencyNullableFilter<"DeliveryOption"> | $Enums.Currency | null
     active?: BoolFilter<"DeliveryOption"> | boolean
-    baseFee?: FloatFilter<"DeliveryOption"> | number
     metadata?: JsonNullableFilter<"DeliveryOption">
     createdAt?: DateTimeFilter<"DeliveryOption"> | Date | string
     updatedAt?: DateTimeFilter<"DeliveryOption"> | Date | string
@@ -23507,9 +23658,10 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     provider?: SortOrderInput | SortOrder
-    type?: SortOrder
+    pricingMode?: SortOrder
+    baseFee?: SortOrderInput | SortOrder
+    baseCurrency?: SortOrderInput | SortOrder
     active?: SortOrder
-    baseFee?: SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -23527,9 +23679,10 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"DeliveryOption"> | string
     name?: StringWithAggregatesFilter<"DeliveryOption"> | string
     provider?: StringNullableWithAggregatesFilter<"DeliveryOption"> | string | null
-    type?: EnumDeliveryTypeWithAggregatesFilter<"DeliveryOption"> | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeWithAggregatesFilter<"DeliveryOption"> | $Enums.DeliveryPricingMode
+    baseFee?: FloatNullableWithAggregatesFilter<"DeliveryOption"> | number | null
+    baseCurrency?: EnumCurrencyNullableWithAggregatesFilter<"DeliveryOption"> | $Enums.Currency | null
     active?: BoolWithAggregatesFilter<"DeliveryOption"> | boolean
-    baseFee?: FloatWithAggregatesFilter<"DeliveryOption"> | number
     metadata?: JsonNullableWithAggregatesFilter<"DeliveryOption">
     createdAt?: DateTimeWithAggregatesFilter<"DeliveryOption"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DeliveryOption"> | Date | string
@@ -24617,6 +24770,11 @@ export namespace Prisma {
     slug: string
     name: string
     description?: string | null
+    bannerImage?: string | null
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
     products?: ProductCreateNestedManyWithoutCategoryInput
   }
 
@@ -24624,6 +24782,11 @@ export namespace Prisma {
     slug: string
     name: string
     description?: string | null
+    bannerImage?: string | null
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
     products?: ProductUncheckedCreateNestedManyWithoutCategoryInput
   }
 
@@ -24631,6 +24794,11 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     products?: ProductUpdateManyWithoutCategoryNestedInput
   }
 
@@ -24638,6 +24806,11 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     products?: ProductUncheckedUpdateManyWithoutCategoryNestedInput
   }
 
@@ -24645,18 +24818,33 @@ export namespace Prisma {
     slug: string
     name: string
     description?: string | null
+    bannerImage?: string | null
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type CategoryUpdateManyMutationInput = {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryUncheckedUpdateManyInput = {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProductCreateInput = {
@@ -24941,9 +25129,10 @@ export namespace Prisma {
     id?: string
     name: string
     provider?: string | null
-    type: $Enums.DeliveryType
+    pricingMode?: $Enums.DeliveryPricingMode
+    baseFee?: number | null
+    baseCurrency?: $Enums.Currency | null
     active?: boolean
-    baseFee: number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -24954,9 +25143,10 @@ export namespace Prisma {
     id?: string
     name: string
     provider?: string | null
-    type: $Enums.DeliveryType
+    pricingMode?: $Enums.DeliveryPricingMode
+    baseFee?: number | null
+    baseCurrency?: $Enums.Currency | null
     active?: boolean
-    baseFee: number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -24967,9 +25157,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24980,9 +25171,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -24993,9 +25185,10 @@ export namespace Prisma {
     id?: string
     name: string
     provider?: string | null
-    type: $Enums.DeliveryType
+    pricingMode?: $Enums.DeliveryPricingMode
+    baseFee?: number | null
+    baseCurrency?: $Enums.Currency | null
     active?: boolean
-    baseFee: number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -25005,9 +25198,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -25017,9 +25211,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -26153,6 +26348,17 @@ export namespace Prisma {
     _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type ProductListRelationFilter = {
     every?: ProductWhereInput
     some?: ProductWhereInput
@@ -26167,18 +26373,57 @@ export namespace Prisma {
     slug?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    bannerImage?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CategoryAvgOrderByAggregateInput = {
+    sortOrder?: SortOrder
   }
 
   export type CategoryMaxOrderByAggregateInput = {
     slug?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    bannerImage?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type CategoryMinOrderByAggregateInput = {
     slug?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    bannerImage?: SortOrder
+    isActive?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CategorySumOrderByAggregateInput = {
+    sortOrder?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type StringNullableListFilter<$PrismaModel = never> = {
@@ -26216,17 +26461,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type CategoryScalarRelationFilter = {
@@ -26356,22 +26590,6 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
   export type ProductScalarRelationFilter = {
     is?: ProductWhereInput
     isNot?: ProductWhereInput
@@ -26481,11 +26699,18 @@ export namespace Prisma {
     rating?: SortOrder
   }
 
-  export type EnumDeliveryTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.DeliveryType | EnumDeliveryTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumDeliveryTypeFilter<$PrismaModel> | $Enums.DeliveryType
+  export type EnumDeliveryPricingModeFilter<$PrismaModel = never> = {
+    equals?: $Enums.DeliveryPricingMode | EnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    in?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumDeliveryPricingModeFilter<$PrismaModel> | $Enums.DeliveryPricingMode
+  }
+
+  export type EnumCurrencyNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Currency | EnumCurrencyFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCurrencyNullableFilter<$PrismaModel> | $Enums.Currency | null
   }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -26515,9 +26740,10 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     provider?: SortOrder
-    type?: SortOrder
-    active?: SortOrder
+    pricingMode?: SortOrder
     baseFee?: SortOrder
+    baseCurrency?: SortOrder
+    active?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -26531,9 +26757,10 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     provider?: SortOrder
-    type?: SortOrder
-    active?: SortOrder
+    pricingMode?: SortOrder
     baseFee?: SortOrder
+    baseCurrency?: SortOrder
+    active?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26542,9 +26769,10 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     provider?: SortOrder
-    type?: SortOrder
-    active?: SortOrder
+    pricingMode?: SortOrder
     baseFee?: SortOrder
+    baseCurrency?: SortOrder
+    active?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -26553,14 +26781,24 @@ export namespace Prisma {
     baseFee?: SortOrder
   }
 
-  export type EnumDeliveryTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.DeliveryType | EnumDeliveryTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumDeliveryTypeWithAggregatesFilter<$PrismaModel> | $Enums.DeliveryType
+  export type EnumDeliveryPricingModeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.DeliveryPricingMode | EnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    in?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumDeliveryPricingModeWithAggregatesFilter<$PrismaModel> | $Enums.DeliveryPricingMode
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumDeliveryTypeFilter<$PrismaModel>
-    _max?: NestedEnumDeliveryTypeFilter<$PrismaModel>
+    _min?: NestedEnumDeliveryPricingModeFilter<$PrismaModel>
+    _max?: NestedEnumDeliveryPricingModeFilter<$PrismaModel>
+  }
+
+  export type EnumCurrencyNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Currency | EnumCurrencyFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCurrencyNullableWithAggregatesFilter<$PrismaModel> | $Enums.Currency | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumCurrencyNullableFilter<$PrismaModel>
+    _max?: NestedEnumCurrencyNullableFilter<$PrismaModel>
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -27420,6 +27658,14 @@ export namespace Prisma {
     connect?: ProductWhereUniqueInput | ProductWhereUniqueInput[]
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type ProductUpdateManyWithoutCategoryNestedInput = {
     create?: XOR<ProductCreateWithoutCategoryInput, ProductUncheckedCreateWithoutCategoryInput> | ProductCreateWithoutCategoryInput[] | ProductUncheckedCreateWithoutCategoryInput[]
     connectOrCreate?: ProductCreateOrConnectWithoutCategoryInput | ProductCreateOrConnectWithoutCategoryInput[]
@@ -27518,14 +27764,6 @@ export namespace Prisma {
   }
 
   export type FloatFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
-  export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
@@ -27723,8 +27961,12 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
   }
 
-  export type EnumDeliveryTypeFieldUpdateOperationsInput = {
-    set?: $Enums.DeliveryType
+  export type EnumDeliveryPricingModeFieldUpdateOperationsInput = {
+    set?: $Enums.DeliveryPricingMode
+  }
+
+  export type NullableEnumCurrencyFieldUpdateOperationsInput = {
+    set?: $Enums.Currency | null
   }
 
   export type OrderUpdateManyWithoutDeliveryOptionNestedInput = {
@@ -28243,6 +28485,33 @@ export namespace Prisma {
     _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -28259,17 +28528,6 @@ export namespace Prisma {
     in?: $Enums.ProductStatus[] | ListEnumProductStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ProductStatus[] | ListEnumProductStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumProductStatusFilter<$PrismaModel> | $Enums.ProductStatus
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -28314,37 +28572,38 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
+  export type NestedEnumDeliveryPricingModeFilter<$PrismaModel = never> = {
+    equals?: $Enums.DeliveryPricingMode | EnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    in?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumDeliveryPricingModeFilter<$PrismaModel> | $Enums.DeliveryPricingMode
   }
 
-  export type NestedEnumDeliveryTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.DeliveryType | EnumDeliveryTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumDeliveryTypeFilter<$PrismaModel> | $Enums.DeliveryType
+  export type NestedEnumCurrencyNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.Currency | EnumCurrencyFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCurrencyNullableFilter<$PrismaModel> | $Enums.Currency | null
   }
 
-  export type NestedEnumDeliveryTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.DeliveryType | EnumDeliveryTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.DeliveryType[] | ListEnumDeliveryTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumDeliveryTypeWithAggregatesFilter<$PrismaModel> | $Enums.DeliveryType
+  export type NestedEnumDeliveryPricingModeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.DeliveryPricingMode | EnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    in?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.DeliveryPricingMode[] | ListEnumDeliveryPricingModeFieldRefInput<$PrismaModel>
+    not?: NestedEnumDeliveryPricingModeWithAggregatesFilter<$PrismaModel> | $Enums.DeliveryPricingMode
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumDeliveryTypeFilter<$PrismaModel>
-    _max?: NestedEnumDeliveryTypeFilter<$PrismaModel>
+    _min?: NestedEnumDeliveryPricingModeFilter<$PrismaModel>
+    _max?: NestedEnumDeliveryPricingModeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCurrencyNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Currency | EnumCurrencyFieldRefInput<$PrismaModel> | null
+    in?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCurrencyNullableWithAggregatesFilter<$PrismaModel> | $Enums.Currency | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumCurrencyNullableFilter<$PrismaModel>
+    _max?: NestedEnumCurrencyNullableFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -28888,12 +29147,22 @@ export namespace Prisma {
     slug: string
     name: string
     description?: string | null
+    bannerImage?: string | null
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type CategoryUncheckedCreateWithoutProductsInput = {
     slug: string
     name: string
     description?: string | null
+    bannerImage?: string | null
+    isActive?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type CategoryCreateOrConnectWithoutProductsInput = {
@@ -28996,12 +29265,22 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryUncheckedUpdateWithoutProductsInput = {
     slug?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    bannerImage?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VariantUpsertWithWhereUniqueWithoutProductInput = {
@@ -29709,9 +29988,10 @@ export namespace Prisma {
     id?: string
     name: string
     provider?: string | null
-    type: $Enums.DeliveryType
+    pricingMode?: $Enums.DeliveryPricingMode
+    baseFee?: number | null
+    baseCurrency?: $Enums.Currency | null
     active?: boolean
-    baseFee: number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -29721,9 +30001,10 @@ export namespace Prisma {
     id?: string
     name: string
     provider?: string | null
-    type: $Enums.DeliveryType
+    pricingMode?: $Enums.DeliveryPricingMode
+    baseFee?: number | null
+    baseCurrency?: $Enums.Currency | null
     active?: boolean
-    baseFee: number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -29935,9 +30216,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29947,9 +30229,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     provider?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: EnumDeliveryTypeFieldUpdateOperationsInput | $Enums.DeliveryType
+    pricingMode?: EnumDeliveryPricingModeFieldUpdateOperationsInput | $Enums.DeliveryPricingMode
+    baseFee?: NullableFloatFieldUpdateOperationsInput | number | null
+    baseCurrency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     active?: BoolFieldUpdateOperationsInput | boolean
-    baseFee?: FloatFieldUpdateOperationsInput | number
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
