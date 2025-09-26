@@ -1,38 +1,50 @@
 import Link from "next/link";
 import React from "react";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 interface BannerProps {
   name: string;
 }
 
+/**
+ * Category page banner with shadcn/ui Breadcrumb.
+ */
 export default function Banner({ name }: BannerProps) {
   return (
-    <div className="w-full h-48 bg-gray-100 dark:bg-gray-800">
+    <div className="w-full h-48 bg-gray-100 dark:bg-gray-800 mt-10">
       <div className="container mx-auto h-full flex flex-col justify-center px-5">
-        <h1 className="text-4xl font-semibold text-foreground mb-2">{name}</h1>
-        <nav className="text-sm text-muted-foreground" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1">
-            <li>
-              <Link href="/" className="hover:underline">
-                Home
-              </Link>
-            </li>
-            <li>
-              <span className="px-2">/</span>
-            </li>
-            <li>
-              <Link href="/categories" className="hover:underline">
-                Categories
-              </Link>
-            </li>
-            <li>
-              <span className="px-2">/</span>
-            </li>
-            <li className="font-semibold text-foreground whitespace-nowrap">
-              {name}
-            </li>
-          </ol>
-        </nav>
+        <h1 className="text-4xl font-semibold text-foreground mb-3">{name}</h1>
+
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
+            <BreadcrumbSeparator />
+
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/categories">Categories</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
+            <BreadcrumbSeparator />
+
+            <BreadcrumbItem>
+              <BreadcrumbPage className="whitespace-nowrap">{name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
     </div>
   );

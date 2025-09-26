@@ -12,14 +12,23 @@ interface ProductGridProps {
   fallbackCount?: number;
 }
 
+/**
+ * Responsive grid:
+ * - base: 2 columns
+ * - md (>=768): 3 columns
+ * - lg (>=1024): 4 columns  ← 13/14″ laptops
+ * - xl (>=1280): 5 columns  ← 15″+ screens
+ */
 export default function ProductGrid({
   products,
   isLoading = false,
   fallbackCount = 12,
 }: ProductGridProps) {
+  const gridClasses = "grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+
   if (isLoading) {
     return (
-      <section className="grid gap-6 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      <section className={gridClasses}>
         {Array.from({ length: fallbackCount }).map((_, i) => (
           <div key={i} className="block">
             <ProductCardSkeleton />
@@ -34,7 +43,7 @@ export default function ProductGrid({
   }
 
   return (
-    <section className="grid gap-6 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+    <section className={gridClasses}>
       {products.map((prod) => (
         <Link key={prod.id} href={`/product/${prod.id}`} className="block">
           <ProductCard product={prod} />

@@ -18,6 +18,11 @@ import { SizeChartModal } from "@/components/SizeChartModal";
 import SearchMobileSheet from "./search-mobile-sheet";
 import SearchDesktopPopover from "./search-desktop-popover";
 
+type HeaderProps = {
+  /** If true, the header starts transparent and turns solid on scroll. */
+  transparentOnTop?: boolean;
+};
+
 const BrandIcon: React.FC = () => (
   <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold bg-gradient-to-tr from-brand to-green-600 text-white shadow-md">
     M!
@@ -27,7 +32,7 @@ const BrandIcon: React.FC = () => (
 const linkBase =
   "tracking-widest font-semibold uppercase py-1 px-3 rounded-full transition duration-300 ease-in-out";
 
-export const Header: React.FC = () => {
+export const Header: React.FC<HeaderProps> = ({ transparentOnTop = false }) => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
   const { session, status, isCustomer } = useAuthSession();
@@ -45,14 +50,22 @@ export const Header: React.FC = () => {
     [categories]
   );
 
-  // Transparent at top; white after scroll
-  const [solid, setSolid] = useState(false);
+  /**
+   * Solid background state:
+   * - If transparentOnTop=false  => always solid
+   * - If transparentOnTop=true   => solid when scrolled > 2px
+   */
+  const [solid, setSolid] = useState<boolean>(!transparentOnTop);
   useEffect(() => {
+    if (!transparentOnTop) {
+      setSolid(true);
+      return;
+    }
     const onScroll = () => setSolid(window.scrollY > 2);
-    onScroll();
+    onScroll(); // set initial state at mount
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [transparentOnTop]);
 
   // color helpers (white on transparent, dark on solid)
   const navTextCls = solid
@@ -62,7 +75,7 @@ export const Header: React.FC = () => {
   const iconCls = solid
     ? "text-gray-600 hover:text-gray-800"
     : "text-white hover:text-white/90";
-  const tone = solid ? "dark" : "light"; // passed to child components
+  const tone = solid ? "dark" : "light"; // passed to children (CurrencySelector/Cart/MobileMenu)
 
   // Search states
   const [openDesktopSearch, setOpenDesktopSearch] = useState(false);
@@ -79,7 +92,7 @@ export const Header: React.FC = () => {
       );
 
     return (
-      <ul className="flex flex-wrap justify-center gap-x-8 gap-y-2">
+      <ul className="flex flex-wrap justify-center gap-x-4 gap-y-2">
         {navItems.map((item) => {
           const active = pathname === item.href;
           return (
@@ -105,11 +118,7 @@ export const Header: React.FC = () => {
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link
-              href="/account"
-              className={`flex items-center p-2 rounded ${iconCls}`}
-              aria-label="Account"
-            >
+            <Link href="/account" className={`flex items-center p-2 rounded ${iconCls}`} aria-label="Account">
               <UserRound className="w-5 h-5" />
             </Link>
           </TooltipTrigger>
@@ -137,7 +146,7 @@ export const Header: React.FC = () => {
     <>
       <header
         className={[
-          // fixed to let hero show behind it while transparent
+          // fixed lets hero sit behind when transparent
           "fixed top-0 left-0 right-0 z-50 transition-colors duration-300",
           solid
             ? "bg-white/95 backdrop-blur-md border-b border-gray-200"
@@ -155,7 +164,7 @@ export const Header: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* NOW tone-aware */}
+              {/* tone-aware */}
               <CurrencySelector tone={tone} />
 
               <Tooltip>

@@ -4,6 +4,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
+
 import { getCategoryBySlug } from "@/lib/categories";
 import {
   getProductById,
@@ -16,7 +17,6 @@ import {
 import Header from "@/components/shared/header";
 import Footer from "@/components/shared/footer";
 import ReviewSection from "@/components/ReviewSection";
-import ProductCard from "@/components/shared/product-card";
 import ProductDetailHero from "@/components/ProductDetailsHero";
 import {
   Accordion,
@@ -26,21 +26,33 @@ import {
 } from "@/components/ui/accordion";
 import { authOptions } from "@/lib/authOptions";
 
+/** shadcn/ui breadcrumbs */
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import ProductCard from "@/components/shared/product-card";
+
 export default async function ProductPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
   const product: Product | null = await getProductById(id);
   if (!product) return notFound();
 
   const category = await getCategoryBySlug(product.category);
   const categoryName = category?.name ?? product.category;
 
-  const related = (
-    await getProductsByCategory(product.category, 8)
-  ).filter((p) => p.id !== id);
+  const related = (await getProductsByCategory(product.category, 8)).filter(
+    (p) => p.id !== id
+  );
 
   const reviews: Review[] = await getReviewsByProduct(id);
 
@@ -51,42 +63,31 @@ export default async function ProductPage({
     <section className="flex flex-col min-h-screen">
       <Header />
 
-      <main className="mt-10 px-5 md:px-10 lg:px-20 flex-1 space-y-12">
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="text-sm text-gray-600 mb-4">
-          <ol className="flex flex-wrap items-center space-x-1 sm:space-x-2">
-            <li>
-              <a href="/" className="hover:underline">
-                Home
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <a href="/categories" className="hover:underline">
-                Categories
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <a
-                href={`/categories/${product.category}`}
-                className="hover:underline"
-              >
+      <main className="mt-20 px-5 md:px-10 lg:px-40 flex-1 space-y-12">
+        {/* Breadcrumb (shadcn/ui) */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/categories">Categories</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`/categories/${product.category}`}>
                 {categoryName}
-              </a>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li className="font-semibold text-gray-900">
-              {product.name}
-            </li>
-          </ol>
-        </nav>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="whitespace-nowrap">
+                {product.name}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         {/* Hero & Details */}
         <ProductDetailHero
@@ -99,7 +100,7 @@ export default async function ProductPage({
         <hr className="my-8 border-gray-200 dark:border-gray-700" />
 
         {/* — Reviews Accordion — */}
-        <div className="lg:px-60">
+        <section>
           <Accordion type="single" collapsible defaultValue="">
             <AccordionItem value="reviews">
               <AccordionTrigger className="w-full text-xl font-semibold text-gray-900 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
@@ -114,15 +115,15 @@ export default async function ProductPage({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-        </div>
+        </section>
 
         {/* Related Products */}
-        <section className="pb-20 space-y-4 lg:px-60">
+        <section className="pb-20 space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">
             More {categoryName} Looks
           </h2>
           {related.length > 0 ? (
-            <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               {related.map((p) => (
                 <a key={p.id} href={`/product/${p.id}`} className="block">
                   <ProductCard product={p} />

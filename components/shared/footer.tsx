@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
-import { FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa6";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa6";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -36,13 +36,6 @@ export default function Footer() {
               className="inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-white/15 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
             >
               <FaWhatsapp size={18} />
-            </Link>
-            <Link
-              href="/"
-              aria-label="TikTok"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-white/15 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
-            >
-              <FaTiktok size={18} />
             </Link>
           </div>
         </div>

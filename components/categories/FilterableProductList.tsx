@@ -5,20 +5,25 @@ import FilterSidebar, { Filters } from "./FilterSidebar";
 import ProductGrid from "./ProductGrid";
 import { Product } from "@/lib/products";
 import { useCurrency } from "@/lib/context/currencyContext";
+import { Card } from "@/components/ui/card";
 
 interface Props {
   initialProducts: Product[];
   isLoading?: boolean;
 }
 
+// No `inStock` here — you already fetch only in-stock products.
 const DEFAULT_FILTERS: Filters = {
   priceRange: [0, Infinity],
-  inStock: false,
   colors: [],
   sizes: [],
   onSale: false,
 };
 
+/**
+ * Layout: left filter card, right grid.
+ * The card uses a muted/off-white look to clearly separate it from the grid.
+ */
 export default function FilterableProductList({
   initialProducts,
   isLoading = false,
@@ -33,15 +38,13 @@ export default function FilterableProductList({
   const filtered = useMemo(() => {
     if (isLoading) return [];
     return initialProducts.filter((p) => {
-      const pr = (p.prices as any)[currency] as number;
-      if (pr < filters.priceRange[0] || pr > filters.priceRange[1]) return false;
+      const price = (p.prices as any)[currency] as number;
+
+      if (price < filters.priceRange[0] || price > filters.priceRange[1]) return false;
 
       if (filters.onSale) {
-        // Placeholder: adapt this if you add a sale/discount flag to Product.
-        // e.g., if (!p.isDiscounted) return false;
+        // Hook for future discount flag.
       }
-
-      if (filters.inStock && !p.variants.some((v) => v.inStock > 0)) return false;
 
       if (
         filters.colors.length &&
@@ -51,7 +54,7 @@ export default function FilterableProductList({
 
       if (
         filters.sizes.length &&
-        !p.variants.some((v) => filters.sizes.includes(v.size) && v.inStock > 0)
+        !p.variants.some((v) => v.inStock > 0 && filters.sizes.includes(v.size))
       )
         return false;
 
@@ -60,8 +63,14 @@ export default function FilterableProductList({
   }, [initialProducts, currency, filters, isLoading]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8">
-      <FilterSidebar products={initialProducts} onChange={handleFilterChange} />
+    <div className="grid items-start grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+      {/* Sidebar in a subtle card */}
+<Card className="p-4 bg-muted/40 border-muted-foreground/20 shadow-sm rounded-2xl lg:sticky lg:top-24">
+
+        <FilterSidebar products={initialProducts} onChange={handleFilterChange} />
+      </Card>
+
+      {/* Product grid */}
       <ProductGrid products={filtered} isLoading={isLoading} />
     </div>
   );

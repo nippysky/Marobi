@@ -9,7 +9,7 @@ export default function AllProductsPage() {
     <section className="flex flex-col">
       <Header />
 
-      <main className="container mx-auto px-5 mt-10 pb-20">
+      <main className="mt-28 pb-20 px-5 md:px-10 lg:px-20">
         <nav className="text-sm text-gray-600 mb-4" aria-label="Breadcrumb">
           <Link href="/" className="hover:underline">
             Home

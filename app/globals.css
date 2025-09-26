@@ -134,3 +134,13 @@
 .animate-fade-in {
   animation: fadeIn 0.35s ease-out forwards;
 }
+
+
+/* Hide scrollbars but keep scroll/drag gestures */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;   /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;           /* Chrome/Safari */
+}

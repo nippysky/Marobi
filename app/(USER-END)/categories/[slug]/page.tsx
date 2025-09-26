@@ -9,13 +9,10 @@ import Footer from "@/components/shared/footer";
 
 // For static generation of category paths (if using SSG)
 export async function generateStaticParams() {
-  const categories = await prisma.category.findMany({
-    select: { slug: true },
-  });
+  const categories = await prisma.category.findMany({ select: { slug: true } });
   return categories.map((cat) => ({ slug: cat.slug }));
 }
 
-// Individual Category Page
 export default async function CategoryPage({
   params,
 }: {
@@ -30,15 +27,17 @@ export default async function CategoryPage({
   });
   if (!category) notFound();
 
-  // Fetch products in this category (from your efficient lib/products function)
+  // Fetch products for this category
   const products: Product[] = await getProductsByCategory(slug);
 
   return (
     <section className="flex flex-col">
+      {/* Solid header (no hero fade needed here) */}
       <Header />
+
       <Banner name={category.name} />
 
-      <main className="container mx-auto px-5 mt-10 pb-20">
+      <main className="mt-10 pb-20 px-5 md:px-10 lg:px-20">
         <FilterableProductList initialProducts={products} />
       </main>
 

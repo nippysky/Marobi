@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -12,14 +12,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import { Product } from "@/lib/products";
 import { Currency, useCurrency } from "@/lib/context/currencyContext";
-import useMediaQuery from "@/lib/useMediaQuery";
 
 export interface Filters {
   priceRange: [number, number];
   colors: string[];
   sizes: string[];
   onSale: boolean;
-  inStock: boolean;
 }
 
 interface SidebarProps {
@@ -38,21 +36,21 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
   const { currency } = useCurrency();
   const symbol = SYMBOLS[currency];
 
-  // Recompute price list on currency change
+  // Currency-aware price span
   const priceValues = useMemo(
     () => (products ?? []).map((p) => p.prices[currency]),
     [products, currency]
   );
-  const min = priceValues.length > 0 ? Math.min(...priceValues) : 0;
-  const max = priceValues.length > 0 ? Math.max(...priceValues) : 0;
+  const min = priceValues.length ? Math.min(...priceValues) : 0;
+  const max = priceValues.length ? Math.max(...priceValues) : 0;
 
-  // Colors
+  // Colors & sizes
   const colors = useMemo(
     () =>
       Array.from(
         new Set(
           (products ?? [])
-            .flatMap((p) => Array.isArray(p.variants) ? p.variants : [])
+            .flatMap((p) => (Array.isArray(p.variants) ? p.variants : []))
             .map((v) => v.color)
             .filter(Boolean)
         )
@@ -60,13 +58,12 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
     [products]
   );
 
-  // Sizes (corrected: just v.size)
   const sizes = useMemo(
     () =>
       Array.from(
         new Set(
           (products ?? [])
-            .flatMap((p) => Array.isArray(p.variants) ? p.variants : [])
+            .flatMap((p) => (Array.isArray(p.variants) ? p.variants : []))
             .map((v) => v.size)
             .filter(Boolean)
         )
@@ -78,39 +75,55 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
   const [selColors, setSelColors] = useState<string[]>([]);
   const [selSizes, setSelSizes] = useState<string[]>([]);
   const [onSale, setOnSale] = useState(false);
-  const [inStock, setInStock] = useState(false);
 
-  // Reset slider when currency or product set changes
+  // Reset slider when span changes
   useEffect(() => {
     setPriceRange([min, max]);
   }, [min, max]);
 
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const defaultPanels = isDesktop
-    ? ["price", "color", "size", "onSale", "inStock"]
-    : [];
-
-  // Notify parent when filters change
+  // Emit filters upward
   useEffect(() => {
     onChange({
       priceRange,
       colors: selColors,
       sizes: selSizes,
       onSale,
-      inStock,
     });
-  }, [priceRange, selColors, selSizes, onSale, inStock, onChange]);
+  }, [priceRange, selColors, selSizes, onSale, onChange]);
+
+  // Reset all
+  const handleReset = useCallback(() => {
+    setPriceRange([min, max]);
+    setSelColors([]);
+    setSelSizes([]);
+    setOnSale(false);
+  }, [min, max]);
 
   return (
     <aside>
+      {/* Tiny header row */}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold tracking-wide text-foreground/80">
+          Filters
+        </h3>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="text-xs text-primary hover:underline"
+        >
+          Reset
+        </button>
+      </div>
+
       <Accordion
         type="multiple"
-        defaultValue={defaultPanels}
-        className="space-y-4"
+        // All panels collapsed by default for a clean initial UI
+        defaultValue={[]}
+        className="space-y-3"
       >
         {/* PRICE */}
         <AccordionItem value="price">
-          <AccordionTrigger>Price ({symbol})</AccordionTrigger>
+          <AccordionTrigger className="text-sm">Price ({symbol})</AccordionTrigger>
           <AccordionContent>
             <SliderPrimitive.Root
               className="relative flex w-full items-center"
@@ -136,24 +149,19 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
 
         {/* COLOR */}
         <AccordionItem value="color">
-          <AccordionTrigger>Color</AccordionTrigger>
+          <AccordionTrigger className="text-sm">Color</AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-wrap gap-2">
               {colors.map((c) => (
-                <label
-                  key={c}
-                  className="inline-flex items-center gap-2 cursor-pointer"
-                >
+                <label key={c} className="inline-flex items-center gap-2 cursor-pointer">
                   <Checkbox
                     checked={selColors.includes(c)}
                     onCheckedChange={(checked: CheckedState) => {
                       const isChecked = checked === true;
-                      setSelColors((prev) =>
-                        isChecked ? [...prev, c] : prev.filter((x) => x !== c)
-                      );
+                      setSelColors((prev) => (isChecked ? [...prev, c] : prev.filter((x) => x !== c)));
                     }}
                   />
-                  <span className="text-sm text-foreground">{c}</span>
+                  <span className="text-sm text-muted-foreground">{c}</span>
                 </label>
               ))}
             </div>
@@ -162,24 +170,19 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
 
         {/* SIZE */}
         <AccordionItem value="size">
-          <AccordionTrigger>Size</AccordionTrigger>
+          <AccordionTrigger className="text-sm">Size</AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-wrap gap-2">
               {sizes.map((s) => (
-                <label
-                  key={s}
-                  className="inline-flex items-center gap-2 cursor-pointer"
-                >
+                <label key={s} className="inline-flex items-center gap-2 cursor-pointer">
                   <Checkbox
                     checked={selSizes.includes(s)}
                     onCheckedChange={(checked: CheckedState) => {
                       const isChecked = checked === true;
-                      setSelSizes((prev) =>
-                        isChecked ? [...prev, s] : prev.filter((x) => x !== s)
-                      );
+                      setSelSizes((prev) => (isChecked ? [...prev, s] : prev.filter((x) => x !== s)));
                     }}
                   />
-                  <span className="text-sm text-foreground">{s}</span>
+                  <span className="text-sm text-muted-foreground">{s}</span>
                 </label>
               ))}
             </div>
@@ -188,36 +191,14 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
 
         {/* ON SALE */}
         <AccordionItem value="onSale">
-          <AccordionTrigger>On Sale</AccordionTrigger>
+          <AccordionTrigger className="text-sm">On Sale</AccordionTrigger>
           <AccordionContent>
             <label className="inline-flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={onSale}
-                onCheckedChange={(checked: CheckedState) =>
-                  setOnSale(checked === true)
-                }
+                onCheckedChange={(checked: CheckedState) => setOnSale(checked === true)}
               />
-              <span className="text-sm text-foreground">
-                Only show discounted
-              </span>
-            </label>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* IN STOCK */}
-        <AccordionItem value="inStock">
-          <AccordionTrigger>In Stock</AccordionTrigger>
-          <AccordionContent>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={inStock}
-                onCheckedChange={(checked: CheckedState) =>
-                  setInStock(checked === true)
-                }
-              />
-              <span className="text-sm text-foreground">
-                Only show in-stock
-              </span>
+              <span className="text-sm text-muted-foreground">Only show discounted</span>
             </label>
           </AccordionContent>
         </AccordionItem>

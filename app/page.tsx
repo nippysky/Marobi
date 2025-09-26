@@ -45,7 +45,7 @@ export default async function Home() {
 
   return (
     <section className="min-h-screen flex flex-col">
-      <Header />
+      <Header transparentOnTop />
       <main className="w-full flex-1">
         <HeroSlider slides={heroSlides} />
         <FeatureHighlights />

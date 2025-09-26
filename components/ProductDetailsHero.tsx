@@ -46,31 +46,37 @@ interface Props {
   categoryName: string;
 }
 
-const ProductDetailHero: React.FC<Props> = ({
-  product,
-  user,
-  categoryName,
-}) => {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => {
+  const router = useRouter();
+  const { openSizeChart } = useSizeChart(); // ✅ hook at top-level
 
+  // media
   const media = useMemo(() => [...(product.images || [])], [product.images]);
   const [featuredImage, setFeaturedImage] = useState(media[0] || "");
   const [imgLoading, setImgLoading] = useState(true);
 
-  const thumbsRef = useRef<HTMLDivElement>(null);
-  const scrollThumbs = (dir: "left" | "right") => {
-    if (!thumbsRef.current) return;
-    const w = thumbsRef.current.clientWidth;
-    thumbsRef.current.scrollBy({
-      left: dir === "left" ? -w : w,
-      behavior: "smooth",
-    });
-  };
+  // thumb refs (for auto-centering on active)
+  const thumbsRef = useRef<HTMLDivElement | null>(null);
+  const thumbRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const setThumbRef =
+    (i: number) =>
+    (el: HTMLButtonElement | null): void => {
+      thumbRefs.current[i] = el;
+    };
 
+  useEffect(() => {
+    const idx = media.findIndex((m) => m === featuredImage);
+    if (idx >= 0) {
+      const el = thumbRefs.current[idx];
+      if (el) el.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    }
+  }, [featuredImage, media]);
+
+  // video
   const hasVideo = !!product.videoUrl;
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
+  // stock
   const totalStock = useMemo(
     () =>
       product.variants.reduce(
@@ -80,14 +86,9 @@ const ProductDetailHero: React.FC<Props> = ({
     [product.variants]
   );
 
-  const colors = useMemo(
-    () => Array.from(new Set(product.variants.map((v) => v.color))),
-    [product.variants]
-  );
-  const sizes = useMemo(
-    () => Array.from(new Set(product.variants.map((v) => v.size))),
-    [product.variants]
-  );
+  // variants
+  const colors = useMemo(() => Array.from(new Set(product.variants.map((v) => v.color))), [product.variants]);
+  const sizes = useMemo(() => Array.from(new Set(product.variants.map((v) => v.size))), [product.variants]);
   const hasColor = colors.length > 1 || (colors[0] ?? "") !== "";
   const hasSize = sizes.length > 1 || (sizes[0] ?? "") !== "";
 
@@ -95,22 +96,12 @@ const ProductDetailHero: React.FC<Props> = ({
   const availableSizes = useMemo(
     () =>
       hasColor
-        ? Array.from(
-            new Set(
-              product.variants
-                .filter((v) => v.color === selectedColor)
-                .map((v) => v.size)
-            )
-          )
+        ? Array.from(new Set(product.variants.filter((v) => v.color === selectedColor).map((v) => v.size)))
         : sizes,
     [hasColor, product.variants, selectedColor, sizes]
   );
-  const [selectedSize, setSelectedSize] = useState<string>(
-    availableSizes[0] || ""
-  );
-  useEffect(() => {
-    setSelectedSize(availableSizes[0] || "");
-  }, [availableSizes]);
+  const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || "");
+  useEffect(() => setSelectedSize(availableSizes[0] || ""), [availableSizes]);
 
   const enableSizeMod = product.sizeMods;
   const [customSizeEnabled, setCustomSizeEnabled] = useState(false);
@@ -135,28 +126,29 @@ const ProductDetailHero: React.FC<Props> = ({
   );
   const outOfStock = inStock === 0;
 
+  // qty
   const [quantity, setQuantity] = useState(1);
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), inStock || 1));
   }, [selectedColor, selectedSize, inStock]);
 
-  const { openSizeChart } = useSizeChart();
+  // pricing
   const { currency } = useCurrency();
-
   const basePrice =
-    (product as any).prices?.[currency] ?? Object.values((product as any).prices ?? {})[0] ?? 0;
-  const sizeModFee = customSizeEnabled
-    ? parseFloat((basePrice * 0.05).toFixed(2))
-    : 0;
+    (product as any).prices?.[currency] ??
+    Object.values((product as any).prices ?? {})[0] ??
+    0;
+  const sizeModFee = customSizeEnabled ? parseFloat((basePrice * 0.05).toFixed(2)) : 0;
   const finalPrice = parseFloat((basePrice + sizeModFee).toFixed(2));
   const currentPrice = formatAmount(finalPrice, currency);
 
-  const addToCart = useCartStore((s) => s.addToCart);
+  const unitWeight =
+    typeof (selectedVariant as any)?.weight === "number" ? (selectedVariant as any).weight : 0;
 
+  // wishlist
   const [wishLoading, setWishLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   useEffect(() => {
-    // only treat as customer if role === "customer"
     if (user && user.role === "customer" && product.id) {
       fetch(`/api/account/wishlist/${product.id}`)
         .then((r) => r.json())
@@ -166,6 +158,7 @@ const ProductDetailHero: React.FC<Props> = ({
       setIsWishlisted(false);
     }
   }, [user, product.id]);
+
   const toggleWishlist = async () => {
     if (!user || user.role !== "customer") {
       toast.error("Sign in to use wishlist");
@@ -174,15 +167,11 @@ const ProductDetailHero: React.FC<Props> = ({
     setWishLoading(true);
     try {
       if (isWishlisted) {
-        await fetch(`/api/account/wishlist/${product.id}`, {
-          method: "DELETE",
-        });
+        await fetch(`/api/account/wishlist/${product.id}`, { method: "DELETE" });
         setIsWishlisted(false);
         toast("Removed from wishlist");
       } else {
-        await fetch(`/api/account/wishlist/${product.id}`, {
-          method: "POST",
-        });
+        await fetch(`/api/account/wishlist/${product.id}`, { method: "POST" });
         setIsWishlisted(true);
         toast.success("Added to wishlist");
       }
@@ -192,43 +181,20 @@ const ProductDetailHero: React.FC<Props> = ({
     setWishLoading(false);
   };
 
-  const router = useRouter();
+  // cart
+  const addToCart = useCartStore((s) => s.addToCart);
 
   const validate = () => {
-    if (outOfStock) {
-      toast.error("Out of stock");
-      return false;
-    }
-    if (hasColor && !selectedColor) {
-      toast.error("Select a color");
-      return false;
-    }
-    if (hasSize && !selectedSize) {
-      toast.error("Select a size");
-      return false;
-    }
-    if (quantity < 1) {
-      toast.error("Quantity must be at least 1");
-      return false;
-    }
+    if (outOfStock) return toast.error("Out of stock"), false;
+    if (hasColor && !selectedColor) return toast.error("Select a color"), false;
+    if (hasSize && !selectedSize) return toast.error("Select a size"), false;
+    if (quantity < 1) return toast.error("Quantity must be at least 1"), false;
     if (customSizeEnabled) {
-      const any = CUSTOM_SIZE_FIELDS.some(
-        (f) => (customMods[f.name] ?? "").toString().trim()
-      );
-      if (!any) {
-        toast.error("Enter at least one custom measurement");
-        return false;
-      }
+      const any = CUSTOM_SIZE_FIELDS.some((f) => (customMods[f.name] ?? "").toString().trim());
+      if (!any) return toast.error("Enter at least one custom measurement"), false;
     }
     return true;
   };
-
-  const unitWeight =
-    typeof (selectedVariant as any)?.weight === "number" ? (selectedVariant as any).weight : 0;
-  const totalWeight = useMemo(
-    () => parseFloat((unitWeight * quantity).toFixed(3)),
-    [unitWeight, quantity]
-  );
 
   const handleAddToCart = () => {
     if (!validate()) return;
@@ -262,6 +228,7 @@ const ProductDetailHero: React.FC<Props> = ({
     router.push("/checkout");
   };
 
+  // featured init
   useEffect(() => {
     if (media[0]) {
       setFeaturedImage(media[0]);
@@ -271,159 +238,146 @@ const ProductDetailHero: React.FC<Props> = ({
 
   const idx = media.findIndex((m) => m === featuredImage);
   const prevMedia = () => {
-    if (media.length === 0) return;
+    if (!media.length) return;
     const i = (idx - 1 + media.length) % media.length;
     setFeaturedImage(media[i]);
     setImgLoading(true);
   };
   const nextMedia = () => {
-    if (media.length === 0) return;
+    if (!media.length) return;
     const i = (idx + 1) % media.length;
     setFeaturedImage(media[i]);
     setImgLoading(true);
   };
 
   return (
-    <section className="grid lg:grid-cols-2 gap-10 mt-10">
-      <div className="relative w-full max-w-xl mx-auto aspect-[4/5] rounded-lg bg-gray-100 overflow-hidden">
-        <Skeleton className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`} />
-        {featuredImage ? (
-          <Image
-            src={featuredImage}
-            alt={product.name}
-            fill
-            className="object-cover"
-            onLoad={() => setImgLoading(false)}
-            priority
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No image available
-          </div>
-        )}
-        {media.length > 1 && (
-          <>
-            <button
-              onClick={prevMedia}
-              className="absolute inset-y-0 left-0 px-2 bg-black/20 hover:bg-black/30 text-white flex items-center"
-              aria-label="Previous image"
-              type="button"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={nextMedia}
-              className="absolute inset-y-0 right-0 px-2 bg-black/20 hover:bg-black/30 text-white flex items-center"
-              aria-label="Next image"
-              type="button"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </>
-        )}
+    <section className="grid gap-10 lg:grid-cols-[minmax(280px,520px)_1fr] mt-10">
+      {/* Main image (keep these arrows) */}
+      <div className="lg:sticky lg:top-28">
+        <div className="relative w-full mx-auto max-w-[520px] aspect-[3/4] rounded-2xl bg-gray-100 overflow-hidden shadow-sm">
+          <Skeleton className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`} />
+          {featuredImage ? (
+            <Image
+              src={featuredImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+              onLoad={() => setImgLoading(false)}
+              priority
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No image available
+            </div>
+          )}
+
+          {media.length > 1 && (
+            <>
+              <button
+                onClick={prevMedia}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/35 hover:bg-black/45 text-white"
+                aria-label="Previous image"
+                type="button"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={nextMedia}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/35 hover:bg-black/45 text-white"
+                aria-label="Next image"
+                type="button"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Right column */}
       <div className="space-y-6 w-full">
-        {media.length > 0 && (
-          <div className="space-y-2">
+        {/* Media thumbnails — smaller size, no arrows, scrollbar hidden */}
+        {!!media.length && (
+          <div className="space-y-3">
             <p className="font-medium text-gray-700">Media</p>
-            <div className="relative">
-              {media.length > 4 && (
+
+            <div
+              ref={thumbsRef}
+              className="
+                no-scrollbar
+                grid grid-flow-col
+                auto-cols-[22%] md:auto-cols-[18%]
+                gap-3 overflow-x-auto scroll-smooth rounded-xl p-1
+              "
+            >
+              {media.map((url, i) => (
                 <button
-                  onClick={() => scrollThumbs("left")}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-white/80 hover:bg-white rounded-r"
-                  aria-label="Scroll media left"
+                  key={`${url}-${i}`}
+                  ref={setThumbRef(i)}
+                  onClick={() => {
+                    setFeaturedImage(url);
+                    setImgLoading(true);
+                  }}
+                  className={`relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 border ${
+                    featuredImage === url ? "ring-2 ring-brand" : "border-transparent"
+                  }`}
+                  aria-label={`View image ${i + 1}`}
                   type="button"
                 >
-                  <ChevronLeft size={20} />
+                  <Image src={url} alt="" fill className="object-cover" />
                 </button>
-              )}
-              <div
-                ref={thumbsRef}
-                className="grid grid-flow-col auto-cols-[25%] gap-3 overflow-x-auto scroll-smooth no-scrollbar"
-              >
-                {media.map((url, i) => (
-                  <button
-                    key={`${url}-${i}`}
-                    onClick={() => {
-                      setFeaturedImage(url);
-                      setImgLoading(true);
-                    }}
-                    className={`relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 border ${
-                      featuredImage === url ? "ring-2 ring-brand" : ""
-                    }`}
-                    aria-label={`View image ${i + 1}`}
-                    type="button"
-                  >
-                    <Image src={url} alt="" fill className="object-cover" />
-                  </button>
-                ))}
-              </div>
-              {media.length > 4 && (
-                <button
-                  onClick={() => scrollThumbs("right")}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 bg-white/80 hover:bg-white rounded-l"
-                  aria-label="Scroll media right"
-                  type="button"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              )}
+              ))}
             </div>
+
             {hasVideo && (
-              <Button variant="outline" className="my-5 w-full" onClick={() => setIsVideoOpen(true)}>
+              <Button variant="outline" className="w-full" onClick={() => setIsVideoOpen(true)}>
                 <Play className="mr-2" /> Play Video
               </Button>
             )}
           </div>
         )}
 
+        {/* Facts */}
         <div className="flex flex-wrap lg:gap-20 gap-10 text-sm text-gray-700">
-          <a
-            href={`/categories/${product.category}`}
-            className="flex items-center gap-1 underline"
-          >
+          <a href={`/categories/${product.category}`} className="flex items-center gap-1 underline">
             <LayoutGrid /> {categoryName}
           </a>
-          <button
-            onClick={openSizeChart}
-            className="flex items-center gap-1 underline"
-            type="button"
-          >
+          <button onClick={openSizeChart} className="flex items-center gap-1 underline" type="button">
             <PencilRuler /> Size Chart
           </button>
           <div className="flex items-center gap-1">
             <CheckCircle />
             <span className="font-semibold">{totalStock}</span> in stock
           </div>
-          {unitWeight > 0 && (
+          {typeof unitWeight === "number" && unitWeight > 0 && (
             <div className="flex items-center gap-1">
               <span className="font-medium">Weight:</span>
               <span>{unitWeight.toFixed(3)}kg</span>
               {quantity > 1 && (
-                <span className="text-gray-500">
-                  (Total: {totalWeight.toFixed(3)}kg)
-                </span>
+                <span className="text-gray-500">(Total: {(unitWeight * quantity).toFixed(3)}kg)</span>
               )}
             </div>
           )}
         </div>
 
+        {/* Title & description */}
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
           <p className="text-gray-600">{product.description}</p>
         </div>
 
+        {/* Price */}
         <div className="text-3xl font-bold text-gray-900">{currentPrice}</div>
         <div className="text-sm text-gray-500">
           {customSizeEnabled && (
             <>
-              <span>+5% custom-size fee:</span>{" "}
+              <span>+5% custom-size fee: </span>
               <strong>{formatAmount(sizeModFee, currency)}</strong>
             </>
           )}
         </div>
 
+        {/* Options */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:gap-4 gap-4">
             {hasColor && (
@@ -480,31 +434,6 @@ const ProductDetailHero: React.FC<Props> = ({
             )}
           </div>
 
-          {customSizeEnabled && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {CUSTOM_SIZE_FIELDS.map((f) => (
-                <div key={f.name} className="flex flex-col">
-                  <label className="text-xs text-gray-600 mb-1">{f.label}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    value={customMods[f.name] ?? ""}
-                    onChange={(e) =>
-                      setCustomMods((m) => ({
-                        ...m,
-                        [f.name]: e.target.value,
-                      }))
-                    }
-                    placeholder={`Enter ${f.label.toLowerCase()}`}
-                    className="w-full rounded border px-3 py-2 text-sm"
-                    aria-label={f.label}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
           <div className="flex items-center gap-2">
             <label className="block text-sm text-gray-700">Quantity</label>
             <Button
@@ -514,7 +443,7 @@ const ProductDetailHero: React.FC<Props> = ({
               disabled={quantity <= 1}
               aria-label="Decrease quantity"
             >
-              –
+              -
             </Button>
             <span className="w-6 text-center">{quantity}</span>
             <Button
@@ -530,12 +459,9 @@ const ProductDetailHero: React.FC<Props> = ({
           </div>
         </div>
 
+        {/* CTAs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Button
-            className="bg-gradient-to-r from-brand to-green-700"
-            onClick={handleBuyNow}
-            disabled={outOfStock}
-          >
+          <Button className="bg-gradient-to-r from-brand to-green-700" onClick={handleBuyNow} disabled={outOfStock}>
             <Tag className="mr-2" /> Buy Now
           </Button>
           <Button variant="outline" onClick={handleAddToCart} disabled={outOfStock}>
@@ -543,7 +469,8 @@ const ProductDetailHero: React.FC<Props> = ({
           </Button>
         </div>
 
-        {user && mounted && user.role === "customer" && (
+        {/* Wishlist */}
+        {user && user.role === "customer" && (
           <Button
             variant={isWishlisted ? "outline" : "secondary"}
             className={`mt-3 w-full ${isWishlisted ? "text-red-500" : ""}`}
