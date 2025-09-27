@@ -85,6 +85,7 @@ export default function CheckoutSection({ user }: Props) {
   const items = useCartStore((s) => s.items) as CartItem[];
   const clearCart = useCartStore((s) => s.clear) as () => void;
 
+  // Totals (without delivery fee)
   const { itemsSubtotal, sizeModTotal, totalWeight, total: baseTotal } =
     useCartTotals(
       items.map((it) => ({
@@ -95,6 +96,7 @@ export default function CheckoutSection({ user }: Props) {
       }))
     );
 
+  // Country / state / phone logic
   const {
     countryList,
     country,
@@ -107,6 +109,7 @@ export default function CheckoutSection({ user }: Props) {
     phoneOptions,
   } = useCountryState(user?.country, user?.state);
 
+  // Delivery options based on country
   const {
     deliveryOptions,
     selectedDeliveryOption,
@@ -116,6 +119,7 @@ export default function CheckoutSection({ user }: Props) {
 
   const total = baseTotal + deliveryFee;
 
+  // Form fields
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
@@ -128,6 +132,7 @@ export default function CheckoutSection({ user }: Props) {
     user?.billingAddress ?? ""
   );
 
+  // Payment / UX state
   const [hasAttemptedPayment, setHasAttemptedPayment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [customerEmailForModal, setCustomerEmailForModal] =
@@ -137,8 +142,10 @@ export default function CheckoutSection({ user }: Props) {
   const [orderCreatingFromReference, setOrderCreatingFromReference] =
     useState(false);
 
+  // Shared checkout hook
   const { isProcessing, error, result, createOrder, reset } = useCheckout();
 
+  // Readiness
   const isPaymentReady =
     email.trim() !== "" &&
     items.length > 0 &&
@@ -149,6 +156,7 @@ export default function CheckoutSection({ user }: Props) {
 
   const amountInLowestDenomination = Math.round(total * 100);
 
+  // Paystack key
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
   if (!paystackPublicKey) {
     console.error(
@@ -157,6 +165,7 @@ export default function CheckoutSection({ user }: Props) {
   }
   const safePaystackPublicKey = paystackPublicKey || "";
 
+  // Reference
   const [paystackReference, setPaystackReference] = useState<string>(
     `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
   );
@@ -199,15 +208,34 @@ export default function CheckoutSection({ user }: Props) {
   };
 
   const buildCartItemsPayload = useCallback((): CartItemPayload[] => {
-    return items.map((it) => ({
-      productId: it.product.id,
-      color: it.color || "N/A",
-      size: it.size || "N/A",
-      quantity: it.quantity,
-      hasSizeMod: !!it.hasSizeMod,
-      sizeModFee: it.sizeModFee || 0,
-      unitWeight: it.unitWeight ?? 0,
-    }));
+    return items.map((it) => {
+      // NOTE: Persist custom measurements if present
+      const cm =
+        (it as any).customMods as
+          | Record<string, string | number>
+          | undefined;
+
+      const payload: CartItemPayload = {
+        productId: it.product.id,
+        color: it.color || "N/A",
+        size: it.size || "N/A",
+        quantity: it.quantity,
+        hasSizeMod: !!it.hasSizeMod,
+        sizeModFee: it.sizeModFee || 0,
+        unitWeight: it.unitWeight ?? 0,
+        ...(it.hasSizeMod && cm
+          ? {
+              // Send as customMods (API accepts customMods or customSize)
+              customMods: {
+                // keep all keys (chest, waist, hip, length, etc.)
+                ...cm,
+              },
+            }
+          : {}),
+      };
+
+      return payload;
+    });
   }, [items]);
 
   const handlePaystackSuccess = async (reference: any) => {
@@ -533,6 +561,14 @@ export default function CheckoutSection({ user }: Props) {
                       const lineWeight = parseFloat(
                         ((unitWeight * item.quantity) || 0).toFixed(3)
                       );
+
+                      // Custom-size info (mirrors CartSheet)
+                      const cm =
+                        (item.customMods as Record<string, string | number> | undefined) ||
+                        undefined;
+                      const hasAnyCustom =
+                        !!cm && Object.values(cm).some((v) => `${v ?? ""}`.trim() !== "");
+
                       return (
                         <li
                           key={`${item.product.id}-${item.color}-${item.size}-${idx}`}
@@ -553,11 +589,42 @@ export default function CheckoutSection({ user }: Props) {
                               <p className="text-xs text-gray-500">
                                 {item.color}, {item.hasSizeMod ? "Custom" : item.size} × {item.quantity}
                               </p>
+
                               {item.hasSizeMod && (
-                                <p className="text-xs text-yellow-600">
-                                  +5% size-mod fee
-                                </p>
+                                <div className="text-xs text-yellow-600 mt-1">
+                                  +5% size-mod fee:{" "}
+                                  <span className="font-medium">
+                                    {formatAmount(item.sizeModFee, currency)}
+                                  </span>
+                                </div>
                               )}
+
+                              {item.hasSizeMod && hasAnyCustom && (
+                                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-900 shadow-sm">
+                                  <div className="font-semibold mb-1">
+                                    Custom measurements
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                                    <div>
+                                      <span className="text-amber-800">Chest/Bust:</span>{" "}
+                                      <span className="font-medium">{cm?.chest ?? "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-amber-800">Waist:</span>{" "}
+                                      <span className="font-medium">{cm?.waist ?? "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-amber-800">Hip:</span>{" "}
+                                      <span className="font-medium">{cm?.hip ?? "-"}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-amber-800">Length:</span>{" "}
+                                      <span className="font-medium">{cm?.length ?? "-"}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <p className="text-xs text-gray-600 mt-1">
                                 Unit weight: {unitWeight.toFixed(3)}kg • Total:{" "}
                                 {lineWeight.toFixed(3)}kg
@@ -654,6 +721,7 @@ export default function CheckoutSection({ user }: Props) {
               </div>
             </div>
 
+            {/* Error display */}
             {hasAttemptedPayment && error && (
               <div className="mt-2 px-3 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm">
                 {typeof error === "string" ? error : error.error}

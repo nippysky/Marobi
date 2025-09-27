@@ -1,4 +1,3 @@
-// app/api/account/wishlist/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import prisma, { prismaReady } from "@/lib/db";
@@ -9,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: NextRequest,
-context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   await prismaReady;
 
@@ -34,11 +33,11 @@ context: { params: Promise<{ id: string }> }
 
 export async function POST(
   _req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   await prismaReady;
 
-  const { id } = params;
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -82,11 +81,11 @@ export async function POST(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   await prismaReady;
 
-  const { id } = params;
+  const { id } = await context.params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
@@ -94,10 +93,14 @@ export async function DELETE(
   }
 
   try {
+    // Accept either the wishlist row id OR the product id
     await prisma.wishlistItem.deleteMany({
       where: {
-        productId: id,
         customer: { email: session.user.email },
+        OR: [
+          { id },          // wishlist item id
+          { productId: id } // product id
+        ],
       },
     });
     return NextResponse.json({ success: true }, { status: 200 });

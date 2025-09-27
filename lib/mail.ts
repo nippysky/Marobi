@@ -333,6 +333,7 @@ function renderTeekaStyleReceiptEmail({
       size?: string | null;
       hasSizeMod?: boolean;
       sizeModFee?: number;
+      customSize?: any; // <-- include custom measurements when present
     }>;
     totalAmount: number;
     paymentMethod: string;
@@ -362,21 +363,50 @@ function renderTeekaStyleReceiptEmail({
       const alt = i % 2 === 0 ? "background:#fafafa;" : "";
       const sub: string[] = [];
       if (p.color) sub.push(`Color: ${p.color}`);
-      if (p.size) sub.push(`Size: ${p.size}`);
-      const subLine = sub.length ? `<div style="font-size:12px;color:#6b7280">${sub.join(" • ")}</div>` : "";
-      const sizeMod = p.hasSizeMod && p.sizeModFee
-        ? `<div style="font-size:12px;color:#92400e">+5% size-mod fee: ${sym}${(p.sizeModFee * p.quantity).toLocaleString()}</div>`
-        : "";
+      // Precedence: show "Custom" if size-mod present
+      if (p.hasSizeMod) {
+        sub.push(`Size: Custom`);
+      } else if (p.size) {
+        sub.push(`Size: ${p.size}`);
+      }
+      const subLine =
+        sub.length ? `<div style="font-size:12px;color:#6b7280">${sub.join(" • ")}</div>` : "";
+
+      const sizeMod =
+        p.hasSizeMod && p.sizeModFee
+          ? `<div style="font-size:12px;color:#92400e">+5% size-mod fee: ${sym}${(
+              p.sizeModFee * p.quantity
+            ).toLocaleString()}</div>`
+          : "";
+
+      // Custom measurements (compact, muted)
+      const cm = (p as any).customSize || {};
+      const parts: string[] = [];
+      if (cm.chest ?? cm.bust) parts.push(`Chest/Bust: ${cm.chest ?? cm.bust}`);
+      if (cm.waist !== undefined) parts.push(`Waist: ${cm.waist}`);
+      if (cm.hip !== undefined) parts.push(`Hip: ${cm.hip}`);
+      if (cm.length !== undefined) parts.push(`Length: ${cm.length}`);
+      const customLine =
+        p.hasSizeMod && parts.length
+          ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">Custom measurements: ${parts.join(
+              " • "
+            )}</div>`
+          : "";
 
       return `
       <tr style="${alt}">
         <td style="padding:10px 12px;">
           <div style="display:flex;gap:20px;align-items:flex-start">
-            ${p.image ? `<img src="${p.image}" width="44" height="44" style="object-fit:cover;border-radius:6px;border:1px solid #e5e7eb" />` : ""}
-            <div style="margin-left: 30px;">
+            ${
+              p.image
+                ? `<img src="${p.image}" width="44" height="44" style="object-fit:cover;border-radius:6px;border:1px solid #e5e7eb" />`
+                : ""
+            }
+            <div style="margin-left: 20px;">
               <div style="font-weight:600;color:#111827">${p.name}</div>
               ${subLine}
               ${sizeMod}
+              ${customLine}
             </div>
           </div>
         </td>
@@ -451,7 +481,7 @@ function renderTeekaStyleReceiptEmail({
             </td>
           </tr>
 
-          <!-- Checkout Fields / Notes -->
+          <!-- CHECKOUT FIELDS -->
           <tr>
             <td style="padding:16px 22px">
               <div style="font-size:12px;color:#374151;margin-bottom:6px;font-weight:700;">CHECKOUT FIELDS</div>

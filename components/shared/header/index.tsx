@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ transparentOnTop = false }) => {
             </Link>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="whitespace-nowrap">Account: {name}</p>
+            <p className="whitespace-nowrap">{name}</p>
           </TooltipContent>
         </Tooltip>
       );

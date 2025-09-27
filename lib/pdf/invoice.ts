@@ -24,6 +24,8 @@ export async function generateInvoicePDF({
       lineTotal: number;
       color?: string | null;
       size?: string | null;
+      hasSizeMod?: boolean;
+      sizeModFee?: number;
       customSize?: any;
     }>;
     paymentMethod: string;
@@ -197,26 +199,79 @@ export async function generateInvoicePDF({
   drawHeader();
 
   order.items.forEach((it, idx) => {
-    const rowBG = idx % 2 === 0 ? "#fafafa" : "#ffffff";
-    const rowHeight = 34;
+    // Build sub-lines
+    const subParts: string[] = [];
+    if (it.color) subParts.push(`Color: ${it.color}`);
+    if (it.hasSizeMod) {
+      subParts.push("Size: Custom");
+    } else if (it.size) {
+      subParts.push(`Size: ${it.size}`);
+    }
+    const subLine = subParts.join(" • ");
+
+    const hasSizeFee = !!(it.hasSizeMod && it.sizeModFee);
+    const cm = (it as any).customSize || {};
+    const cmParts: string[] = [];
+    if (cm.chest ?? cm.bust) cmParts.push(`Chest/Bust: ${cm.chest ?? cm.bust}`);
+    if (cm.waist !== undefined) cmParts.push(`Waist: ${cm.waist}`);
+    if (cm.hip !== undefined) cmParts.push(`Hip: ${cm.hip}`);
+    if (cm.length !== undefined) cmParts.push(`Length: ${cm.length}`);
+    const hasCustom = it.hasSizeMod && cmParts.length > 0;
+
+    // Compute row height dynamically
+    let rowHeight = 20; // name line
+    if (subLine) rowHeight += 12;
+    if (hasSizeFee) rowHeight += 12;
+    if (hasCustom) rowHeight += 12;
+    rowHeight = Math.max(rowHeight, 34);
 
     ensureSpace(rowHeight + 14);
 
+    const rowBG = idx % 2 === 0 ? "#fafafa" : "#ffffff";
     doc.rect(margin, y - 6, doc.page.width - margin * 2, rowHeight).fillAndStroke(rowBG, rowBG);
 
+    // Name
+    let lineY = y - 2;
     doc
       .fillColor("#111")
       .font(bodyFont)
       .fontSize(10)
-      .text(it.name, productX, y - 2, { width: qtyX - productX - 12 });
+      .text(it.name, productX, lineY, { width: qtyX - productX - 12 });
 
-    const sub: string[] = [];
-    if (it.color) sub.push(`Color: ${it.color}`);
-    if (it.size) sub.push(`Size: ${it.size}`);
-    if (sub.length) doc.fillColor("#6b7280").fontSize(9).text(sub.join(" • "), productX, y + 12);
+    // Sub line (color/size)
+    if (subLine) {
+      lineY += 12;
+      doc.fillColor("#6b7280").fontSize(9).text(subLine, productX, lineY, {
+        width: qtyX - productX - 12,
+      });
+    }
 
+    // Size-mod fee
+    if (hasSizeFee) {
+      lineY += 12;
+      doc.fillColor("#92400e").fontSize(9).text(
+        `+5% size-mod fee: ${money((it.sizeModFee || 0) * it.quantity)}`,
+        productX,
+        lineY,
+        { width: qtyX - productX - 12 }
+      );
+    }
+
+    // Custom measurements
+    if (hasCustom) {
+      lineY += 12;
+      doc
+        .fillColor("#6b7280")
+        .fontSize(9)
+        .text(`Custom measurements: ${cmParts.join(" • ")}`, productX, lineY, {
+          width: qtyX - productX - 12,
+        });
+    }
+
+    // Qty
     doc.fillColor("#111").fontSize(10).text(String(it.quantity), qtyX, y - 2, { width: 50 });
 
+    // Price (line total)
     doc
       .font(boldFont)
       .text(money(it.lineTotal), priceX, y - 2, { width: priceBoxWidth, align: "right" })

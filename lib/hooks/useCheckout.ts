@@ -1,6 +1,15 @@
 import { useState } from "react";
 
 // --- Types for frontend (must match your API/order requirements)
+export interface CustomModsPayload {
+  chest?: number | string;
+  waist?: number | string;
+  hip?: number | string;
+  length?: number | string;
+  // allow any extra custom fields you may add later
+  [key: string]: number | string | undefined;
+}
+
 export interface CartItemPayload {
   productId: string;
   color?: string;
@@ -9,6 +18,10 @@ export interface CartItemPayload {
   hasSizeMod?: boolean;
   sizeModFee?: number;
   unitWeight?: number;
+  /** <-- ADDED: will be read as customMods/customSize by the API */
+  customMods?: CustomModsPayload;
+  /** optional alias if you ever want to send this key instead */
+  customSize?: CustomModsPayload;
 }
 
 export interface CustomerPayload {

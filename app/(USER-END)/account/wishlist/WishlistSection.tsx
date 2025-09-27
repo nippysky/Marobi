@@ -33,9 +33,26 @@ export default function WishlistSection() {
   );
   const { currency } = useCurrency();
 
-  const remove = async (id: string) => {
-    await fetch(`/api/account/wishlist/${id}`, { method: "DELETE" });
-    mutate();
+  // IMPORTANT: delete by productId (what the API expects)
+  const remove = async (productId: string) => {
+    // optimistic update so the card disappears instantly
+    const previous = items;
+    mutate(
+      (prev) => (prev ? prev.filter((w) => w.product.id !== productId) : prev),
+      { revalidate: false }
+    );
+
+    const res = await fetch(`/api/account/wishlist/${productId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      // rollback on failure
+      mutate(previous, false);
+    } else {
+      // final sync
+      mutate();
+    }
   };
 
   if (!items && !error) {
@@ -57,10 +74,13 @@ export default function WishlistSection() {
               const { product: p } = item;
               // pick the correct price
               const price =
-                (currency === "NGN" ? p.priceNGN :
-                 currency === "USD" ? p.priceUSD :
-                 currency === "EUR" ? p.priceEUR :
-                 p.priceGBP) ?? 0;
+                (currency === "NGN"
+                  ? p.priceNGN
+                  : currency === "USD"
+                  ? p.priceUSD
+                  : currency === "EUR"
+                  ? p.priceEUR
+                  : p.priceGBP) ?? 0;
               // extract the category's name
               const categoryName = p.category.name;
 
@@ -71,7 +91,7 @@ export default function WishlistSection() {
                 >
                   {/* Remove button */}
                   <button
-                    onClick={() => remove(item.id)}
+                    onClick={() => remove(p.id)}
                     className="absolute top-2 right-2 z-10 rounded-full bg-white p-1 opacity-0 group-hover:opacity-100 transition"
                     aria-label="Remove from wishlist"
                   >
@@ -96,9 +116,7 @@ export default function WishlistSection() {
                       <h3 className="text-sm font-semibold text-gray-900">
                         {p.name}
                       </h3>
-                      <p className="text-xs text-gray-500">
-                        {categoryName}
-                      </p>
+                      <p className="text-xs text-gray-500">{categoryName}</p>
                       <p className="mt-2 font-bold">
                         {formatAmount(price, currency)}
                       </p>
@@ -110,9 +128,7 @@ export default function WishlistSection() {
           </div>
         ) : (
           <div className="flex flex-col items-center space-y-4 py-12">
-            <p className="text-muted-foreground">
-              Your wishlist is empty.
-            </p>
+            <p className="text-muted-foreground">Your wishlist is empty.</p>
             <Link href="/all-products">
               <Button className="bg-gradient-to-r from-brand to-green-700">
                 Start Shopping
