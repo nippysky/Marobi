@@ -22,7 +22,9 @@ import { Trash2, PlusCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Currency } from "@/lib/generated/prisma-client";
 
-// ─── Types ─────────────────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────────────────
+   Types
+   ────────────────────────────────────────────────────────────────────────── */
 interface DBVariant {
   color: string;
   size: string;
@@ -71,14 +73,20 @@ interface LineItem {
   };
 }
 
+/** Prisma schema has no "type" field anymore; we derive it in the UI. */
+type DeliveryKind = "COURIER" | "PICKUP";
+
 interface DeliveryOption {
   id: string;
   name: string;
   provider?: string | null;
-  type: "COURIER" | "PICKUP";
-  baseFee: number;
+  pricingMode?: "FIXED" | "EXTERNAL";
+  baseFee?: number | null;
+  baseCurrency?: Currency | null;
   active: boolean;
   metadata?: Record<string, any>;
+  /** derived on the client for grouping in the dropdown */
+  _kind?: DeliveryKind;
 }
 
 type PaymentMethod = "Cash" | "Transfer" | "Card";
@@ -87,7 +95,9 @@ interface Props {
   staffId: string;
 }
 
-// ─── Debounce helper ───────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────────────────
+   Debounce helper
+   ────────────────────────────────────────────────────────────────────────── */
 function useDebounce(callback: (...args: any[]) => void, delay: number) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   return (...args: any[]) => {
@@ -96,7 +106,11 @@ function useDebounce(callback: (...args: any[]) => void, delay: number) {
   };
 }
 
-// ─── Delivery Selector Subcomponent ───────────────────────────────────
+/* ──────────────────────────────────────────────────────────────────────────
+   Delivery Selector
+   - compatible with new schema (no `type` field)
+   - groups options by derived kind; shows all even if all are courier
+   ────────────────────────────────────────────────────────────────────────── */
 interface DeliverySelectorProps {
   currency: Currency;
   selectedOption: DeliveryOption | null;
@@ -108,6 +122,7 @@ interface DeliverySelectorProps {
 }
 
 const DeliverySelector: React.FC<DeliverySelectorProps> = ({
+  currency,
   selectedOption,
   deliveryFee,
   deliveryDetails,
@@ -119,34 +134,62 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-  let cancelled = false;
-  async function fetchOptions() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/delivery-options?active=true");
-      if (!res.ok) throw new Error(`Failed to load: ${res.statusText}`);
-      const data: DeliveryOption[] = await res.json();
-      if (!cancelled) setOptions(data || []);
-    } catch (e) {
-      if (!cancelled) setError("Unable to load options");
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
-  }
-  fetchOptions();
-  return () => { cancelled = true; };
-}, []);
+  useEffect(() => {
+    let cancelled = false;
 
+    function deriveKind(o: any): DeliveryKind {
+      const name = String(o?.name ?? "").toLowerCase();
+      const provider = String(o?.provider ?? "").toLowerCase();
+      const metaKind = String(o?.metadata?.kind ?? "").toLowerCase();
+      if (name.includes("pickup") || provider.includes("pickup") || metaKind === "pickup") {
+        return "PICKUP";
+      }
+      return "COURIER";
+    }
+
+    async function fetchOptions() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/delivery-options?active=true");
+        if (!res.ok) throw new Error(`Failed to load: ${res.statusText}`);
+        const raw = (await res.json()) as any[];
+        const normalized: DeliveryOption[] = (raw || []).map((o) => ({
+          id: o.id,
+          name: o.name,
+          provider: o.provider ?? null,
+          pricingMode: o.pricingMode ?? "FIXED",
+          baseFee: typeof o.baseFee === "number" ? o.baseFee : 0,
+          baseCurrency: o.baseCurrency ?? null,
+          active: o.active ?? true,
+          metadata: o.metadata ?? undefined,
+          _kind: deriveKind(o),
+        }));
+        if (!cancelled) setOptions(normalized);
+      } catch (e) {
+        if (!cancelled) setError("Unable to load options");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const grouped = {
-    COURIER: options.filter((o) => o.type === "COURIER"),
-    PICKUP: options.filter((o) => o.type === "PICKUP"),
+    COURIER: options.filter((o) => (o._kind ?? "COURIER") === "COURIER"),
+    PICKUP: options.filter((o) => o._kind === "PICKUP"),
   };
 
+  const currencySym =
+    currency === Currency.NGN ? "₦" :
+    currency === Currency.USD ? "$" :
+    currency === Currency.EUR ? "€" : "£";
+
   return (
-    <div className="space-y-4 border rounded-lg p-4 bg-white">
+    <div className="space-y-5 border rounded-xl p-5 bg-white shadow-sm">
       <div className="flex justify-between items-center">
         <div className="font-semibold">Delivery / Fulfillment</div>
         {loading && (
@@ -157,36 +200,40 @@ useEffect(() => {
       </div>
 
       {error && (
-        <div className="text-sm text-red-600">Could not load delivery options: {error}</div>
+        <div className="text-sm text-red-600">
+          Could not load delivery options: {error}
+        </div>
       )}
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col">
           <div className="text-xs font-semibold mb-1">Method</div>
           <Select
             value={selectedOption?.id || ""}
             onValueChange={(v) => {
               const opt = options.find((o) => o.id === v);
-              if (opt) onOptionChange(opt);
+              if (opt) {
+                onOptionChange(opt);
+                onFeeChange(typeof opt.baseFee === "number" ? opt.baseFee : 0);
+              }
             }}
             disabled={loading || options.length === 0}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select delivery option" />
+              <SelectValue placeholder={loading ? "Loading..." : "Select delivery option"} />
             </SelectTrigger>
             <SelectContent>
-              {grouped.COURIER.length > 0 && (
-                <>
-                  <div className="px-3 py-1 text-[10px] uppercase text-gray-400">
-                    Couriers
-                  </div>
-                  {grouped.COURIER.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name} {o.provider ? `(${o.provider})` : ""}
-                    </SelectItem>
-                  ))}
-                </>
+              {/* If both kinds exist, show section headers; otherwise just list all */}
+              {grouped.COURIER.length > 0 && grouped.PICKUP.length > 0 && (
+                <div className="px-3 py-1 text-[10px] uppercase text-gray-400">
+                  Couriers
+                </div>
               )}
+              {(grouped.PICKUP.length > 0 ? grouped.COURIER : options).map((o) => (
+                <SelectItem key={o.id} value={o.id}>
+                  {o.name} {o.provider ? `(${o.provider})` : ""}
+                </SelectItem>
+              ))}
               {grouped.PICKUP.length > 0 && (
                 <>
                   <div className="px-3 py-1 text-[10px] uppercase text-gray-400">
@@ -199,13 +246,28 @@ useEffect(() => {
                   ))}
                 </>
               )}
-              {grouped.COURIER.length === 0 && grouped.PICKUP.length === 0 && (
+              {options.length === 0 && !loading && (
                 <div className="px-3 py-2 text-sm text-gray-500">
                   No delivery options available.
                 </div>
               )}
             </SelectContent>
           </Select>
+          {selectedOption && (
+            <div className="mt-2 text-xs text-gray-500">
+              Pricing: <span className="font-medium">{selectedOption.pricingMode ?? "FIXED"}</span>
+              {typeof selectedOption.baseFee === "number" && (
+                <>
+                  {" • "}Base fee:{" "}
+                  <span className="font-mono">
+                    {selectedOption.baseCurrency || currency}{" "}
+                    {selectedOption.baseFee.toLocaleString()}
+                  </span>
+                </>
+              )}
+              {selectedOption.provider && <> {" • "}Provider: {selectedOption.provider}</>}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col">
@@ -222,9 +284,10 @@ useEffect(() => {
             <div className="flex items-center text-sm text-gray-500">
               {selectedOption && (
                 <div>
-                  base:&nbsp;
+                  suggested:&nbsp;
                   <span className="font-mono">
-                    {selectedOption.baseFee.toFixed(2)}
+                    {currencySym}
+                    {Number(selectedOption.baseFee ?? 0).toLocaleString()}
                   </span>
                 </div>
               )}
@@ -249,7 +312,11 @@ useEffect(() => {
   );
 };
 
-// ─── MAIN COMPONENT ────────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────────────────────────
+   MAIN COMPONENT
+   - UI refined (clean spacing, modern step tabs)
+   - functionality unchanged (except delivery selector fix)
+   ────────────────────────────────────────────────────────────────────────── */
 export default function OfflineSaleForm({ staffId }: Props) {
   const [step, setStep] = useState(1);
   const [items, setItems] = useState<LineItem[]>([]);
@@ -613,28 +680,29 @@ export default function OfflineSaleForm({ staffId }: Props) {
   // ─── UI RENDER ────────────────────────────────────────────────────────
   return (
     <Card className="max-w-6xl mx-auto shadow-2xl ring-1 ring-slate-200">
-      <CardHeader>
+      <CardHeader className="pb-0">
         <CardTitle>
-          <nav className="flex space-x-4">
-            {["Products", "Customer", "Payment"].map((lbl, i) => (
-              <button
-                key={i}
-                disabled={i + 1 > step || loading}
-                onClick={() => setStep(i + 1)}
-                className={`flex-1 py-2 text-center transition-all rounded-md ${
-                  step === i + 1
-                    ? "border-b-2 border-gradient-to-r from-indigo-500 to-green-400 font-semibold text-gray-900"
-                    : "text-gray-500"
-                }`}
-              >
-                {lbl}
-              </button>
-            ))}
+          {/* Stepper tabs — sleek + responsive */}
+          <nav className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-1">
+            {["Products", "Customer", "Payment"].map((lbl, i) => {
+              const active = step === i + 1;
+              return (
+                <button
+                  key={i}
+                  disabled={i + 1 > step || loading}
+                  onClick={() => setStep(i + 1)}
+                  className={`rounded-md py-2 text-center text-sm transition-all
+                    ${active ? "bg-white shadow-sm font-semibold text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  {lbl}
+                </button>
+              );
+            })}
           </nav>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         {successSummary && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-md">
             <h3 className="font-bold text-green-800">Sale Logged!</h3>
@@ -674,7 +742,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
         {step === 1 && (
           <div className="space-y-6">
             {items.length === 0 && (
-              <div className="border border-dashed border-gray-300 rounded-lg py-12 flex flex-col items-center justify-center gap-4">
+              <div className="border border-dashed border-gray-300 rounded-xl py-12 flex flex-col items-center justify-center gap-4 bg-white">
                 <div className="text-lg font-semibold">
                   Start by adding a product to log an offline sale
                 </div>
@@ -707,11 +775,11 @@ export default function OfflineSaleForm({ staffId }: Props) {
               return (
                 <div
                   key={row.id}
-                  className="grid grid-cols-12 gap-4 items-start bg-white p-4 rounded-lg shadow relative"
+                  className="grid grid-cols-12 gap-4 items-start bg-white p-5 rounded-xl shadow-sm border"
                 >
                   {/* Thumbnail & search */}
-                  <div className="col-span-3 flex gap-2 items-start relative">
-                    <div className="w-16 h-16 bg-slate-100 rounded flex-shrink-0 overflow-hidden border">
+                  <div className="col-span-12 md:col-span-4 flex gap-3 items-start relative">
+                    <div className="w-16 h-16 bg-slate-100 rounded overflow-hidden border flex-shrink-0">
                       {row.productImages[0] ? (
                         <img
                           src={row.productImages[0]}
@@ -719,7 +787,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                           className="object-cover w-full h-full"
                         />
                       ) : (
-                        <div className="flex items-center justify-center text-xs text-gray-400">
+                        <div className="flex items-center justify-center text-xs text-gray-400 h-full">
                           No image
                         </div>
                       )}
@@ -755,7 +823,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                         disabled={loading}
                       />
                       {productSearch[row.id]?.length > 0 && (
-                        <div className="absolute z-20 bg-white border mt-1 rounded shadow max-h-56 overflow-auto w-[300px]">
+                        <div className="absolute z-20 bg-white border mt-1 rounded shadow max-h-56 overflow-auto w-[min(560px,90vw)]">
                           {productSearch[row.id].map((p) => (
                             <div
                               key={p.id}
@@ -794,7 +862,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                   </div>
 
                   {/* Color */}
-                  <div className="col-span-2">
+                  <div className="col-span-6 md:col-span-2">
                     <div className="text-xs font-semibold mb-1">Color</div>
                     {productHasColor ? (
                       <Select
@@ -821,7 +889,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                   </div>
 
                   {/* Size */}
-                  <div className="col-span-2">
+                  <div className="col-span-6 md:col-span-2">
                     <div className="text-xs font-semibold mb-1">Size</div>
                     {productHasSize ? (
                       <Select
@@ -848,7 +916,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                   </div>
 
                   {/* Quantity + stock */}
-                  <div className="col-span-2">
+                  <div className="col-span-6 md:col-span-2">
                     <div className="text-xs font-semibold mb-1">
                       Quantity{" "}
                       <span className="text-[10px] text-gray-500">
@@ -873,7 +941,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                   </div>
 
                   {/* Custom size block (only if supportsSizeMod) */}
-                  <div className="col-span-2 flex flex-col gap-1">
+                  <div className="col-span-6 md:col-span-3 flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-semibold">
                         Custom Size?
@@ -905,13 +973,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                         <div className="text-[12px]">
                           Size modification fee (5%):{" "}
                           <span className="font-mono">
-                            {currency === Currency.NGN
-                              ? "₦"
-                              : currency === Currency.USD
-                              ? "$"
-                              : currency === Currency.EUR
-                              ? "€"
-                              : "£"}
+                            {currencySymbol}
                             {sizeModFee.toLocaleString()}
                           </span>
                         </div>
@@ -964,8 +1026,31 @@ export default function OfflineSaleForm({ staffId }: Props) {
                     )}
                   </div>
 
+                  {/* Unit price & totals */}
+                  <div className="col-span-6 md:col-span-3">
+                    <div className="text-xs font-semibold mb-1">Pricing</div>
+                    <div className="text-sm bg-slate-50 rounded p-2 border">
+                      <div>
+                        Unit:{" "}
+                        <span className="font-mono">
+                          {currencySymbol}
+                          {unitPrice.toLocaleString()}
+                        </span>
+                      </div>
+                      {row.hasSizeMod && (
+                        <div className="text-[12px] text-gray-600">
+                          + Size mod fee:{" "}
+                          <span className="font-mono">
+                            {currencySymbol}
+                            {sizeModFee.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Remove */}
-                  <div className="col-span-1 flex justify-end items-start">
+                  <div className="col-span-12 md:col-span-1 flex md:justify-end items-start">
                     <button
                       onClick={() => removeRow(row.id)}
                       disabled={loading}
@@ -1090,7 +1175,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
         {/* STEP 3: PAYMENT, DELIVERY & CURRENCY */}
         {step === 3 && (
           <div className="space-y-6">
-            <section className="space-y-4 grid grid-cols-2 gap-6">
+            <section className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col">
                 <div className="text-xs font-semibold mb-1">
                   Payment Method
@@ -1140,7 +1225,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
               deliveryDetails={deliveryDetails}
               onOptionChange={(o) => {
                 setDeliveryOption(o);
-                setDeliveryFee(o.baseFee);
+                setDeliveryFee(Number(o.baseFee ?? 0));
               }}
               onFeeChange={setDeliveryFee}
               onDetailsChange={setDeliveryDetails}

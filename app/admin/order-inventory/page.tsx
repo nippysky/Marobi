@@ -1,3 +1,4 @@
+// app/admin/order-inventory/page.ts
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
@@ -9,7 +10,6 @@ import type { OrderRow } from "@/types/orders";
    Helpers
    ────────────────────────────────────────────────────────────────────────── */
 
-/** Coerce a JSON-ish customSize into a flat record of strings or null */
 function normalizeCustomSize(raw: unknown): Record<string, string> | null {
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     const out: Record<string, string> = {};
@@ -21,7 +21,6 @@ function normalizeCustomSize(raw: unknown): Record<string, string> | null {
   return null;
 }
 
-/** Display an address from either a linked customer or guestInfo */
 function normalizeAddress(o: {
   customer?: {
     deliveryAddress?: string | null;
@@ -29,7 +28,6 @@ function normalizeAddress(o: {
     country?: string | null;
     state?: string | null;
   } | null;
-  // Prisma gives JsonValue | null here, so accept unknown and narrow at runtime.
   guestInfo?: unknown;
 }): string {
   if (o.customer) {
@@ -55,10 +53,6 @@ function normalizeAddress(o: {
   return "—";
 }
 
-/**
- * Human-readable summary of delivery details.
- * Always return a string (no `unknown` leaks).
- */
 function humanizeDeliveryDetails(
   raw: unknown,
   deliveryOption?: { name?: string | null }
@@ -67,14 +61,11 @@ function humanizeDeliveryDetails(
 
   if (typeof raw === "string") {
     try {
-      const parsed = JSON.parse(raw);
-      raw = parsed;
+      raw = JSON.parse(raw);
     } catch {
-      // Ensure we return a string in this branch
       return raw as string;
     }
   }
-
   if (typeof raw !== "object" || Array.isArray(raw)) return String(raw);
 
   const obj = raw as Record<string, any>;
@@ -87,17 +78,11 @@ function humanizeDeliveryDetails(
     parts.push(`Courier: ${deliveryOption.name}`);
   }
 
-  // Append other keys (exclude internal ones)
   for (const [k, v] of Object.entries(obj)) {
     if (k === "aggregatedWeight" || k === "deliveryOptionId") continue;
     if (v === null || v === undefined || v === "") continue;
-    parts.push(
-      `${k[0].toUpperCase()}${k.slice(1)}: ${
-        typeof v === "object" ? JSON.stringify(v) : v
-      }`
-    );
+    parts.push(`${k[0].toUpperCase()}${k.slice(1)}: ${typeof v === "object" ? JSON.stringify(v) : v}`);
   }
-
   return parts.length ? parts.join(" • ") : "—";
 }
 
@@ -138,30 +123,19 @@ async function fetchOrders(): Promise<OrderRow[]> {
           variant: {
             select: {
               product: {
-                select: {
-                  priceNGN: true,
-                  images: true,
-                  name: true,
-                  categorySlug: true,
-                },
+                select: { priceNGN: true, images: true, name: true, categorySlug: true },
               },
             },
           },
         },
       },
       offlineSale: true,
-      deliveryOption: {
-        select: {
-          id: true,
-          name: true,
-          provider: true, // NOTE: your schema has no `type` column
-        },
-      },
+      deliveryOption: { select: { id: true, name: true, provider: true } },
     },
   });
 
   return orders.map((o): OrderRow => {
-    /* Customer/guest block */
+    // customer/guest
     let customerObj: OrderRow["customer"];
     if (o.customer) {
       customerObj = {
@@ -184,13 +158,13 @@ async function fetchOrders(): Promise<OrderRow[]> {
       customerObj = { id: null, name: "Guest", email: "", phone: "", address: "—" };
     }
 
-    // Always compute NGN for dashboards
-    const totalNGN: number = o.items.reduce(
-      (sum, it) => sum + ((it.variant?.product.priceNGN ?? 0) * it.quantity),
-      0
-    );
+    // NGN ledger subtotal (INCLUDES size-mod fee when order currency is NGN).
+    const totalNGN: number = o.items.reduce((sum, it) => {
+      const base = (it.variant?.product.priceNGN ?? 0) * it.quantity;
+      const sizeFeeNGN = o.currency === "NGN" ? (it.sizeModFee ?? 0) * it.quantity : 0;
+      return sum + base + sizeFeeNGN;
+    }, 0);
 
-    // Item rows for UI
     const products = o.items.map((it) => ({
       id: it.id,
       name: it.name,
@@ -206,22 +180,15 @@ async function fetchOrders(): Promise<OrderRow[]> {
       customSize: normalizeCustomSize(it.customSize),
     }));
 
-    // UI type requires a `type` even though DB doesn't have it. Your schema comment
-    // says only courier options exist, so we safely derive "COURIER".
     const deliveryOption: OrderRow["deliveryOption"] = o.deliveryOption
-      ? {
-          id: o.deliveryOption.id,
-          name: o.deliveryOption.name,
-          provider: o.deliveryOption.provider ?? null,
-          type: "COURIER", // derive; satisfies DeliveryOptionShape
-        }
+      ? { id: o.deliveryOption.id, name: o.deliveryOption.name, provider: o.deliveryOption.provider ?? null, type: "COURIER" }
       : null;
 
     return {
       id: o.id,
       status: o.status,
       currency: o.currency,
-      totalAmount: o.totalAmount,
+      totalAmount: o.totalAmount, // items subtotal in order currency (already includes fees)
       totalNGN,
       paymentMethod: o.paymentMethod,
       createdAt: o.createdAt.toISOString(),
@@ -230,7 +197,6 @@ async function fetchOrders(): Promise<OrderRow[]> {
       channel: o.channel,
       deliveryOption,
       deliveryFee: o.deliveryFee ?? 0,
-      // Do not pass `null` to a param typed as optional; use undefined instead.
       deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, deliveryOption ?? undefined),
     };
   });

@@ -1,3 +1,4 @@
+// components/admin/OrderTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -48,7 +49,7 @@ import toast from "react-hot-toast";
 import Papa from "papaparse";
 import type { OrderChannel, OrderRow } from "@/types/orders";
 import { OrderStatus, Currency } from "@/lib/generated/prisma-client";
-import { receiptCSS } from "@/lib/utils";
+import { renderReceiptHTML } from "@/lib/receipt/html"; // shared renderer
 
 type OrderTableProps = {
   data: OrderRow[];
@@ -97,10 +98,41 @@ export default function OrderTable({
   const [receiptOrder, setReceiptOrder] = useState<OrderRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
-  // Modal for viewing products
   function openReceiptModal(order: OrderRow) {
     setReceiptOrder(order);
     setReceiptOpen(true);
+  }
+
+  // Normalize OrderRow -> renderer input
+  function toRenderPayload(o: OrderRow) {
+    return {
+      order: {
+        id: o.id,
+        createdAt: o.createdAt,
+        paymentMethod: o.paymentMethod,
+        totalAmount: o.totalAmount,
+        items: o.products.map((p) => ({
+          name: p.name,
+          image: p.image,
+          quantity: p.quantity,
+          lineTotal: p.lineTotal,
+          color: p.color,
+          size: p.size,
+          hasSizeMod: p.hasSizeMod,
+          sizeModFee: p.sizeModFee,
+          customSize: p.customSize || undefined,
+        })),
+      },
+      recipient: {
+        firstName: o.customer?.name?.split(" ")[0] ?? "Customer",
+        lastName: o.customer?.name?.split(" ").slice(1).join(" ") ?? "",
+        email: o.customer?.email ?? "",
+        deliveryAddress: o.customer?.address ?? "",
+        billingAddress: o.customer?.address ?? "",
+      },
+      currency: o.currency as any,
+      deliveryFee: o.deliveryFee ?? 0,
+    };
   }
 
   async function handleStatusChange(id: string, newStatus: OrderStatus) {
@@ -129,185 +161,9 @@ export default function OrderTable({
   }
 
   async function handlePrint(order: OrderRow) {
-    if (typeof window === "undefined") return;
-    const now = new Date().toLocaleString();
-    const vatRate = 0.075;
-    const subtotal = +order.totalAmount.toFixed(2);
-    const vat = +(subtotal * vatRate).toFixed(2);
-    const deliveryCharge = order.deliveryFee ?? 0;
-    const deliveryOptionName = order.deliveryOption?.name || "—";
-    const totalWeight = order.products
-      .reduce((w, p) => w + p.quantity * 0.2, 0)
-      .toFixed(2);
-    const sym =
-      order.currency === "NGN"
-        ? "₦"
-        : order.currency === "USD"
-        ? "$"
-        : order.currency === "EUR"
-        ? "€"
-        : "£";
-    const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
-    const deliveryDetails = order.deliveryDetails || "—";
-    const address = order.customer?.address ?? "—";
-    const productLines = order.products
-      .map((p) => {
-        const sizeModDetails = p.hasSizeMod
-          ? `<div class="mod">
-               <div><strong>Size modification fee:</strong> ${sym}${p.sizeModFee.toFixed(
-                 2
-               )}</div>
-               ${
-                 p.customSize
-                   ? `<div class="custom-sizes"><strong>Custom sizes:</strong> ${Object.entries(
-                       p.customSize
-                     )
-                       .map(([k, v]) => `${k}:${v}`)
-                       .join(", ")}</div>`
-                   : ""
-               }
-             </div>`
-          : "";
-        return `
-          <div class="prod">
-            <div class="prod-info">
-              <div class="name">${p.name}</div>
-              <div class="meta">Color: ${p.color} • Size: ${p.size} • Qty: ${
-          p.quantity
-        }</div>
-              ${sizeModDetails}
-            </div>
-            <div class="price">${sym}${p.lineTotal.toLocaleString()}</div>
-          </div>
-        `;
-      })
-      .join("");
-    const html = `
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width,initial-scale=1" />
-          <style>
-            :root {
-              --bg:#0f111a;
-              --card:#1f233e;
-              --text:#f0f5ff;
-              --muted:#8a9bb8;
-              --accent:#5c7cfa;
-              --radius:16px;
-              font-family: system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
-            }
-            body { background: #07091e; color: var(--text); padding:24px; margin:0;}
-            .wrapper { max-width:800px; margin:0 auto; }
-            .header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
-            .title { font-size:1.75rem; font-weight:700; letter-spacing:0.5px; }
-            .small { font-size:0.75rem; color: var(--muted); margin-top:4px;}
-            .card { background: var(--card); border-radius: var(--radius); padding:24px; margin-top:16px; position:relative; overflow:hidden; }
-            .section { margin-bottom:20px; }
-            .prod { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.08); }
-            .prod-info { max-width:70%; }
-            .name { font-weight:600; font-size:1rem; }
-            .meta { font-size:0.65rem; color: var(--muted); margin-top:4px; }
-            .mod { margin-top:6px; font-size:0.65rem; background: rgba(92,124,250,0.08); padding:6px 8px; border-radius:8px; }
-            .custom-sizes { margin-top:4px; }
-            .price { font-weight:700; font-size:1rem; }
-            .totals { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:16px; }
-            .line { display:flex; justify-content:space-between; padding:6px 0; }
-            .grand { display:flex; justify-content:space-between; padding:12px 0; font-size:1.125rem; font-weight:700; border-top:2px solid var(--accent); margin-top:8px; }
-            .footer { margin-top:32px; font-size:0.75rem; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-            .badge { background: var(--accent); padding:4px 8px; border-radius:999px; font-size:0.5rem; text-transform:uppercase; letter-spacing:1px; display:inline-block; }
-            .info { display:flex; flex-direction:column; gap:4px; }
-            .delivery { margin-top:12px; background: rgba(255,255,255,0.03); padding:12px; border-radius:8px; }
-          </style>
-        </head>
-        <body>
-          <div class="wrapper">
-            <div class="header">
-              <div class="title">Marobi Receipt</div>
-              <div class="info">
-                <div><span class="badge">${order.status}</span></div>
-                <div class="small">Order: ${order.id}</div>
-                <div class="small">Date: ${now}</div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="section">
-                ${productLines}
-              </div>
-              <div class="section totals">
-                <div>
-                  <div class="line">
-                    <div>Subtotal</div>
-                    <div>${sym}${subtotal.toLocaleString()}</div>
-                  </div>
-                  <div class="line">
-                    <div>VAT (7.5%)</div>
-                    <div>${sym}${vat.toLocaleString()}</div>
-                  </div>
-                  <div class="line">
-                    <div>Delivery (${deliveryOptionName})</div>
-                    <div>${sym}${deliveryCharge.toLocaleString()}</div>
-                  </div>
-                  <div class="line">
-                    <div>Weight</div>
-                    <div>${totalWeight}kg</div>
-                  </div>
-                </div>
-                <div>
-                  <div class="grand">
-                    <div>Grand Total</div>
-                    <div>${sym}${grand.toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="delivery">
-                <div><strong>Delivery Option:</strong> ${deliveryOptionName}</div>
-                <div><strong>Delivery Fee:</strong> ${sym}${deliveryCharge.toLocaleString()}</div>
-                <div><strong>Delivery Details:</strong> ${
-                  deliveryDetails === "—"
-                    ? "—"
-                    : deliveryDetails
-                        .split("•")
-                        .map((entry) => entry.trim())
-                        .filter(Boolean)
-                        .map((entry) => `<div>${entry}</div>`)
-                        .join("")
-                }</div>
-                <div><strong>Delivery Address:</strong> ${address}</div>
-              </div>
-              <div class="footer">
-                <div>
-                  <div><strong>Customer:</strong> ${
-                    order.customer?.name ?? "Guest"
-                  }</div>
-                  <div><strong>Email:</strong> ${
-                    order.customer?.email ?? "-"
-                  }</div>
-                  <div><strong>Phone:</strong> ${
-                    order.customer?.phone ?? "-"
-                  }</div>
-                  <div><strong>Address:</strong> ${address}</div>
-                </div>
-                <div>
-                  <div><strong>Payment:</strong> ${order.paymentMethod}</div>
-                  <div><strong>Channel:</strong> ${
-                    order.channel === "OFFLINE"
-                      ? "Offline Sale"
-                      : "Online Store"
-                  }</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
     const { default: printJS } = await import("print-js");
-    printJS({
-      printable: html,
-      type: "raw-html",
-      scanStyles: false,
-      style: receiptCSS,
-    });
+    const html = renderReceiptHTML(toRenderPayload(order));
+    printJS({ printable: html, type: "raw-html", scanStyles: false });
   }
 
   const filtered = useMemo(() => {
@@ -321,7 +177,8 @@ export default function OrderTable({
           return false;
         }
       }
-      if (showSearch && statusFilter !== "All" && o.status !== statusFilter) return false;
+      if (showSearch && statusFilter !== "All" && o.status !== statusFilter)
+        return false;
       if (showSearch && currencyFilter !== "All" && o.currency !== currencyFilter)
         return false;
       return true;
@@ -741,147 +598,39 @@ export default function OrderTable({
         </div>
       )}
 
-      {/* Receipt Modal */}
+      {/* Receipt Modal — now fluid and responsive to the shared HTML */}
       {receiptOrder && (
         <Dialog open={receiptOpen} onOpenChange={() => setReceiptOpen(false)}>
-          <DialogContent className="max-w-lg rounded-lg shadow-lg print:hidden">
-            <DialogHeader>
-              <DialogTitle>Receipt — {receiptOrder.id}</DialogTitle>
-              <DialogDescription>
-                Payment: <strong>{receiptOrder.paymentMethod}</strong> —{" "}
-                {new Date(receiptOrder.createdAt).toLocaleString()}
-              </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="mt-6 max-h-[60vh] space-y-4">
-              {(() => {
-                const o = receiptOrder!;
-                const vatRate = 0.075;
-                const subtotal = +o.totalAmount.toFixed(2);
-                const vat = +(subtotal * vatRate).toFixed(2);
-                const deliveryCharge = o.deliveryFee ?? 0;
-                const deliveryOptionName = o.deliveryOption?.name || "—";
-                const totalWeight = o.products
-                  .reduce((w, p) => w + p.quantity * 0.2, 0)
-                  .toFixed(2);
-                const sym =
-                  o.currency === "NGN"
-                    ? "₦"
-                    : o.currency === "USD"
-                    ? "$"
-                    : o.currency === "EUR"
-                    ? "€"
-                    : "£";
-                const grand = +(subtotal + vat + deliveryCharge).toFixed(2);
+          <DialogContent
+            // fluid width that comfortably fits the 640px receipt plus padding,
+            // but never exceeds the viewport
+            className="w-[96vw] max-w-[980px] p-0 rounded-lg shadow-lg print:hidden"
+          >
+            {/* header section retains padding */}
+            <div className="px-6 pt-5">
+              <DialogHeader>
+                <DialogTitle>Receipt — {receiptOrder.id}</DialogTitle>
+                <DialogDescription>
+                  Payment: <strong>{receiptOrder.paymentMethod}</strong> —{" "}
+                  {new Date(receiptOrder.createdAt).toLocaleString()}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
-                const address = o.customer?.address ?? "—";
-                const deliveryDetails = o.deliveryDetails || "—";
-
-                return (
-                  <div className="px-2 space-y-4">
-                    {o.products.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex justify-between mb-2 border-b pb-2"
-                      >
-                        <div className="flex-1">
-                          <div className="font-medium">{p.name}</div>
-                          <div className="text-sm text-gray-600">
-                            Color: {p.color} • Size: {p.size} • Qty:{" "}
-                            {p.quantity}
-                          </div>
-                          {p.hasSizeMod && (
-                            <div className="mt-1 text-[12px] bg-indigo-50 p-2 rounded">
-                              <div>
-                                <strong>Size Mod:</strong> applied (5%)
-                              </div>
-                              <div>
-                                <strong>Fee:</strong> {sym}
-                                {p.sizeModFee.toFixed(2)}
-                              </div>
-                              {p.customSize && (
-                                <div className="text-xs mt-1">
-                                  <div className="font-medium">
-                                    Custom measurements:
-                                  </div>
-                                  <div>
-                                    {Object.entries(p.customSize)
-                                      .map(([k, v]) => `${k}: ${v}`)
-                                      .join(" • ")}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="font-medium">
-                          {sym}
-                          {p.lineTotal.toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex justify-between font-medium">
-                      <span>Subtotal</span>
-                      <span>
-                        {sym}
-                        {subtotal.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>VAT (7.5%)</span>
-                      <span>
-                        {sym}
-                        {vat.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Delivery ({deliveryOptionName})</span>
-                      <span>
-                        {sym}
-                        {deliveryCharge.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Weight</span>
-                      <span>{totalWeight}kg</span>
-                    </div>
-                    <div className="flex justify-between font-semibold mt-2">
-                      <span>Grand Total</span>
-                      <span>
-                        {sym}
-                        {grand.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="mt-4 text-sm space-y-1">
-                      <div>
-                        <strong>Customer:</strong> {o.customer?.name ?? "Guest"}
-                      </div>
-                      <div>
-                        <strong>Email:</strong> {o.customer?.email ?? "-"}
-                      </div>
-                      <div>
-                        <strong>Phone:</strong> {o.customer?.phone ?? "-"}
-                      </div>
-                      <div>
-                        <strong>Address:</strong> {address}</div>
-                      <div className="mt-2">
-                        <div>
-                          <strong>Delivery Option:</strong>{" "}
-                          {deliveryOptionName}
-                        </div>
-                        <div>
-                          <strong>Delivery Details:</strong>{" "}
-                          {displayDeliveryDetails(deliveryDetails)}
-                        </div>
-                        <div>
-                          <strong>Delivery Address:</strong> {address}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+            {/* the receipt viewport */}
+            <ScrollArea className="mt-3 max-h-[78vh] px-0 pb-4" type="auto">
+              {/* Wrap to apply responsive overrides to the injected HTML */}
+              <div className="receipt-frame mx-4">
+                <div
+                  className="receipt-html"
+                  dangerouslySetInnerHTML={{
+                    __html: renderReceiptHTML(toRenderPayload(receiptOrder)),
+                  }}
+                />
+              </div>
             </ScrollArea>
-            <DialogFooter className="space-x-2">
+
+            <DialogFooter className="px-6 pb-5 space-x-2">
               <Button variant="outline" onClick={() => setReceiptOpen(false)}>
                 Close
               </Button>
@@ -892,6 +641,39 @@ export default function OrderTable({
                 <Printer className="mr-1 h-4 w-4" /> Print
               </Button>
             </DialogFooter>
+
+            {/* global overrides to make email-style HTML responsive inside the modal */}
+            <style jsx global>{`
+              .receipt-frame {
+                background: #f3f4f6;
+                border: 1px solid #e5e7eb;
+                border-radius: 10px;
+                overflow: hidden;
+              }
+              .receipt-frame,
+              .receipt-frame * {
+                box-sizing: border-box;
+              }
+              /* Make every nested table flexible */
+              .receipt-frame table {
+                width: 100% !important;
+                max-width: 100% !important;
+              }
+              /* Avoid side-scroll */
+              .receipt-frame {
+                overflow-x: hidden;
+              }
+              /* Images should scale inside cells */
+              .receipt-frame img {
+                max-width: 100% !important;
+                height: auto !important;
+              }
+              /* Break long content gracefully */
+              .receipt-frame td,
+              .receipt-frame th {
+                word-break: break-word;
+              }
+            `}</style>
           </DialogContent>
         </Dialog>
       )}

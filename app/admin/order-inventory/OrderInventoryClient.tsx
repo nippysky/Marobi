@@ -1,9 +1,10 @@
+// app/admin/order-inventory/OrderInventoryClient.tsx
 "use client";
 
 import React from "react";
 import LogOfflineSaleButton from "@/components/admin/LogOfflineSaleButton";
 import type { OrderRow } from "@/types/orders";
-import OrderTable from "@/components/admin/OrderTable"; // <- adjust if needed
+import OrderTable from "@/components/admin/OrderTable";
 
 interface Props {
   data: OrderRow[];

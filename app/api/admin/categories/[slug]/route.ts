@@ -21,12 +21,16 @@ async function ensureAdmin() {
 /** Load one category by slug (used by edit form) */
 export async function GET(
   _req: Request,
-  { params }: { params: { slug: string } }
+ context: { params: Promise<{ slug: string }> }
 ) {
+
+  const { slug: slugify } = await context.params;
+
+
   const ok = await ensureAdmin();
   if (!ok) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const slug = decodeURIComponent(params.slug);
+  const slug = decodeURIComponent(slugify);
   const c = await prisma.category.findUnique({
     where: { slug },
   });
@@ -37,12 +41,14 @@ export async function GET(
 /** Update/toggle */
 export async function PATCH(
   req: Request,
-  { params }: { params: { slug: string } }
+ context: { params: Promise<{ slug: string }> }
 ) {
+
+    const { slug } = await context.params;
   const ok = await ensureAdmin();
   if (!ok) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const currentSlug = decodeURIComponent(params.slug);
+  const currentSlug = decodeURIComponent(slug);
   const body = await req.json().catch(() => ({}));
 
   // Allow partial updates
@@ -87,12 +93,13 @@ export async function PATCH(
 /** Delete category (blocked by FK if products exist) */
 export async function DELETE(
   _req: Request,
-  { params }: { params: { slug: string } }
+   context: { params: Promise<{ slug: string }> }
 ) {
+   const { slug: slugify } = await context.params;
   const ok = await ensureAdmin();
   if (!ok) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const slug = decodeURIComponent(params.slug);
+  const slug = decodeURIComponent(slugify);
   try {
     await prisma.category.delete({ where: { slug } });
     revalidatePath("/admin/categories");

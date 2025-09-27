@@ -7,11 +7,11 @@ export const runtime = "nodejs";
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
   await prismaReady;
 
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     // Optional: quick existence check to return 404 early

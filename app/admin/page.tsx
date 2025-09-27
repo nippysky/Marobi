@@ -172,11 +172,7 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
       customSize: normalizeCustomSize(it.customSize),
     }));
 
-    /** Delivery option shape expected by UI types.
-     *  Your UI's OrderRow.deliveryOption -> { id, name, provider, type: "COURIER" | "PICKUP" }
-     *  We only support courier now, so force the literal "COURIER" and annotate the variable so
-     *  TS doesn't widen it to `string`.
-     */
+    /** Delivery option shape expected by UI types. */
     const deliveryOption: OrderRow["deliveryOption"] = o.deliveryOption
       ? {
           id: o.deliveryOption.id,
@@ -197,16 +193,22 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
       products,
       customer: customerObj,
       channel: o.channel,
-      deliveryOption, // <- typed variable avoids the `"string"` widening error
+      deliveryOption,
       deliveryFee: o.deliveryFee ?? 0,
-deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, deliveryOption ?? undefined),
-
+      deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, deliveryOption ?? undefined),
     };
   });
 }
 
 /* -----------------------------------------------------------------------------
    Top products by qty (ignores Cancelled)
+   NOTE: We previously grouped by variantId and then used product.id in the UI.
+   That can produce duplicate product IDs if multiple variants of the same product
+   appear. We now:
+   - take a buffered groupBy on variantId,
+   - join to variants/products,
+   - collapse into unique products (sum quantities/revenue),
+   - sort and slice to the requested limit.
 ----------------------------------------------------------------------------- */
 async function fetchTopProducts(limit = 5) {
   const validOrderIds = (
@@ -218,12 +220,13 @@ async function fetchTopProducts(limit = 5) {
 
   if (!validOrderIds.length) return [];
 
+  // Buffer results to survive collapsing variants->products
   const grouped = await prisma.orderItem.groupBy({
     by: ["variantId"],
     _sum: { quantity: true },
     where: { orderId: { in: validOrderIds } },
     orderBy: { _sum: { quantity: "desc" } },
-    take: limit,
+    take: Math.max(limit * 4, limit),
   });
 
   const variantIds = grouped.map((g) => g.variantId);
@@ -233,21 +236,38 @@ async function fetchTopProducts(limit = 5) {
     include: { product: true },
   });
 
-  return grouped.map((g) => {
-    const soldQty = g._sum.quantity ?? 0;
-    const variant = variants.find((v) => v.id === g.variantId)!;
-    const prod = variant.product;
-    const revenueNGN = Math.round((prod.priceNGN ?? 0) * soldQty);
+  // Collapse into unique products
+  const perProduct = new Map<
+    string,
+    { id: string; name: string; sold: number; revenue: number; image: string; category?: string }
+  >();
 
-    return {
-      id: prod.id,
-      name: prod.name,
-      sold: soldQty,
-      revenue: revenueNGN,
-      image: prod.images[0],
-      category: prod.categorySlug,
-    };
-  });
+  for (const g of grouped) {
+    const soldQty = g._sum.quantity ?? 0;
+    const variant = variants.find((v) => v.id === g.variantId);
+    if (!variant) continue;
+    const prod = variant.product;
+    const priceNGN = prod.priceNGN ?? 0;
+
+    const existing = perProduct.get(prod.id);
+    if (existing) {
+      existing.sold += soldQty;
+      existing.revenue += Math.round(priceNGN * soldQty);
+    } else {
+      perProduct.set(prod.id, {
+        id: prod.id,
+        name: prod.name,
+        sold: soldQty,
+        revenue: Math.round(priceNGN * soldQty),
+        image: prod.images[0],
+        category: prod.categorySlug,
+      });
+    }
+  }
+
+  return Array.from(perProduct.values())
+    .sort((a, b) => b.sold - a.sold)
+    .slice(0, limit);
 }
 
 /* -----------------------------------------------------------------------------

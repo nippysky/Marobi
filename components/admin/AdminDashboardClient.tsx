@@ -151,9 +151,9 @@ export default function AdminDashboardClient({
               </div>
             ) : (
               <ul className="flex flex-col gap-6">
-                {top3.map((prod) => (
+                {top3.map((prod, idx) => (
                   <li
-                    key={prod.id}
+                    key={`${prod.id}-${idx}`}
                     className="flex items-center justify-between hover:bg-gray-50 p-3 rounded-lg transition"
                   >
                     <div className="flex items-center gap-4">
