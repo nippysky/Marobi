@@ -1,22 +1,31 @@
 // lib/categories.ts
-import { prisma } from "@/lib/db";
+import "server-only";
+import { prisma, prismaReady } from "@/lib/db";
 
-export interface Category {
+/** Shape your frontend expects from /api/categories */
+export type Category = {
   slug: string;
   name: string;
-  description?: string;
-  bannerImage?: string;
-  isActive?: boolean;
-  sortOrder?: number;
-}
+  description: string | null;
+  bannerImage: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;   // ISO string for JSON safety
+  updatedAt: string;   // ISO string for JSON safety
+  productCount: number;
+};
 
-/**
- * Fetch all *active* categories for navigation/home.
- * Categories are dynamic; new rows appear automatically after creation.
- */
-export async function getAllCategories(): Promise<Category[]> {
+/** Fetch categories. Defaults to only active ones. */
+export async function getAllCategories(
+  opts?: { activeOnly?: boolean }
+): Promise<Category[]> {
+  await prismaReady;
+
+  const where = opts?.activeOnly === false ? {} : { isActive: true };
+
   const rows = await prisma.category.findMany({
-    where: { isActive: true },
+    where,
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: {
       slug: true,
       name: true,
@@ -24,27 +33,35 @@ export async function getAllCategories(): Promise<Category[]> {
       bannerImage: true,
       isActive: true,
       sortOrder: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { products: true } },
     },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
 
-  return rows.map((r) => ({
-    slug: r.slug,
-    name: r.name,
-    description: r.description ?? undefined,
-    bannerImage: r.bannerImage ?? undefined,
-    isActive: r.isActive,
-    sortOrder: r.sortOrder ?? 0,
+  return rows.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    description: c.description,
+    bannerImage: c.bannerImage,
+    isActive: c.isActive,
+    sortOrder: c.sortOrder,
+    createdAt: c.createdAt.toISOString(),
+    updatedAt: c.updatedAt.toISOString(),
+    productCount: c._count.products,
   }));
 }
 
-/**
- * Fetch a single category by slug (active or inactive).
- */
+/** Convenience wrapper for active categories */
+export const getActiveCategories = () => getAllCategories({ activeOnly: true });
+
+/** 🔹 NEW: fetch a single category by slug (full mapped object) */
 export async function getCategoryBySlug(
   slug: string
-): Promise<Category | undefined> {
-  const r = await prisma.category.findUnique({
+): Promise<Category | null> {
+  await prismaReady;
+
+  const c = await prisma.category.findUnique({
     where: { slug },
     select: {
       slug: true,
@@ -53,15 +70,23 @@ export async function getCategoryBySlug(
       bannerImage: true,
       isActive: true,
       sortOrder: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { products: true } },
     },
   });
-  if (!r) return undefined;
+
+  if (!c) return null;
+
   return {
-    slug: r.slug,
-    name: r.name,
-    description: r.description ?? undefined,
-    bannerImage: r.bannerImage ?? undefined,
-    isActive: r.isActive,
-    sortOrder: r.sortOrder ?? 0,
+    slug: c.slug,
+    name: c.name,
+    description: c.description,
+    bannerImage: c.bannerImage,
+    isActive: c.isActive,
+    sortOrder: c.sortOrder,
+    createdAt: c.createdAt.toISOString(),
+    updatedAt: c.updatedAt.toISOString(),
+    productCount: c._count.products,
   };
 }

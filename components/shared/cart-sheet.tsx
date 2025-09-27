@@ -15,10 +15,18 @@ import { Button } from "@/components/ui/button";
 import { useCartStore, CartItem } from "@/lib/store/cartStore";
 import { BsBag } from "react-icons/bs";
 import { useCurrency } from "@/lib/context/currencyContext";
-import type { Currency } from "@/lib/context/currencyContext"; // <-- add this
+import type { Currency } from "@/lib/context/currencyContext";
 import { formatAmount } from "@/lib/formatCurrency";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
+
+/** Nice labels for the common custom fields */
+const CUSTOM_LABELS: Record<string, string> = {
+  chest: "Chest/Bust",
+  waist: "Waist",
+  hip: "Hip",
+  length: "Length",
+};
 
 export function CartSheet({ tone = "dark" }: { tone?: "light" | "dark" }) {
   const router = useRouter();
@@ -33,9 +41,9 @@ export function CartSheet({ tone = "dark" }: { tone?: "light" | "dark" }) {
   const distinctCount = useCartStore((s) => s.totalDistinctItems());
 
   const { currency } = useCurrency();
-  const currencyCode = currency as Currency; // <-- narrow to union
+  const currencyCode = currency as Currency;
 
-  const formattedTotal = formatAmount(totalAmount, currencyCode); // <-- use union
+  const formattedTotal = formatAmount(totalAmount, currencyCode);
 
   const [pendingMap, setPendingMap] = useState<Record<string, boolean>>({});
   const setPending = useCallback((key: string, v: boolean) => {
@@ -98,16 +106,7 @@ export function CartSheet({ tone = "dark" }: { tone?: "light" | "dark" }) {
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-6 text-center bg-gray-50">
-            <BsBag className="w-16 h-16 mb-4 text-gray-300" />
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Your cart is empty</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Browse our products and add items to your cart.
-            </p>
-            <Link href="/all-products" className="w-full max-w-xs">
-              <Button className="w-full">Start Shopping</Button>
-            </Link>
-          </div>
+          <EmptyCart />
         ) : (
           <CartBody
             items={items}
@@ -115,7 +114,7 @@ export function CartSheet({ tone = "dark" }: { tone?: "light" | "dark" }) {
             updateQuantity={updateQuantity}
             clearCart={clearCart}
             formattedTotal={formattedTotal}
-            currency={currencyCode} // <-- pass union type
+            currency={currencyCode}
             setPending={setPending}
             pendingMap={pendingMap}
             routerPush={(url) => router.push(url)}
@@ -128,7 +127,22 @@ export function CartSheet({ tone = "dark" }: { tone?: "light" | "dark" }) {
   );
 }
 
-/** Extracted body to keep the top readable; logic unchanged */
+function EmptyCart() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center bg-gray-50">
+      <BsBag className="w-16 h-16 mb-4 text-gray-300" />
+      <h2 className="text-lg font-semibold text-gray-700 mb-2">Your cart is empty</h2>
+      <p className="text-sm text-gray-500 mb-6">
+        Browse our products and add items to your cart.
+      </p>
+      <Link href="/all-products" className="w-full max-w-xs">
+        <Button className="w-full">Start Shopping</Button>
+      </Link>
+    </div>
+  );
+}
+
+/** Extracted body to keep the top readable; logic unchanged except for custom-size rendering */
 function CartBody({
   items,
   removeFromCart,
@@ -147,7 +161,7 @@ function CartBody({
   updateQuantity: any;
   clearCart: any;
   formattedTotal: string;
-  currency: Currency; // <-- union type here
+  currency: Currency;
   setPending: (k: string, v: boolean) => void;
   pendingMap: Record<string, boolean>;
   routerPush: (url: string) => void;
@@ -170,7 +184,7 @@ function CartBody({
             unitWeight = 0,
           } = item;
 
-          const formattedUnit = formatAmount(price, currency); // <-- union
+          const formattedUnit = formatAmount(price, currency);
           const variant = product.variants.find(
             (v: any) => v.color === color && v.size === size
           ) as any | undefined;
@@ -188,6 +202,17 @@ function CartBody({
           const lineWeight = Number.isFinite(unitWeight)
             ? parseFloat((unitWeight * quantity).toFixed(3))
             : 0;
+
+          // If size-mod is on, show "Custom" instead of the standard size
+          const sizeLabel = hasSizeMod ? "Custom" : size;
+
+          // Prepare compact list of entered custom measurements
+          const pairs =
+            hasSizeMod && customMods
+              ? Object.entries(customMods).filter(([_, v]) => String(v ?? "").trim() !== "")
+              : [];
+
+          const renderLabel = (k: string) => CUSTOM_LABELS[k] ?? k.replace(/^\w/, (c) => c.toUpperCase());
 
           return (
             <div key={key} className="py-4" aria-busy={isPending}>
@@ -227,16 +252,37 @@ function CartBody({
 
                   <div className="text-xs text-gray-500 mt-1">
                     Color: <span className="font-medium">{color}</span> | Size:{" "}
-                    <span className="font-medium">{size}</span>
+                    <span className="font-medium">{sizeLabel}</span>
                   </div>
 
                   {hasSizeMod && (
-                    <div className="text-xs text-yellow-600 mt-1">
-                      +5% size-mod fee:{" "}
-                      <span className="font-medium">{formatAmount(sizeModFee, currency)}</span>
-                    </div>
+                    <>
+                      <div className="text-xs text-yellow-700 mt-1">
+                        +5% size-mod fee:{" "}
+                        <span className="font-medium">
+                          {formatAmount(sizeModFee, currency)}
+                        </span>
+                      </div>
+
+                      {pairs.length > 0 && (
+                        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2">
+                          <div className="text-[11px] font-semibold text-amber-900 mb-1">
+                            Custom measurements
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-amber-900">
+                            {pairs.map(([k, v]) => (
+                              <div key={k} className="flex items-center justify-between">
+                                <span className="opacity-75">{renderLabel(k)}:</span>
+                                <span className="font-medium">{String(v)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
-                  {/* optional: show weights if you want */}
+
+                  {/* optional: show weights */}
                   <div className="mt-1 text-xs text-gray-600">
                     <div>
                       Unit weight: {Number.isFinite(unitWeight) ? unitWeight.toFixed(3) : "0.000"}kg
@@ -303,7 +349,7 @@ function QuantityControl({
   onDecrease: (item: CartItem, stock: number, key: string) => void;
   onIncrease: (item: CartItem, stock: number, key: string) => void;
 }) {
-  const { quantity, product, color, size, customMods, hasSizeMod } = item;
+  const { quantity } = item;
 
   return (
     <div className="flex items-center space-x-1">

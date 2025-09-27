@@ -2,18 +2,16 @@ export const dynamic = "force-dynamic";
 
 import AdminDashboardClient from "@/components/admin/AdminDashboardClient";
 import { prisma } from "@/lib/db";
-import type { OrderRow } from "@/types/orders"; // Ensure this matches your OrderTable usage
+import type { OrderRow } from "@/types/orders";
 
-/**
- * Helpers — exactly match order-inventory logic
- */
-function normalizeCustomSize(raw: any): Record<string, string> | null {
+/* -----------------------------------------------------------------------------
+   Small helpers to mirror order/inventory formatting logic
+----------------------------------------------------------------------------- */
+function normalizeCustomSize(raw: unknown): Record<string, string> | null {
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(raw)) {
-      if (v !== null && v !== undefined) {
-        out[k] = String(v);
-      }
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (v !== null && v !== undefined) out[k] = String(v);
     }
     return Object.keys(out).length ? out : null;
   }
@@ -33,7 +31,7 @@ function normalizeAddress(o: any): string {
   if (o.guestInfo && typeof o.guestInfo === "object") {
     return (
       o.guestInfo.deliveryAddress ||
-      o.guestInfo.address ||
+      (o.guestInfo as any).address ||
       o.guestInfo.billingAddress ||
       o.guestInfo.country ||
       o.guestInfo.state ||
@@ -43,34 +41,27 @@ function normalizeAddress(o: any): string {
   return "—";
 }
 
-function humanizeDeliveryDetails(raw: any, deliveryOption?: any): string {
+function humanizeDeliveryDetails(raw: unknown, deliveryOption?: { name?: string | null }): string {
   if (!raw) return "—";
-  if (typeof raw === "string") {
+  let val: any = raw;
+  if (typeof val === "string") {
     try {
-      raw = JSON.parse(raw);
+      val = JSON.parse(val);
     } catch {
-      return raw;
+      return val;
     }
   }
-  if (typeof raw !== "object" || Array.isArray(raw)) return String(raw);
+  if (typeof val !== "object" || Array.isArray(val)) return String(val);
 
   const entries: string[] = [];
-  if (raw.aggregatedWeight) {
-    entries.push(
-      `Weight: ${parseFloat(raw.aggregatedWeight).toLocaleString()}kg`
-    );
+  if (val.aggregatedWeight) {
+    entries.push(`Weight: ${parseFloat(val.aggregatedWeight).toLocaleString()}kg`);
   }
-  if (deliveryOption?.name) {
-    entries.push(`Courier: ${deliveryOption.name}`);
-  }
-  // Add any extra info
-  for (const [k, v] of Object.entries(raw)) {
-    if (
-      k !== "aggregatedWeight" &&
-      k !== "deliveryOptionId" &&
-      v != null &&
-      v !== ""
-    ) {
+  if (deliveryOption?.name) entries.push(`Courier: ${deliveryOption.name}`);
+
+  for (const [k, v] of Object.entries(val)) {
+    if (k === "aggregatedWeight" || k === "deliveryOptionId") continue;
+    if (v != null && v !== "") {
       entries.push(
         `${k[0].toUpperCase() + k.slice(1)}: ${typeof v === "object" ? JSON.stringify(v) : v}`
       );
@@ -79,9 +70,9 @@ function humanizeDeliveryDetails(raw: any, deliveryOption?: any): string {
   return entries.length ? entries.join(" • ") : "—";
 }
 
-/**
- * Fetches recent 5 orders, with all info, just like inventory.
- */
+/* -----------------------------------------------------------------------------
+   Recent orders (5 latest). Prisma shape matches the schema you shared.
+----------------------------------------------------------------------------- */
 async function fetchRecentOrders(): Promise<OrderRow[]> {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
@@ -116,28 +107,27 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
           variant: {
             select: {
               product: {
-                select: {
-                  priceNGN: true,
-                },
+                select: { priceNGN: true, id: true, name: true, images: true, categorySlug: true },
               },
             },
           },
         },
       },
       offlineSale: true,
+      // IMPORTANT: your DeliveryOption model has no `type` column.
       deliveryOption: {
         select: {
           id: true,
           name: true,
           provider: true,
-          type: true,
+          // no `type` here — removed to avoid Prisma validation error
         },
       },
     },
   });
 
   return orders.map((o) => {
-    // Customer normalization
+    /** Customer / guest block */
     let customerObj: OrderRow["customer"];
     if (o.customer) {
       customerObj = {
@@ -147,39 +137,27 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
         phone: o.customer.phone,
         address: normalizeAddress(o),
       };
-    } else if (
-      o.guestInfo &&
-      typeof o.guestInfo === "object" &&
-      !Array.isArray(o.guestInfo)
-    ) {
+    } else if (o.guestInfo && typeof o.guestInfo === "object" && !Array.isArray(o.guestInfo)) {
       const gi = o.guestInfo as Record<string, string>;
       customerObj = {
         id: null,
-        name:
-          `${gi.firstName ?? ""} ${gi.lastName ?? ""}`.trim() || "Guest",
+        name: `${gi.firstName ?? ""} ${gi.lastName ?? ""}`.trim() || "Guest",
         email: gi.email ?? "",
         phone: gi.phone ?? "",
         address: normalizeAddress(o),
       };
     } else {
-      customerObj = {
-        id: null,
-        name: "Guest",
-        email: "",
-        phone: "",
-        address: "—",
-      };
+      customerObj = { id: null, name: "Guest", email: "", phone: "", address: "—" };
     }
 
-    // Calculate NGN total for reporting
-    const totalNGN: number = o.items.reduce(
-      (sum: number, it) =>
-        sum + (it.variant?.product.priceNGN ?? 0) * it.quantity,
-      0
-    );
+    /** NGN total for reporting (from product price * qty) */
+    const totalNGN = o.items.reduce((sum, it) => {
+      const unit = it.variant?.product?.priceNGN ?? 0;
+      return sum + unit * it.quantity;
+    }, 0);
 
-    // Normalize each product row
-    const products = o.items.map((it) => ({
+    /** Normalize product rows */
+    const products: OrderRow["products"] = o.items.map((it) => ({
       id: it.id,
       name: it.name,
       image: it.image ?? "",
@@ -188,11 +166,25 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
       size: it.size,
       quantity: it.quantity,
       lineTotal: it.lineTotal,
-      priceNGN: it.variant.product.priceNGN ?? 0,
+      priceNGN: it.variant?.product?.priceNGN ?? 0,
       hasSizeMod: it.hasSizeMod,
       sizeModFee: it.sizeModFee,
       customSize: normalizeCustomSize(it.customSize),
     }));
+
+    /** Delivery option shape expected by UI types.
+     *  Your UI's OrderRow.deliveryOption -> { id, name, provider, type: "COURIER" | "PICKUP" }
+     *  We only support courier now, so force the literal "COURIER" and annotate the variable so
+     *  TS doesn't widen it to `string`.
+     */
+    const deliveryOption: OrderRow["deliveryOption"] = o.deliveryOption
+      ? {
+          id: o.deliveryOption.id,
+          name: o.deliveryOption.name,
+          provider: o.deliveryOption.provider ?? null,
+          type: "COURIER",
+        }
+      : null;
 
     return {
       id: o.id,
@@ -205,24 +197,17 @@ async function fetchRecentOrders(): Promise<OrderRow[]> {
       products,
       customer: customerObj,
       channel: o.channel,
-      deliveryOption: o.deliveryOption
-        ? {
-            id: o.deliveryOption.id,
-            name: o.deliveryOption.name,
-            provider: o.deliveryOption.provider,
-            type: o.deliveryOption.type,
-          }
-        : null,
+      deliveryOption, // <- typed variable avoids the `"string"` widening error
       deliveryFee: o.deliveryFee ?? 0,
-      deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, o.deliveryOption),
+deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, deliveryOption ?? undefined),
+
     };
   });
 }
 
-/**
- * Build top N products by total quantity sold, always in NGN.
- * Excludes orders with status "Cancelled".
- */
+/* -----------------------------------------------------------------------------
+   Top products by qty (ignores Cancelled)
+----------------------------------------------------------------------------- */
 async function fetchTopProducts(limit = 5) {
   const validOrderIds = (
     await prisma.order.findMany({
@@ -265,10 +250,9 @@ async function fetchTopProducts(limit = 5) {
   });
 }
 
-/**
- * Build revenue time‑series (Day, Month, 6 Months, Year).
- * Only includes non-cancelled orders in calculations.
- */
+/* -----------------------------------------------------------------------------
+   Revenue series (Day / Month / 6 Months / Year), non-cancelled only
+----------------------------------------------------------------------------- */
 async function buildRevenueSeries() {
   const now = new Date();
   const sumRange = async (gte: Date, lte: Date) => {
@@ -283,7 +267,7 @@ async function buildRevenueSeries() {
   };
 
   // Last 7 days
-  const daySeries = [];
+  const daySeries: { label: string; value: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(now.getDate() - i);
@@ -296,7 +280,7 @@ async function buildRevenueSeries() {
   }
 
   // Each month of current year
-  const monthSeries = [];
+  const monthSeries: { label: string; value: number }[] = [];
   for (let m = 0; m < 12; m++) {
     const start = new Date(now.getFullYear(), m, 1);
     if (start > now) break;
@@ -307,8 +291,8 @@ async function buildRevenueSeries() {
     });
   }
 
-  // Last 6 distinct months
-  const sixSeries = [];
+  // Last 6 months
+  const sixSeries: { label: string; value: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const start = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -320,15 +304,12 @@ async function buildRevenueSeries() {
   }
 
   // Last 5 years
-  const yearSeries = [];
+  const yearSeries: { label: string; value: number }[] = [];
   for (let i = 4; i >= 0; i--) {
     const y = now.getFullYear() - i;
     const start = new Date(y, 0, 1);
     const end = new Date(y, 11, 31, 23, 59, 59, 999);
-    yearSeries.push({
-      label: String(y),
-      value: await sumRange(start, end),
-    });
+    yearSeries.push({ label: String(y), value: await sumRange(start, end) });
   }
 
   return {
@@ -339,26 +320,23 @@ async function buildRevenueSeries() {
   };
 }
 
+/* -----------------------------------------------------------------------------
+   Page
+----------------------------------------------------------------------------- */
 export default async function AdminDashboardPage() {
-  const [
-    totalProducts,
-    totalCustomers,
-    orderAgg,
-    top3,
-    recentOrders,
-    revenueSeries,
-  ] = await Promise.all([
-    prisma.product.count(),
-    prisma.customer.count(),
-    prisma.order.aggregate({
-      _count: { _all: true },
-      _sum: { totalNGN: true },
-      where: { status: { not: "Cancelled" } },
-    }),
-    fetchTopProducts(3),
-    fetchRecentOrders(),
-    buildRevenueSeries(),
-  ]);
+  const [totalProducts, totalCustomers, orderAgg, top3, recentOrders, revenueSeries] =
+    await Promise.all([
+      prisma.product.count(),
+      prisma.customer.count(),
+      prisma.order.aggregate({
+        _count: { _all: true },
+        _sum: { totalNGN: true },
+        where: { status: { not: "Cancelled" } },
+      }),
+      fetchTopProducts(3),
+      fetchRecentOrders(),
+      buildRevenueSeries(),
+    ]);
 
   const totalOrders = orderAgg._count._all;
   const totalRevenue = orderAgg._sum.totalNGN ?? 0;

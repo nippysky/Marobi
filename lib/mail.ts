@@ -1,6 +1,7 @@
 // lib/mail.ts
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/db";
+import { generateInvoicePDF } from "@/lib/pdf/invoice";
 
 /* ---------- Brand Tokens ---------- */
 const BRAND_NAME = "Marobi";
@@ -313,6 +314,200 @@ export async function sendStatusEmail(params: {
   });
 }
 
+/* ---------- Teeka4-style Receipt HTML renderer ---------- */
+function renderTeekaStyleReceiptEmail({
+  order,
+  recipient,
+  currency,
+  deliveryFee,
+}: {
+  order: {
+    id: string;
+    createdAt: string | Date;
+    items: Array<{
+      name: string;
+      image?: string | null;
+      quantity: number;
+      lineTotal: number;
+      color?: string | null;
+      size?: string | null;
+      hasSizeMod?: boolean;
+      sizeModFee?: number;
+    }>;
+    totalAmount: number;
+    paymentMethod: string;
+  };
+  recipient: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    deliveryAddress?: string;
+    billingAddress?: string;
+  };
+  currency: "NGN" | "USD" | "EUR" | "GBP" | string;
+  deliveryFee: number;
+}) {
+  const sym =
+    currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency === "EUR" ? "€" : "£";
+
+  const subtotal = Number(order.totalAmount ?? 0);
+  const shipping = Number(deliveryFee ?? 0);
+  const total = +(subtotal + shipping).toFixed(2);
+
+  const name = `${recipient.firstName} ${recipient.lastName}`.trim();
+  const orderDate = new Date(order.createdAt).toLocaleDateString();
+
+  const lineRows = order.items
+    .map((p, i) => {
+      const alt = i % 2 === 0 ? "background:#fafafa;" : "";
+      const sub: string[] = [];
+      if (p.color) sub.push(`Color: ${p.color}`);
+      if (p.size) sub.push(`Size: ${p.size}`);
+      const subLine = sub.length ? `<div style="font-size:12px;color:#6b7280">${sub.join(" • ")}</div>` : "";
+      const sizeMod = p.hasSizeMod && p.sizeModFee
+        ? `<div style="font-size:12px;color:#92400e">+5% size-mod fee: ${sym}${(p.sizeModFee * p.quantity).toLocaleString()}</div>`
+        : "";
+
+      return `
+      <tr style="${alt}">
+        <td style="padding:10px 12px;">
+          <div style="display:flex;gap:20px;align-items:flex-start">
+            ${p.image ? `<img src="${p.image}" width="44" height="44" style="object-fit:cover;border-radius:6px;border:1px solid #e5e7eb" />` : ""}
+            <div style="margin-left: 30px;">
+              <div style="font-weight:600;color:#111827">${p.name}</div>
+              ${subLine}
+              ${sizeMod}
+            </div>
+          </div>
+        </td>
+        <td style="padding:10px 12px;white-space:nowrap;text-align:center;color:#111827">${p.quantity}</td>
+        <td style="padding:10px 12px;white-space:nowrap;text-align:right;color:#111827;font-weight:600">${sym}${p.lineTotal.toLocaleString()}</td>
+      </tr>`;
+    })
+    .join("");
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);">
+          <!-- Header -->
+          <tr>
+            <td style="padding:18px 22px;background:${BRAND_COLOR};color:#fff;">
+              <div style="font-size:22px;font-weight:700;">${BRAND_NAME}</div>
+            </td>
+          </tr>
+
+          <!-- Intro -->
+          <tr>
+            <td style="padding:16px 22px 0;">
+              <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:6px;">Thanks for your order</div>
+              <div style="font-size:13px;color:#374151;line-height:1.6;">
+                Your order has been packed and would be picked up by a courier soon.
+              </div>
+
+              <div style="margin-top:14px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151">
+                <strong>ORDER ${order.id}</strong> (${orderDate})
+              </div>
+            </td>
+          </tr>
+
+          <!-- Items -->
+          <tr>
+            <td style="padding:12px 22px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+                <thead>
+                  <tr style="background:#f9fafb">
+                    <th align="left"  style="font-size:12px;color:#6b7280;padding:10px 12px;">Product</th>
+                    <th align="center" style="font-size:12px;color:#6b7280;padding:10px 12px;">Quantity</th>
+                    <th align="right" style="font-size:12px;color:#6b7280;padding:10px 12px;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>${lineRows}</tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Totals -->
+          <tr>
+            <td style="padding:6px 22px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;border-radius:8px;">
+                <tr>
+                  <td style="padding:10px 12px;font-size:13px;color:#111827;">Subtotal</td>
+                  <td align="right" style="padding:10px 12px;font-size:13px;color:#111827;">${sym}${subtotal.toLocaleString()}</td>
+                </tr>
+                <tr style="background:#fafafa">
+                  <td style="padding:10px 12px;font-size:13px;color:#111827;">Shipping</td>
+                  <td align="right" style="padding:10px 12px;font-size:13px;color:#111827;">${sym}${shipping.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 12px;font-size:14px;font-weight:700;color:#111827;border-top:1px solid #e5e7eb;">Total</td>
+                  <td align="right" style="padding:12px 12px;font-size:14px;font-weight:700;color:#111827;border-top:1px solid #e5e7eb;">${sym}${total.toLocaleString()}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Checkout Fields / Notes -->
+          <tr>
+            <td style="padding:16px 22px">
+              <div style="font-size:12px;color:#374151;margin-bottom:6px;font-weight:700;">CHECKOUT FIELDS</div>
+              <ul style="margin:6px 0 0 16px;padding:0;color:#4b5563;font-size:12px;line-height:1.55;">
+                <li>Shipping is processed promptly; ensure contact details are accurate for delivery updates.</li>
+                <li>If anything looks off, reply to this email immediately.</li>
+                <li>Keep your order number handy for support.</li>
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Addresses -->
+          <tr>
+            <td style="padding:0 22px 18px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td valign="top" style="width:50%;padding-right:10px;">
+                    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
+                      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">BILLING ADDRESS</div>
+                      <div style="font-size:12px;color:#111827;white-space:pre-line;">
+                        ${name}
+                        ${recipient.billingAddress ? `\n${recipient.billingAddress}` : ""}
+                        ${recipient.email ? `\n${recipient.email}` : ""}
+                      </div>
+                    </div>
+                  </td>
+                  <td valign="top" style="width:50%;padding-left:10px;">
+                    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
+                      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">SHIPPING ADDRESS</div>
+                      <div style="font-size:12px;color:#111827;white-space:pre-line;">
+                        ${name}
+                        ${recipient.deliveryAddress ? `\n${recipient.deliveryAddress}` : ""}
+                        ${recipient.email ? `\n${recipient.email}` : ""}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:16px 22px;border-top:1px solid #e5e7eb;background:#fafafa;font-size:12px;color:#6b7280;text-align:center;">
+              Thanks for shopping with ${BRAND_NAME}.
+            </td>
+          </tr>
+        </table>
+        <div style="height:20px">&nbsp;</div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 /** Helper to compute exponential backoff in seconds (capped at 1h) */
 function computeBackoffSeconds(attempts: number) {
   const base = 60; // 1 minute
@@ -341,104 +536,36 @@ export async function sendReceiptEmailWithRetry({
   deliveryFee: number;
 }) {
   const to = recipient.email;
-  const name = `${recipient.firstName} ${recipient.lastName}`;
 
-  const vatRate = 0.075;
-  const subtotal = +order.totalAmount.toFixed(2);
-  const vat = +(subtotal * vatRate).toFixed(2);
-  const deliveryCharge = deliveryFee;
-  const grandTotal = +(subtotal + vat + deliveryCharge).toFixed(2);
-  const sym =
-    currency === "NGN"
-      ? "₦"
-      : currency === "USD"
-      ? "$"
-      : currency === "EUR"
-      ? "€"
-      : "£";
+  // Teeka4-style HTML
+  const html = renderTeekaStyleReceiptEmail({
+    order,
+    recipient,
+    currency: (currency as any) || "NGN",
+    deliveryFee,
+  });
 
-  const lineRows = order.items
-    .map((p: any) => {
-      return `
-        <tr style="border-bottom:1px solid #e1e1e1">
-          <td style="padding:8px; vertical-align:top;">
-            <div style="display:flex; align-items:center;gap:8px;">
-              <img src="${p.image ?? ""}" width="50" style="border-radius:6px; object-fit:cover;" alt="${p.name}" />
-              <div>
-                <div style="font-weight:600;">${p.name} × ${p.quantity}</div>
-                <div style="font-size:12px;color:#555;">
-                  Color: ${p.color} • Size: ${p.size}
-                  ${
-                    p.hasSizeMod
-                      ? `<br/>Size Mod Fee: ${sym}${(
-                          p.sizeModFee * p.quantity
-                        ).toLocaleString()}`
-                      : ""
-                  }
-                </div>
-              </div>
-            </div>
-          </td>
-          <td align="right" style="font-family:monospace; padding:8px;">
-            ${sym}${p.lineTotal.toLocaleString()}
-          </td>
-        </tr>`;
-    })
-    .join("");
-
-  const addressHtml = recipient.deliveryAddress
-    ? `<p><strong>Address:</strong> ${recipient.deliveryAddress}</p>`
-    : "";
-
-  const bodyHtml = `
-    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#333">
-      <p style="margin:0 0 12px;">Order <strong>${order.id}</strong> confirmed.</p>
-      <p style="margin:0 0 4px;">Payment: <strong>${
-        order.paymentMethod
-      }</strong> — ${new Date(order.createdAt).toLocaleString()}</p>
-      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-top:12px;">
-        ${lineRows}
-      </table>
-      <div style="margin-top:24px; font-family:monospace;">
-        <p style="margin:4px 0;">
-          Subtotal:&nbsp;<strong>${sym}${subtotal.toLocaleString()}</strong>
-        </p>
-        <p style="margin:4px 0;">
-          VAT (7.5%):&nbsp;<strong>${sym}${vat.toLocaleString()}</strong>
-        </p>
-        <p style="margin:4px 0;">
-          Delivery Fee:&nbsp;<strong>${sym}${deliveryCharge.toLocaleString()}</strong>
-        </p>
-        <p style="margin:8px 0; font-size:16px;">
-          <strong>Grand Total:&nbsp;${sym}${grandTotal.toLocaleString()}</strong>
-        </p>
-      </div>
-      <div style="margin-top:16px;font-size:14px;">
-        <p><strong>Customer:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${to}</p>
-        ${
-          recipient.phone
-            ? `<p><strong>Phone:</strong> ${recipient.phone}</p>`
-            : ""
-        }
-        ${addressHtml}
-      </div>
-    </div>
-  `;
+  // PDF invoice attachment
+  const pdfBuffer = await generateInvoicePDF({
+    order,
+    recipient,
+    currency: (currency as any) || "NGN",
+    deliveryFee,
+  });
 
   try {
-    await sendGenericEmail({
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to,
-      subject: `Your Receipt — Order ${order.id}`,
-      title: `Payment Successful`,
-      intro: `Hi ${name}, thank you for your purchase! Your order <strong>${order.id}</strong> has been confirmed.`,
-      bodyHtml,
-      button: {
-        label: "Continue Shopping",
-        url: `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/all-products`,
-      },
-      preheader: `Receipt for order ${order.id}`,
-      footerNote: "If you have any questions, reply to this email.",
+      subject: `Invoice for order ${order.id}`,
+      html,
+      attachments: [
+        {
+          filename: `invoice-${order.id}.pdf`,
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     // mark as sent / upsert with deliveryFee

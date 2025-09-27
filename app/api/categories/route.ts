@@ -1,12 +1,21 @@
+// app/api/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getAllCategories } from "@/lib/categories";
 
 export async function GET(req: NextRequest) {
   try {
-    const cats = await getAllCategories();
+    const sp = req.nextUrl.searchParams;
+    // Default: active only. Override with ?active=false or ?active=0
+    const activeParam = sp.get("active");
+    const activeOnly =
+      activeParam === null
+        ? true
+        : /^(true|1|yes)$/i.test(activeParam) ? true : false;
+
+    const cats = await getAllCategories({ activeOnly });
+
     return NextResponse.json(cats, {
       status: 200,
-      // optional: add caching hints if you want edge/browser caching
       headers: {
         "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
       },

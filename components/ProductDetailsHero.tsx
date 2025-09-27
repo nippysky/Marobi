@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Switch } from "./ui/switch";
+import { Input } from "./ui/input"; // ← added
 
 const CUSTOM_SIZE_FIELDS = [
   { name: "chest", label: "Chest/Bust (in)" },
@@ -403,7 +404,7 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
                 <Select
                   value={selectedSize}
                   onValueChange={setSelectedSize}
-                  disabled={hasColor && !selectedColor}
+                  disabled={customSizeEnabled || (hasColor && !selectedColor)} 
                   aria-label="Select size"
                 >
                   <SelectTrigger>
@@ -433,6 +434,37 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
               </div>
             )}
           </div>
+
+          {/* ← ADDED BACK: custom size inputs */}
+          {enableSizeMod && customSizeEnabled && (
+            <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <PencilRuler className="h-4 w-4" />
+                Enter custom measurements (inches)
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {CUSTOM_SIZE_FIELDS.map((f) => (
+                  <div key={f.name} className="space-y-1.5">
+                    <label className="block text-xs text-gray-600">{f.label}</label>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      placeholder="e.g. 36.5"
+                      value={customMods[f.name] ?? ""}
+                      onChange={(e) =>
+                        setCustomMods((m) => ({ ...m, [f.name]: e.target.value }))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Provide any that apply — leave others blank. A 5% tailoring fee is added automatically.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <label className="block text-sm text-gray-700">Quantity</label>

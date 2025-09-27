@@ -32,14 +32,12 @@ import { useSession } from "next-auth/react";
 import type { CheckoutUser } from "./page";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
 
-// shared checkout hook/types
 import {
   useCheckout,
   CartItemPayload,
   CustomerPayload,
 } from "@/lib/hooks/useCheckout";
 
-// extracted form hooks
 import {
   useCountryState,
   useDeliveryOptions,
@@ -73,7 +71,7 @@ const FormField = ({
 );
 
 const flagEmoji = (iso2: string) =>
-  iso2
+  (iso2 || "")
     .toUpperCase()
     .replace(/./g, (char) =>
       String.fromCodePoint(127397 + char.charCodeAt(0))
@@ -87,16 +85,16 @@ export default function CheckoutSection({ user }: Props) {
   const items = useCartStore((s) => s.items) as CartItem[];
   const clearCart = useCartStore((s) => s.clear) as () => void;
 
-  // Totals (without delivery fee)
   const { itemsSubtotal, sizeModTotal, totalWeight, total: baseTotal } =
-    useCartTotals(items.map((it) => ({
-      price: it.price,
-      sizeModFee: it.sizeModFee,
-      quantity: it.quantity,
-      unitWeight: it.unitWeight,
-    })));
+    useCartTotals(
+      items.map((it) => ({
+        price: it.price,
+        sizeModFee: it.sizeModFee,
+        quantity: it.quantity,
+        unitWeight: it.unitWeight,
+      }))
+    );
 
-  // Country / state / phone logic
   const {
     countryList,
     country,
@@ -109,7 +107,6 @@ export default function CheckoutSection({ user }: Props) {
     phoneOptions,
   } = useCountryState(user?.country, user?.state);
 
-  // Delivery options based on country
   const {
     deliveryOptions,
     selectedDeliveryOption,
@@ -119,7 +116,6 @@ export default function CheckoutSection({ user }: Props) {
 
   const total = baseTotal + deliveryFee;
 
-  // Form fields
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
@@ -132,21 +128,17 @@ export default function CheckoutSection({ user }: Props) {
     user?.billingAddress ?? ""
   );
 
-  // Payment / UX state
   const [hasAttemptedPayment, setHasAttemptedPayment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [customerEmailForModal, setCustomerEmailForModal] =
     useState<string>("");
-  const [lastPaymentReference, setLastPaymentReference] = useState<string | null>(
-    null
-  );
+  const [lastPaymentReference, setLastPaymentReference] =
+    useState<string | null>(null);
   const [orderCreatingFromReference, setOrderCreatingFromReference] =
     useState(false);
 
-  // Shared checkout hook
   const { isProcessing, error, result, createOrder, reset } = useCheckout();
 
-  // Readiness
   const isPaymentReady =
     email.trim() !== "" &&
     items.length > 0 &&
@@ -157,7 +149,6 @@ export default function CheckoutSection({ user }: Props) {
 
   const amountInLowestDenomination = Math.round(total * 100);
 
-  // Paystack key
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
   if (!paystackPublicKey) {
     console.error(
@@ -166,7 +157,6 @@ export default function CheckoutSection({ user }: Props) {
   }
   const safePaystackPublicKey = paystackPublicKey || "";
 
-  // Reference
   const [paystackReference, setPaystackReference] = useState<string>(
     `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
   );
@@ -186,7 +176,12 @@ export default function CheckoutSection({ user }: Props) {
       amount: amountInLowestDenomination,
       publicKey: safePaystackPublicKey,
     }),
-    [paystackReference, email, amountInLowestDenomination, safePaystackPublicKey]
+    [
+      paystackReference,
+      email,
+      amountInLowestDenomination,
+      safePaystackPublicKey,
+    ]
   );
 
   const customerPayload: CustomerPayload = {
@@ -433,9 +428,7 @@ export default function CheckoutSection({ user }: Props) {
                   <Textarea
                     id="deliveryAddress"
                     value={deliveryAddress}
-                    onChange={(e) =>
-                      setDeliveryAddress(e.currentTarget.value)
-                    }
+                    onChange={(e) => setDeliveryAddress(e.currentTarget.value)}
                     rows={3}
                   />
                 </FormField>
@@ -466,9 +459,7 @@ export default function CheckoutSection({ user }: Props) {
                     <Textarea
                       id="billingAddress"
                       value={billingAddress}
-                      onChange={(e) =>
-                        setBillingAddress(e.currentTarget.value)
-                      }
+                      onChange={(e) => setBillingAddress(e.currentTarget.value)}
                       rows={3}
                     />
                   </FormField>
@@ -486,39 +477,42 @@ export default function CheckoutSection({ user }: Props) {
                     </p>
                   ) : (
                     <div className="grid gap-4">
-                      {deliveryOptions.map((opt) => (
-                        <div
-                          key={opt.id}
-                          className={`border rounded-lg p-4 flex justify-between items-start ${
-                            selectedDeliveryOption?.id === opt.id
-                              ? "ring-2 ring-brand"
-                              : ""
-                          }`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium">{opt.name}</div>
-                            <div className="text-xs text-gray-600">
-                              {opt.provider
-                                ? `Provider: ${opt.provider}`
-                                : "In-person / generic"}{" "}
-                              • {opt.type.toLowerCase()}
+                      {deliveryOptions.map((opt) => {
+                        const modeLabel =
+                          opt.pricingMode === "EXTERNAL"
+                            ? "external pricing"
+                            : "fixed pricing";
+                        return (
+                          <div
+                            key={opt.id}
+                            className={`border rounded-lg p-4 flex justify-between items-start ${
+                              selectedDeliveryOption?.id === opt.id
+                                ? "ring-2 ring-brand"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium">{opt.name}</div>
+                              <div className="text-xs text-gray-600">
+                                {opt.provider ? `Provider: ${opt.provider}` : "Courier"} • {modeLabel}
+                              </div>
+                              <div className="text-sm mt-1">
+                                Fee: {formatAmount(opt.baseFee ?? 0, currency)}
+                              </div>
                             </div>
-                            <div className="text-sm mt-1">
-                              Fee: {formatAmount(opt.baseFee, currency)}
+                            <div className="flex items-center">
+                              <input
+                                type="radio"
+                                name="deliveryOption"
+                                checked={selectedDeliveryOption?.id === opt.id}
+                                onChange={() => setSelectedDeliveryOption(opt)}
+                                aria-label={`Select delivery option ${opt.name}`}
+                                className="ml-2"
+                              />
                             </div>
                           </div>
-                          <div className="flex items-center">
-                            <input
-                              type="radio"
-                              name="deliveryOption"
-                              checked={selectedDeliveryOption?.id === opt.id}
-                              onChange={() => setSelectedDeliveryOption(opt)}
-                              aria-label={`Select delivery option ${opt.name}`}
-                              className="ml-2"
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -557,7 +551,7 @@ export default function CheckoutSection({ user }: Props) {
                                 {item.product.name}
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.color}, {item.size} × {item.quantity}
+                                {item.color}, {item.hasSizeMod ? "Custom" : item.size} × {item.quantity}
                               </p>
                               {item.hasSizeMod && (
                                 <p className="text-xs text-yellow-600">
@@ -660,7 +654,6 @@ export default function CheckoutSection({ user }: Props) {
               </div>
             </div>
 
-            {/* Error display */}
             {hasAttemptedPayment && error && (
               <div className="mt-2 px-3 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm">
                 {typeof error === "string" ? error : error.error}

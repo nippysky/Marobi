@@ -103,6 +103,13 @@ export default function LoginClient() {
             Forgot password?
           </Link>
         </p>
+
+             <p className="md:col-span-2 text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/auth/register" className="font-semibold hover:underline">
+              Register
+            </Link>
+          </p>
       </div>
     </>
   );

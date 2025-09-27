@@ -1,88 +1,73 @@
-// app/api/countries/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 
-type CountriesNowItem = { country: string };
-type RestCountry = { name: string; alpha2Code?: string; callingCodes?: string[] };
+type RC = {
+  name?: { common?: string };
+  cca2?: string;
+  idd?: { root?: string; suffixes?: string[] };
+};
 
-function normName(n: string): string {
-  return n
-    .toLowerCase()
-    .replace(/\(.*?\)/g, "")            // drop parenthetical notes
-    .replace(/,.*$/, "")                // drop trailing qualifiers after comma
-    .replace(/\b(the|and|of|republic|federal|state|states|democratic|people's)\b/g, "")
-    .replace(/[^a-z]/g, "")
-    .trim();
+function callingCodesFromIdd(idd?: RC["idd"]): string[] {
+  if (!idd?.root) return [];
+  if (!idd.suffixes?.length) return [idd.root];
+  return idd.suffixes.map((s) => `${idd.root}${s}`);
 }
 
 export async function GET() {
+  // Defensive timeout so the handler never hangs
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 15_000);
+
   try {
-    // Add a defensive timeout so the route never hangs
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 15_000);
-
-    // fetch both sources in parallel (cache for a day on the edge)
-    const [cnRes, rcRes] = await Promise.all([
-      fetch("https://countriesnow.space/api/v0.1/countries", {
-        next: { revalidate: 60 * 60 * 24 },
+    const res = await fetch(
+      "https://restcountries.com/v3.1/all?fields=name,cca2,idd",
+      {
+        next: { revalidate: 60 * 60 * 24 }, // 1 day edge cache
         signal: controller.signal,
-      }),
-      fetch("https://restcountries.com/v2/all?fields=name,alpha2Code,callingCodes", {
-        next: { revalidate: 60 * 60 * 24 },
-        signal: controller.signal,
-      }),
-    ]).finally(() => clearTimeout(t));
+      }
+    );
 
-    if (!cnRes.ok || !rcRes.ok) {
-      console.error("Upstream country API error:", cnRes.status, rcRes.status);
-      return NextResponse.json(
-        { error: "Failed to fetch country data" },
-        { status: 502 }
-      );
-    }
+    if (!res.ok) throw new Error(`restcountries ${res.status}`);
 
-    const cnJson = (await cnRes.json()) as { data?: CountriesNowItem[] };
-    const rcJson = (await rcRes.json()) as RestCountry[];
+    const data = (await res.json()) as RC[];
 
-    const list1 = Array.isArray(cnJson?.data) ? cnJson.data : [];
-    const list2 = Array.isArray(rcJson) ? rcJson : [];
+    const list = data
+      .filter(Boolean)
+      .map((r) => ({
+        name: r.name?.common ?? "",
+        iso2: r.cca2 ?? "",
+        callingCodes: callingCodesFromIdd(r.idd),
+      }))
+      .filter((c) => c.name && c.iso2) // keep clean
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Build lookups for exact and fuzzy name matches
-    const byName = new Map<string, RestCountry>();
-    const byNorm = new Map<string, RestCountry>();
-    for (const r of list2) {
-      if (!r?.name) continue;
-      byName.set(r.name, r);
-      byNorm.set(normName(r.name), r);
-    }
-
-    // Merge into the desired shape
-    const merged = list1.map((c) => {
-      const name = c?.country ?? "";
-      const direct = byName.get(name);
-      const fuzzy = byNorm.get(normName(name));
-      const picked = direct ?? fuzzy;
-
-      return {
-        name,
-        iso2: picked?.alpha2Code ?? "",
-        callingCodes: picked?.callingCodes ?? [],
-      };
-    });
-
-    return NextResponse.json(merged, {
+    return NextResponse.json(list, {
       status: 200,
       headers: {
         "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=43200",
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Country proxy error:", err);
-    const status = err?.name === "AbortError" ? 504 : 500;
-    return NextResponse.json(
-      { error: "Server error fetching countries" },
-      { status }
-    );
+
+    // Tiny fallback so your UI still works if upstream is down
+    const fallback = [
+      { name: "Ghana", iso2: "GH", callingCodes: ["+233"] },
+      { name: "Nigeria", iso2: "NG", callingCodes: ["+234"] },
+      { name: "South Africa", iso2: "ZA", callingCodes: ["+27"] },
+      { name: "United Kingdom", iso2: "GB", callingCodes: ["+44"] },
+      { name: "United States", iso2: "US", callingCodes: ["+1"] },
+    ].sort((a, b) => a.name.localeCompare(b.name));
+
+    return NextResponse.json(fallback, {
+      status: 200,
+      headers: {
+        "X-Fallback": "1",
+        "Cache-Control": "public, max-age=300",
+      },
+    });
+  } finally {
+    clearTimeout(t);
   }
 }

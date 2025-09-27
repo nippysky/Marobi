@@ -13,6 +13,7 @@ import {
   LogOut,
   NotebookPen,
   User,
+  Rows4,
 } from "lucide-react";
 import { BsBag } from "react-icons/bs";
 import { RiAdminLine } from "react-icons/ri";
@@ -22,6 +23,7 @@ import { signOut } from "next-auth/react";
 const navItems = [
   { name: "Dashboard",           href: "/admin",                   icon: <LayoutDashboard size={20} /> },
   { name: "Log Offline Sale",    href: "/admin/log-sale",          icon: <NotebookPen size={20} /> },
+  { name: "Categories",          href: "/admin/categories",          icon: <Rows4 size={20} /> },
   { name: "Products Management", href: "/admin/product-management", icon: <Boxes size={20} /> },
   { name: "Order Inventory",     href: "/admin/order-inventory",   icon: <BsBag size={20} /> },
   { name: "Customers",           href: "/admin/customers",         icon: <Users size={20} /> },
