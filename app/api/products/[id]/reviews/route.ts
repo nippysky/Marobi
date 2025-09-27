@@ -1,4 +1,3 @@
-// app/api/product/[id]/reviews/route.ts
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -117,14 +116,51 @@ export async function POST(
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   await prismaReady;
 
+  const url = new URL(req.url);
   const { id } = await context.params;
   const productId = id;
 
+  // Pagination support (offset-based). When query params are present, return {items,total}.
+  const limitParam = url.searchParams.get("limit");
+  const offsetParam = url.searchParams.get("offset");
+  const hasPagination = limitParam !== null || offsetParam !== null;
+
+  const limit = Math.min(
+    20,
+    Math.max(1, Number.isFinite(Number(limitParam)) ? Number(limitParam) : 8)
+  );
+  const offset = Math.max(
+    0,
+    Number.isFinite(Number(offsetParam)) ? Number(offsetParam) : 0
+  );
+
+  if (hasPagination) {
+    const [items, total] = await Promise.all([
+      prisma.review.findMany({
+        where: { productId },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: limit,
+        select: {
+          id: true,
+          rating: true,
+          body: true,
+          createdAt: true,
+          customer: { select: { firstName: true, lastName: true } },
+        },
+      }),
+      prisma.review.count({ where: { productId } }),
+    ]);
+
+    return NextResponse.json({ items, total }, { status: 200 });
+  }
+
+  // Back-compat: no pagination params -> return full array
   const reviews = await prisma.review.findMany({
     where: { productId },
     orderBy: { createdAt: "desc" },
