@@ -23,7 +23,8 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
   const [paused, setPaused] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  const goTo = (n: number) => setCurrent(((n % slides.length) + slides.length) % slides.length);
+  const goTo = (n: number) =>
+    setCurrent(((n % slides.length) + slides.length) % slides.length);
   const next = () => goTo(current + 1);
   const prev = () => goTo(current - 1);
 
@@ -41,7 +42,10 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
   return (
     <div className="w-full max-w-[1920px] mx-auto">
       <div
-        className="relative w-full h-[24rem] sm:h-[30rem] md:h-[36rem] lg:h-[46rem] xl:h-[52rem] overflow-hidden"
+        className={
+          // Shorter fixed heights across breakpoints
+          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[32rem] overflow-hidden"
+        }
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -58,18 +62,18 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
             >
               <div className="absolute inset-0 bg-black/40" />
               <div className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-12 lg:px-24 text-left">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg max-w-2xl">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg max-w-2xl">
                   {s.heading}
                 </h1>
                 {s.subtext && (
-                  <p className="mt-4 text-lg md:text-xl text-white/95 drop-shadow-md max-w-xl">
+                  <p className="mt-3 text-base md:text-lg text-white/95 drop-shadow-md max-w-xl">
                     {s.subtext}
                   </p>
                 )}
                 {s.buttonText && s.buttonHref && (
                   <Link
                     href={s.buttonHref}
-                    className="mt-6 inline-block bg-brand hover:bg-brand/90 text-white font-semibold px-8 py-3 rounded-full transition-colors duration-200 text-base"
+                    className="mt-5 inline-block bg-brand hover:bg-brand/90 text-white font-semibold px-6 py-2.5 rounded-full transition-colors duration-200 text-sm md:text-base"
                   >
                     {s.buttonText}
                   </Link>
@@ -79,49 +83,49 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
           );
         })}
 
-        {/* Control rail — bottom-left */}
-        <div className="absolute left-6 sm:left-10 bottom-6 z-20 flex items-center gap-3">
-          <button
-            aria-label="Previous"
-            onClick={() => {
-              if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-              prev();
-            }}
-            className="h-8 w-8 rounded-full bg-white/70 hover:bg-white transition flex items-center justify-center"
-          >
-            <ChevronLeft className="h-4 w-4 text-gray-900" />
-          </button>
+        {/* Prev arrow — middle left */}
+        <button
+          aria-label="Previous"
+          onClick={() => {
+            if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+            prev();
+          }}
+          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/75 hover:bg-white shadow-md flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+        >
+          <ChevronLeft className="h-5 w-5 text-gray-900" />
+        </button>
 
-          <div className="flex items-center gap-2">
-            {slides.map((_, i) => {
-              const active = i === current;
-              return (
-                <button
-                  key={i}
-                  aria-label={`Go to slide ${i + 1}`}
-                  onClick={() => {
-                    if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-                    goTo(i);
-                  }}
-                  className={[
-                    "h-1.5 rounded-full transition-all duration-400",
-                    active ? "w-8 bg-white" : "w-3 bg-white/50 hover:bg-white/70",
-                  ].join(" ")}
-                />
-              );
-            })}
-          </div>
+        {/* Next arrow — middle right */}
+        <button
+          aria-label="Next"
+          onClick={() => {
+            if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+            next();
+          }}
+          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/75 hover:bg-white shadow-md flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+        >
+          <ChevronRight className="h-5 w-5 text-gray-900" />
+        </button>
 
-          <button
-            aria-label="Next"
-            onClick={() => {
-              if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-              next();
-            }}
-            className="h-8 w-8 rounded-full bg-white/70 hover:bg-white transition flex items-center justify-center"
-          >
-            <ChevronRight className="h-4 w-4 text-gray-900" />
-          </button>
+        {/* Indicators — bottom center */}
+        <div className="absolute inset-x-0 bottom-3 sm:bottom-4 z-20 flex items-center justify-center gap-2">
+          {slides.map((_, i) => {
+            const active = i === current;
+            return (
+              <button
+                key={i}
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => {
+                  if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+                  goTo(i);
+                }}
+                className={[
+                  "h-1.5 rounded-full transition-all duration-300",
+                  active ? "w-8 bg-white" : "w-3 bg-white/60 hover:bg-white/80",
+                ].join(" ")}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

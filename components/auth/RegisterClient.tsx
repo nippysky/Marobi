@@ -48,6 +48,10 @@ const flagEmoji = (iso2: string) =>
     .toUpperCase()
     .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 
+// Always return a dial code with exactly one leading '+'
+const normalizeDial = (code: string | number) =>
+  `+${String(code).replace(/\D/g, "")}`;
+
 export default function RegisterClient() {
   const router = useRouter();
 
@@ -88,7 +92,11 @@ export default function RegisterClient() {
         setCountryList(data);
         // default to Nigeria
         const ng = data.find((c) => c.name === "Nigeria") ?? null;
-        setCountry(ng);
+        setCountry(ng || null);
+        // set default dial (normalize in case API includes '+')
+        if (ng?.callingCodes?.length) {
+          setPhoneCode(normalizeDial(ng.callingCodes[0]));
+        }
       } catch {
         toast.error("Could not load country list.");
       }
@@ -118,18 +126,21 @@ export default function RegisterClient() {
         toast.error("Could not load states.");
       }
     })();
-    // reset phone code
+    // reset phone code (normalize to avoid '++')
     if (country.callingCodes.length) {
-      setPhoneCode(`+${country.callingCodes[0]}`);
+      setPhoneCode(normalizeDial(country.callingCodes[0]));
     }
   }, [country]);
 
-  // ── Build phone‑code options ────────────────────────────────────────
+  // ── Build phone-code options ────────────────────────────────────────
   const phoneOptions = useMemo(
     () =>
       countryList
         .flatMap((c) =>
-          c.callingCodes.map((code) => ({ dial: `+${code}`, iso2: c.iso2 }))
+          c.callingCodes.map((code) => ({
+            dial: normalizeDial(code),
+            iso2: c.iso2,
+          }))
         )
         // dedupe same dial
         .reduce<{ dial: string; iso2: string }[]>((acc, cur) => {
@@ -306,7 +317,7 @@ export default function RegisterClient() {
                 type="tel"
                 placeholder="8012345678"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
                 required
                 disabled={loading}
               />

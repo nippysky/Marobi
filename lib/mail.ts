@@ -15,8 +15,14 @@ const MUTED_COLOR = "#6b7280";
 const BORDER_RADIUS = "8px";
 
 /* ---------- Transporter ---------- */
+/**
+ * Use Gmail (or any SMTP that supports SSL on 465).
+ * If you want a custom From domain (e.g., no-reply@yourdomain.com),
+ * either configure "Send mail as" in Gmail or switch to a provider
+ * like Resend/Mailgun/SendGrid with proper SPF/DKIM.
+ */
 const smtpHost = process.env.EMAIL_HOST || "smtp.gmail.com";
-const smtpPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : 587;
+const smtpPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : 465;
 const smtpUser = process.env.EMAIL_USER;
 const smtpPass = process.env.EMAIL_PASS;
 
@@ -29,12 +35,21 @@ if (!smtpUser || !smtpPass) {
 export const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: smtpPort,
-  secure: smtpPort === 465,
+  secure: true, // SSL on 465 is most reliable across networks
   auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
-  connectionTimeout: 10_000,
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-  tls: { rejectUnauthorized: false },
+
+  // Small connection pool improves reliability during bursts
+  pool: true,
+  maxConnections: 1,
+  maxMessages: 50,
+
+  // Give slower networks time to complete TLS handshake
+  connectionTimeout: 20_000,
+  greetingTimeout: 20_000,
+  socketTimeout: 20_000,
+
+  // Keep TLS strict; do not disable cert checks
+  tls: { minVersion: "TLSv1.2" },
 });
 
 transporter
@@ -133,7 +148,7 @@ export function renderEmail(opts: RenderEmailOptions): string {
               ${buttonHtml}
             </td>
           </tr>
-          ${footerNote ? `<tr><td style="padding:0 32px 8px;font-size:12px;color:${MUTED_COLOR};font-family:Arial,Helvetica,sans-serif;">${footerNote}</td></tr>` : ""}
+            ${footerNote ? `<tr><td style="padding:0 32px 8px;font-size:12px;color:${MUTED_COLOR};font-family:Arial,Helvetica,sans-serif;">${footerNote}</td></tr>` : ""}
           <tr>
             <td style="background:#f9fafb;padding:20px 24px;text-align:center;font-size:12px;color:#9ca3af;font-family:Arial,Helvetica,sans-serif;">
               &copy; ${year} ${BRAND_NAME}. All rights reserved.<br/>
@@ -212,12 +227,12 @@ export async function sendStatusEmail(params: { to: string; name: string; orderI
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   await sendGenericEmail({
     to,
-    subject: `Your order ${orderId} is now ${status}`,
+    subject: `Your order ${orderId} Status: ${status}`,
     title: `Order ${orderId} — ${status}`,
     intro: `Hi ${name},`,
-    bodyHtml: `<p>Your order <strong>${orderId}</strong> status has been updated to <strong>${status}</strong>.</p>`,
+    bodyHtml: `<p>Your order <strong>${orderId}</strong> has been <strong>${status}</strong>.</p>`,
     button: { label: "View Your Orders", url: `${baseUrl}/account` },
-    preheader: `Your order is now ${status}`,
+    preheader: `Your order has been ${status}`,
     footerNote: "Questions? Just reply to this email and we’ll help.",
   });
 }

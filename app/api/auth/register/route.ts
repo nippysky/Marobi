@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma, { prismaReady } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { randomUUID } from "crypto";
+import { randomInt } from "crypto";
 import { sendVerificationEmail } from "@/lib/mail";
 import { rateLimit } from "@/lib/rateLimiter";
 import { z } from "zod";
@@ -30,6 +30,12 @@ function generateCustomerId(): string {
   let suffix = "";
   for (let i = 0; i < 7; i++) suffix += chars[Math.floor(Math.random() * chars.length)];
   return `M-CUS${suffix}`;
+}
+
+/** Secure 6-digit code (with leading zeros) */
+function generate6DigitCode() {
+  // randomInt is cryptographically secure
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
 export async function POST(request: Request) {
@@ -73,12 +79,27 @@ export async function POST(request: Request) {
     const firstName = parts.shift() ?? "";
     const lastName  = parts.join(" ");
 
-    // Hash password & create verification token
+    // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
-    const verificationToken = randomUUID();
-    const verificationTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Branded customer ID (overrides default if your schema has @default(cuid()))
+    // Generate a secure 6-digit verification code and ensure low collision risk
+    const verificationTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    let verificationToken = generate6DigitCode();
+
+    // Very small chance of collision; check a few times against active tokens
+    for (let attempts = 0; attempts < 5; attempts++) {
+      const clash = await prisma.customer.findFirst({
+        where: {
+          verificationToken,
+          verificationTokenExpiry: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+      if (!clash) break;
+      verificationToken = generate6DigitCode();
+    }
+
+    // Branded customer ID
     const id = generateCustomerId();
 
     await prisma.customer.create({
@@ -94,8 +115,8 @@ export async function POST(request: Request) {
         billingAddress: null,
         passwordHash,
         emailVerified: false,
-        verificationToken,
-        verificationTokenExpiry,
+        verificationToken,            // <-- 6-digit code
+        verificationTokenExpiry,      // still 1 hour
       },
     });
 
