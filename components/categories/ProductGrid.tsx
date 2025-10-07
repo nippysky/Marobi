@@ -24,7 +24,7 @@ export default function ProductGrid({
   isLoading = false,
   fallbackCount = 12,
 }: ProductGridProps) {
-  const gridClasses = "grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+  const gridClasses = "grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
 
   if (isLoading) {
     return (
