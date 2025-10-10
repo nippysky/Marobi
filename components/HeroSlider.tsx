@@ -44,7 +44,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
       <div
         className={
           // Shorter fixed heights across breakpoints
-          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[32rem] overflow-hidden"
+          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[36rem] overflow-hidden"
         }
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}

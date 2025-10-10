@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * Admin Offline Sale form
+ * - Adds a virtual "In-person Pickup" delivery option (₦0) ONLY for admin offline sales.
+ * - Does NOT modify schema or /api/delivery-options.
+ * - When pickup is selected: fee is locked to 0 and fee input is disabled.
+ * - On submit: omits deliveryOptionId (so server won't look up a fake id), forces fee 0,
+ *   and prefixes details with "PICKUP:" (or just "PICKUP" if empty).
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import {
@@ -73,9 +82,10 @@ interface LineItem {
   };
 }
 
-/** Prisma schema has no "type" field anymore; we derive it in the UI. */
+/** Derived grouping for UI only */
 type DeliveryKind = "COURIER" | "PICKUP";
 
+/** Shape used by DeliverySelector (superset of API response with a few UI helpers) */
 interface DeliveryOption {
   id: string;
   name: string;
@@ -108,8 +118,10 @@ function useDebounce(callback: (...args: any[]) => void, delay: number) {
 
 /* ──────────────────────────────────────────────────────────────────────────
    Delivery Selector
-   - compatible with new schema (no `type` field)
-   - groups options by derived kind; shows all even if all are courier
+   - Compatible with schema (no `type` field).
+   - **Adds a virtual "In-person Pickup" option** for admin offline sales.
+   - Groups options by derived kind; shows all even if all are courier.
+   - When pickup is selected: fee input is disabled (locked to 0).
    ────────────────────────────────────────────────────────────────────────── */
 interface DeliverySelectorProps {
   currency: Currency;
@@ -134,18 +146,34 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Helper: classify an option for grouping in the dropdown */
+  function deriveKind(o: any): DeliveryKind {
+    const name = String(o?.name ?? "").toLowerCase();
+    const provider = String(o?.provider ?? "").toLowerCase();
+    const metaKind = String(o?.metadata?.kind ?? "").toLowerCase();
+    if (name.includes("pickup") || provider.includes("pickup") || metaKind === "pickup") {
+      return "PICKUP";
+    }
+    return "COURIER";
+  }
+
+  /** Build a virtual pickup option (client-only; never saved to DB) */
+  function createVirtualPickup(): DeliveryOption {
+    return {
+      id: "__pickup__", // synthetic id; never sent to server as deliveryOptionId
+      name: "In-person Pickup",
+      provider: null,
+      pricingMode: "FIXED",
+      baseFee: 0,
+      baseCurrency: currency,
+      active: true,
+      metadata: { kind: "pickup", virtual: true },
+      _kind: "PICKUP",
+    };
+  }
+
   useEffect(() => {
     let cancelled = false;
-
-    function deriveKind(o: any): DeliveryKind {
-      const name = String(o?.name ?? "").toLowerCase();
-      const provider = String(o?.provider ?? "").toLowerCase();
-      const metaKind = String(o?.metadata?.kind ?? "").toLowerCase();
-      if (name.includes("pickup") || provider.includes("pickup") || metaKind === "pickup") {
-        return "PICKUP";
-      }
-      return "COURIER";
-    }
 
     async function fetchOptions() {
       setLoading(true);
@@ -154,6 +182,8 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
         const res = await fetch("/api/delivery-options?active=true");
         if (!res.ok) throw new Error(`Failed to load: ${res.statusText}`);
         const raw = (await res.json()) as any[];
+
+        // Normalize API response to DeliveryOption
         const normalized: DeliveryOption[] = (raw || []).map((o) => ({
           id: o.id,
           name: o.name,
@@ -165,7 +195,12 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
           metadata: o.metadata ?? undefined,
           _kind: deriveKind(o),
         }));
-        if (!cancelled) setOptions(normalized);
+
+        // If no pickup-like option exists in DB, append our virtual pickup
+        const hasPickup = normalized.some((o) => (o._kind ?? "COURIER") === "PICKUP");
+        const withPickup = hasPickup ? normalized : [...normalized, createVirtualPickup()];
+
+        if (!cancelled) setOptions(withPickup);
       } catch (e) {
         if (!cancelled) setError("Unable to load options");
       } finally {
@@ -176,8 +211,9 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currency]); // currency matters for the display currency on the virtual option
 
+  /** Group for nicer UI sectioning */
   const grouped = {
     COURIER: options.filter((o) => (o._kind ?? "COURIER") === "COURIER"),
     PICKUP: options.filter((o) => o._kind === "PICKUP"),
@@ -187,6 +223,8 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
     currency === Currency.NGN ? "₦" :
     currency === Currency.USD ? "$" :
     currency === Currency.EUR ? "€" : "£";
+
+  const isPickup = selectedOption?._kind === "PICKUP" || selectedOption?.metadata?.kind === "pickup";
 
   return (
     <div className="space-y-5 border rounded-xl p-5 bg-white shadow-sm">
@@ -206,6 +244,7 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Method select */}
         <div className="flex flex-col">
           <div className="text-xs font-semibold mb-1">Method</div>
           <Select
@@ -214,7 +253,9 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
               const opt = options.find((o) => o.id === v);
               if (opt) {
                 onOptionChange(opt);
-                onFeeChange(typeof opt.baseFee === "number" ? opt.baseFee : 0);
+                // Lock fee to 0 for pickup; otherwise use baseFee (or 0 if missing)
+                const fee = (opt._kind === "PICKUP" || opt.metadata?.virtual) ? 0 : Number(opt.baseFee ?? 0);
+                onFeeChange(fee);
               }
             }}
             disabled={loading || options.length === 0}
@@ -253,23 +294,27 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
               )}
             </SelectContent>
           </Select>
+
+          {/* Tiny info line for selected option */}
           {selectedOption && (
             <div className="mt-2 text-xs text-gray-500">
               Pricing: <span className="font-medium">{selectedOption.pricingMode ?? "FIXED"}</span>
-              {typeof selectedOption.baseFee === "number" && (
+              {typeof selectedOption.baseFee === "number" && !isPickup && (
                 <>
                   {" • "}Base fee:{" "}
                   <span className="font-mono">
                     {selectedOption.baseCurrency || currency}{" "}
-                    {selectedOption.baseFee.toLocaleString()}
+                    {Number(selectedOption.baseFee).toLocaleString()}
                   </span>
                 </>
               )}
+              {isPickup && <> {" • "}Fee: <span className="font-mono">{currencySym}0</span></>}
               {selectedOption.provider && <> {" • "}Provider: {selectedOption.provider}</>}
             </div>
           )}
         </div>
 
+        {/* Fee input (disabled for pickup) */}
         <div className="flex flex-col">
           <div className="text-xs font-semibold mb-1">Fee</div>
           <div className="flex gap-2">
@@ -279,7 +324,7 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
               value={deliveryFee}
               onChange={(e) => onFeeChange(Number(e.target.value))}
               placeholder="Fee"
-              disabled={!selectedOption}
+              disabled={!selectedOption || isPickup} // lock for pickup
             />
             <div className="flex items-center text-sm text-gray-500">
               {selectedOption && (
@@ -287,22 +332,25 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
                   suggested:&nbsp;
                   <span className="font-mono">
                     {currencySym}
-                    {Number(selectedOption.baseFee ?? 0).toLocaleString()}
+                    {(isPickup ? 0 : Number(selectedOption.baseFee ?? 0)).toLocaleString()}
                   </span>
                 </div>
               )}
             </div>
           </div>
           <div className="text-[10px] text-gray-500">
-            You can override the base fee if needed.
+            {isPickup
+              ? "In-person pickup: fee is always 0."
+              : "You can override the base fee if needed."}
           </div>
         </div>
       </div>
 
+      {/* Details / Notes (placeholder adapts for pickup) */}
       <div className="flex flex-col">
         <div className="text-xs font-semibold mb-1">Details / Notes</div>
         <Input
-          placeholder="Tracking number, pickup note, etc."
+          placeholder={isPickup ? "Pickup note (person, ID, time, etc.)" : "Tracking number, pickup note, etc."}
           value={deliveryDetails}
           onChange={(e) => onDetailsChange(e.target.value)}
           disabled={!selectedOption}
@@ -315,14 +363,12 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
 /* ──────────────────────────────────────────────────────────────────────────
    MAIN COMPONENT
    - UI refined (clean spacing, modern step tabs)
-   - functionality unchanged (except delivery selector fix)
+   - Adds virtual pickup handling on submit (no deliveryOptionId, fee 0)
    ────────────────────────────────────────────────────────────────────────── */
 export default function OfflineSaleForm({ staffId }: Props) {
   const [step, setStep] = useState(1);
   const [items, setItems] = useState<LineItem[]>([]);
-  const [productSearch, setProductSearch] = useState<Record<string, DBProduct[]>>(
-    {}
-  );
+  const [productSearch, setProductSearch] = useState<Record<string, DBProduct[]>>({});
   const [searchingProduct, setSearchingProduct] = useState(false);
 
   const [mode, setMode] = useState<"existing" | "guest">("existing");
@@ -354,9 +400,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
   } | null>(null);
 
   // delivery
-  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption | null>(
-    null
-  );
+  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption | null>(null);
   const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const [deliveryDetails, setDeliveryDetails] = useState<string>("");
 
@@ -384,8 +428,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
           )
       : true;
 
-  const canSubmit =
-    step === 3 && canNext && !!deliveryOption; // require delivery method selected
+  const canSubmit = step === 3 && canNext && !!deliveryOption; // require delivery method selected
 
   // ─── Row helpers ───────────────────────────────────────────────────────
   const addRow = () =>
@@ -409,8 +452,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
         prices: { NGN: 0, USD: 0, EUR: 0, GBP: 0 },
       },
     ]);
-  const removeRow = (id: string) =>
-    setItems((s) => s.filter((i) => i.id !== id));
+  const removeRow = (id: string) => setItems((s) => s.filter((i) => i.id !== id));
 
   // ─── PRODUCT SEARCH & SELECTION ───────────────────────────────────────
   const fetchProducts = async (rowId: string, q: string) => {
@@ -420,9 +462,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
     }
     setSearchingProduct(true);
     try {
-      const res = await fetch(
-        `/api/search-products?query=${encodeURIComponent(q)}`
-      );
+      const res = await fetch(`/api/search-products?query=${encodeURIComponent(q)}`);
       const data: DBProduct[] = await res.json();
       setProductSearch((p) => ({ ...p, [rowId]: data }));
     } finally {
@@ -443,9 +483,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
 
     const selColor = colors[0] || "N/A";
     const selSize = sizes[0] || "N/A";
-    const match = normalizedVariants.find(
-      (v) => v.color === selColor && v.size === selSize
-    );
+    const match = normalizedVariants.find((v) => v.color === selColor && v.size === selSize);
     const stock = match ? match.stock : 1;
 
     const priceNGN = product.priceNGN ?? 0;
@@ -484,17 +522,11 @@ export default function OfflineSaleForm({ staffId }: Props) {
     setProductSearch((p) => ({ ...p, [rowId]: [] }));
   }
 
-  function updateVariantSelection(
-    rowId: string,
-    newColor: string,
-    newSize: string
-  ) {
+  function updateVariantSelection(rowId: string, newColor: string, newSize: string) {
     setItems((prev) =>
       prev.map((i) => {
         if (i.id !== rowId) return i;
-        const m = i.variants.find(
-          (v) => v.color === newColor && v.size === newSize
-        );
+        const m = i.variants.find((v) => v.color === newColor && v.size === newSize);
         const stock = m?.stock ?? 1;
         return {
           ...i,
@@ -561,9 +593,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
     }
     setSearchingCustomer(true);
     try {
-      const res = await fetch(
-        `/api/search-customers?query=${encodeURIComponent(q)}`
-      );
+      const res = await fetch(`/api/search-customers?query=${encodeURIComponent(q)}`);
       const data = await res.json();
       setCustomerSearch(data);
     } finally {
@@ -598,6 +628,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
     const unitPrice = getUnitPrice(item);
     const base = unitPrice * item.quantity;
     return +(base * 0.05).toFixed(2);
+    // Note: A future improvement could be to use a configurable percent.
   };
 
   // ─── SUBMIT ──────────────────────────────────────────────────────────
@@ -605,52 +636,66 @@ export default function OfflineSaleForm({ staffId }: Props) {
     if (!canSubmit) return;
     setLoading(true);
     try {
+      const isPickup =
+        deliveryOption?._kind === "PICKUP" || deliveryOption?.metadata?.virtual === true;
+
+      const payload = {
+        items: items.map((i) => ({
+          productId: i.productId,
+          color: i.color,
+          size: i.size,
+          quantity: i.quantity,
+          hasSizeMod: i.hasSizeMod,
+          customSize: i.hasSizeMod ? i.customSize : undefined,
+        })),
+        customer:
+          mode === "existing"
+            ? { id: existingCustomerId }
+            : {
+                firstName: guest.firstName,
+                lastName: guest.lastName,
+                email: guest.email,
+                phone: guest.phone,
+                address: guest.address,
+                country: guest.country,
+                state: guest.state,
+              },
+        paymentMethod,
+        currency,
+        staffId,
+        timestamp: new Date().toISOString(),
+
+        // IMPORTANT:
+        // - If pickup: DO NOT send deliveryOptionId; force fee 0; prefix details
+        // - Else: use selected delivery option id/fee/details as chosen
+        deliveryOptionId: isPickup ? undefined : deliveryOption?.id,
+        deliveryFee: isPickup ? 0 : deliveryFee,
+        deliveryDetails: isPickup
+          ? (deliveryDetails ? `PICKUP: ${deliveryDetails}` : "PICKUP")
+          : (deliveryDetails || undefined),
+      };
+
       const res = await fetch("/api/offline-sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            productId: i.productId,
-            color: i.color,
-            size: i.size,
-            quantity: i.quantity,
-            hasSizeMod: i.hasSizeMod,
-            customSize: i.hasSizeMod ? i.customSize : undefined,
-          })),
-          customer:
-            mode === "existing"
-              ? { id: existingCustomerId }
-              : {
-                  firstName: guest.firstName,
-                  lastName: guest.lastName,
-                  email: guest.email,
-                  phone: guest.phone,
-                  address: guest.address,
-                  country: guest.country,
-                  state: guest.state,
-                },
-          paymentMethod,
-          currency,
-          staffId,
-          timestamp: new Date().toISOString(),
-          deliveryOptionId: deliveryOption?.id,
-          deliveryFee,
-          deliveryDetails: deliveryDetails || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error || "Failed to log sale");
         return;
       }
+
       toast.success("Offline sale logged!");
       setSuccessSummary({
         orderId: data.orderId,
         items: [...items],
         paymentMethod,
         deliveryOption: deliveryOption?.name,
-        deliveryFee,
+        deliveryFee: isPickup ? 0 : deliveryFee,
       });
+
       // reset form
       setItems([]);
       setMode("existing");
@@ -717,10 +762,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                 <strong>Delivery:</strong> {successSummary.deliveryOption}{" "}
                 {typeof successSummary.deliveryFee === "number" && (
                   <>
-                    • Fee:{" "}
-                    <span className="font-mono">
-                      {successSummary.deliveryFee.toFixed(2)}
-                    </span>
+                    • Fee: <span className="font-mono">{successSummary.deliveryFee.toFixed(2)}</span>
                   </>
                 )}
               </p>
@@ -755,12 +797,10 @@ export default function OfflineSaleForm({ staffId }: Props) {
             {items.map((row) => {
               const productHasColor =
                 row.colorOptions.length > 0 &&
-                !(row.colorOptions.length === 1 &&
-                  row.colorOptions[0] === "N/A");
+                !(row.colorOptions.length === 1 && row.colorOptions[0] === "N/A");
               const productHasSize =
                 row.sizeOptions.length > 0 &&
-                !(row.sizeOptions.length === 1 &&
-                  row.sizeOptions[0] === "N/A");
+                !(row.sizeOptions.length === 1 && row.sizeOptions[0] === "N/A");
               const unitPrice = getUnitPrice(row);
               const sizeModFee = computeSizeModFee(row);
               const currencySymbol =
@@ -805,12 +845,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                                     productName: e.target.value,
                                     variants: [],
                                     productId: "",
-                                    prices: {
-                                      NGN: 0,
-                                      USD: 0,
-                                      EUR: 0,
-                                      GBP: 0,
-                                    },
+                                    prices: { NGN: 0, USD: 0, EUR: 0, GBP: 0 },
                                     supportsSizeMod: false,
                                     hasSizeMod: false,
                                     customSize: {},
@@ -845,14 +880,10 @@ export default function OfflineSaleForm({ staffId }: Props) {
                               </div>
                               <div className="flex-1 text-sm">
                                 <div className="font-medium">{p.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  {p.id}
-                                </div>
+                                <div className="text-xs text-gray-500">{p.id}</div>
                               </div>
                               <div className="text-[11px] px-2 py-1 rounded bg-indigo-50">
-                                {p.sizeMods
-                                  ? "Size mods enabled"
-                                  : "No size mods"}
+                                {p.sizeMods ? "Size mods enabled" : "No size mods"}
                               </div>
                             </div>
                           ))}
@@ -929,9 +960,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                         min={1}
                         max={row.maxQty}
                         value={row.quantity}
-                        onChange={(e) =>
-                          updateRow(row.id, "quantity", +e.target.value)
-                        }
+                        onChange={(e) => updateRow(row.id, "quantity", +e.target.value)}
                         disabled={loading}
                       />
                       <div className="text-[10px] text-gray-500 mt-1">
@@ -943,18 +972,14 @@ export default function OfflineSaleForm({ staffId }: Props) {
                   {/* Custom size block (only if supportsSizeMod) */}
                   <div className="col-span-6 md:col-span-3 flex flex-col gap-1">
                     <div className="flex items-center justify-between">
-                      <div className="text-xs font-semibold">
-                        Custom Size?
-                      </div>
+                      <div className="text-xs font-semibold">Custom Size?</div>
                       {row.supportsSizeMod ? (
                         <div>
                           <label className="inline-flex items-center space-x-2 text-sm">
                             <input
                               type="checkbox"
                               checked={row.hasSizeMod}
-                              onChange={(e) =>
-                                updateRow(row.id, "hasSizeMod", e.target.checked)
-                              }
+                              onChange={(e) => updateRow(row.id, "hasSizeMod", e.target.checked)}
                               disabled={loading}
                               className="h-4 w-4"
                             />
@@ -962,9 +987,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                           </label>
                         </div>
                       ) : (
-                        <div className="text-[11px] text-gray-400">
-                          Not supported
-                        </div>
+                        <div className="text-[11px] text-gray-400">Not supported</div>
                       )}
                     </div>
 
@@ -981,36 +1004,28 @@ export default function OfflineSaleForm({ staffId }: Props) {
                           <Input
                             placeholder="Chest"
                             value={row.customSize?.chest || ""}
-                            onChange={(e) =>
-                              updateRow(row.id, "chest", e.target.value)
-                            }
+                            onChange={(e) => updateRow(row.id, "chest", e.target.value)}
                             disabled={loading}
                             className="text-sm"
                           />
                           <Input
                             placeholder="Waist"
                             value={row.customSize?.waist || ""}
-                            onChange={(e) =>
-                              updateRow(row.id, "waist", e.target.value)
-                            }
+                            onChange={(e) => updateRow(row.id, "waist", e.target.value)}
                             disabled={loading}
                             className="text-sm"
                           />
                           <Input
                             placeholder="Hips"
                             value={row.customSize?.hips || ""}
-                            onChange={(e) =>
-                              updateRow(row.id, "hips", e.target.value)
-                            }
+                            onChange={(e) => updateRow(row.id, "hips", e.target.value)}
                             disabled={loading}
                             className="text-sm"
                           />
                           <Input
                             placeholder="Length"
                             value={row.customSize?.length || ""}
-                            onChange={(e) =>
-                              updateRow(row.id, "length", e.target.value)
-                            }
+                            onChange={(e) => updateRow(row.id, "length", e.target.value)}
                             disabled={loading}
                             className="text-sm"
                           />
@@ -1020,8 +1035,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
 
                     {!row.hasSizeMod && row.supportsSizeMod && (
                       <div className="text-[10px] text-gray-500">
-                        Enable custom sizing if customer wants adjustments
-                        (5%).
+                        Enable custom sizing if customer wants adjustments (5%).
                       </div>
                     )}
                   </div>
@@ -1049,7 +1063,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
                     </div>
                   </div>
 
-                  {/* Remove */}
+                  {/* Remove row */}
                   <div className="col-span-12 md:col-span-1 flex md:justify-end items-start">
                     <button
                       onClick={() => removeRow(row.id)}
@@ -1065,12 +1079,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
             })}
 
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addRow}
-                disabled={loading}
-              >
+              <Button variant="outline" size="sm" onClick={addRow} disabled={loading}>
                 <PlusCircle className="mr-2" /> Add Product
               </Button>
               <div className="text-sm text-gray-500">
@@ -1085,10 +1094,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
           <div className="space-y-6">
             <div className="flex items-center gap-8">
               {["existing", "guest"].map((m) => (
-                <label
-                  key={m}
-                  className="flex items-center space-x-2 cursor-pointer"
-                >
+                <label key={m} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="radio"
                     name="customerMode"
@@ -1148,25 +1154,17 @@ export default function OfflineSaleForm({ staffId }: Props) {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  "firstName",
-                  "lastName",
-                  "email",
-                  "phone",
-                  "address",
-                  "country",
-                  "state",
-                ].map((f) => (
-                  <Input
-                    key={f}
-                    placeholder={f.charAt(0).toUpperCase() + f.slice(1)}
-                    value={(guest as any)[f]}
-                    onChange={(e) =>
-                      setGuest((g) => ({ ...g, [f]: e.target.value }))
-                    }
-                    disabled={loading}
-                  />
-                ))}
+                {["firstName", "lastName", "email", "phone", "address", "country", "state"].map(
+                  (f) => (
+                    <Input
+                      key={f}
+                      placeholder={f.charAt(0).toUpperCase() + f.slice(1)}
+                      value={(guest as any)[f]}
+                      onChange={(e) => setGuest((g) => ({ ...g, [f]: e.target.value }))}
+                      disabled={loading}
+                    />
+                  )
+                )}
               </div>
             )}
           </div>
@@ -1177,9 +1175,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
           <div className="space-y-6">
             <section className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col">
-                <div className="text-xs font-semibold mb-1">
-                  Payment Method
-                </div>
+                <div className="text-xs font-semibold mb-1">Payment Method</div>
                 <Select
                   value={paymentMethod}
                   onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
@@ -1225,7 +1221,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
               deliveryDetails={deliveryDetails}
               onOptionChange={(o) => {
                 setDeliveryOption(o);
-                setDeliveryFee(Number(o.baseFee ?? 0));
+                // Fee is set inside DeliverySelector on change (0 for pickup, baseFee otherwise)
               }}
               onFeeChange={setDeliveryFee}
               onDetailsChange={setDeliveryDetails}
@@ -1246,10 +1242,7 @@ export default function OfflineSaleForm({ staffId }: Props) {
         </div>
         <div className="flex gap-2 ml-auto">
           {step < 3 ? (
-            <Button
-              disabled={!canNext || loading}
-              onClick={() => canNext && setStep((s) => s + 1)}
-            >
+            <Button disabled={!canNext || loading} onClick={() => canNext && setStep((s) => s + 1)}>
               Next
             </Button>
           ) : (

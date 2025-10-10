@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState, useMemo } from "react";
-import {
-  Search as SearchIcon,
-  PencilRuler,
-  UserRound,
-} from "lucide-react";
+import { Search as SearchIcon, PencilRuler, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { SizeChartModal } from "../SizeChartModal";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
@@ -26,9 +23,31 @@ import { FuturisticSkeleton } from "../FuturisticSkeleton";
 import { useAuthSession } from "@/lib/hooks/useAuthSession";
 import SearchModal from "../SearchModal";
 
+/** Collapsed/mobile brand icon (SVG from /public) */
 const BrandIcon: React.FC = () => (
-  <div className="w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold bg-gradient-to-tr from-brand to-green-600 text-white shadow-md">
-    M!
+  <div className="w-8 h-8">
+    <Image
+      src="/Marobi_Icon.svg"
+      alt="Marobi icon"
+      width={32}
+      height={32}
+      priority
+      className="w-8 h-8"
+    />
+  </div>
+);
+
+/** Expanded desktop wordmark (SVG from /public) */
+const BrandWordmark: React.FC = () => (
+  <div className="h-8">
+    <Image
+      src="/Marobi_Logo.svg"
+      alt="Marobi — premium fashion & accessories"
+      width={240}
+      height={48}
+      priority
+      className="h-8 w-auto"
+    />
   </div>
 );
 
@@ -39,11 +58,7 @@ export const Header: React.FC = () => {
   const pathname = usePathname() || "/";
   const { openSizeChart } = useSizeChart();
   const { isOpen, openModal } = useSearchModal();
-  const {
-    session,
-    status,
-    isCustomer,
-  } = useAuthSession();
+  const { session, status, isCustomer } = useAuthSession();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -97,7 +112,8 @@ export const Header: React.FC = () => {
               variants={{
                 hidden: { opacity: 0, y: 6 },
                 visible: {
-                  opacity: 1, y: 0,
+                  opacity: 1,
+                  y: 0,
                   transition: { duration: 0.25, delay: 0.04 * i },
                 },
               }}
@@ -128,7 +144,7 @@ export const Header: React.FC = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/account" 
+              href="/account"
               className="flex items-center p-2 text-gray-600 hover:text-gray-800 rounded"
               aria-label="Account"
             >
@@ -159,29 +175,42 @@ export const Header: React.FC = () => {
     );
   };
 
+  // ---- Animations (unchanged except for the fixed typo) ----
   const headerVariants = {
-    expanded:  { height: "auto", backgroundColor: "#ffffff" },
+    expanded: { height: "auto", backgroundColor: "#ffffff" },
     collapsed: { height: "4rem", backgroundColor: "#ffffff" },
   };
   const logoTextVariants = {
-    expanded:  { opacity: 1, x: 0, transition: { duration: 0.2 } },
+    expanded: { opacity: 1, x: 0, transition: { duration: 0.2 } },
     collapsed: { opacity: 0, x: -20, transition: { duration: 0.2 } },
   };
   const logoIconVariants = {
-    expanded:  { opacity: 0, x: 20, transition: { duration: 0.2 } },
-    collapsed: { opacity: 1, x: 0,  transition: { duration: 0.2 } },
+    expanded: { opacity: 0, x: 20, transition: { duration: 0.2 } }, // ✅ fixed stray quote
+    collapsed: { opacity: 1, x: 0, transition: { duration: 0.2 } },
   };
   const searchInputVariants = {
-    expanded:  { opacity: 1,  width: "40vw", transition: { duration: 0.3 } },
-    collapsed: { opacity: 0,  width: 0,     transition: { duration: 0.2 } },
+    expanded: { opacity: 1, width: "40vw", transition: { duration: 0.3 } },
+    collapsed: { opacity: 0, width: 0, transition: { duration: 0.2 } },
   };
   const searchIconVariants = {
-    expanded:  { opacity: 0, x: 10 },
+    expanded: { opacity: 0, x: 10 },
     collapsed: { opacity: 1, x: 0, transition: { duration: 0.3 } },
   };
   const topNavVariants = {
-    expanded:  { height: "auto", opacity: 1,  y: 0, transition: { duration: 0.2 }, display: "block" },
-    collapsed: { height: 0,     opacity: 0,  y: -20, transition: { duration: 0.2 }, transitionEnd: { display: "none" as const } },
+    expanded: {
+      height: "auto",
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2 },
+      display: "block",
+    },
+    collapsed: {
+      height: 0,
+      opacity: 0,
+      y: -20,
+      transition: { duration: 0.2 },
+      transitionEnd: { display: "none" as const },
+    },
   };
 
   return (
@@ -209,27 +238,31 @@ export const Header: React.FC = () => {
                   animate={isCollapsed ? "collapsed" : "expanded"}
                   className="flex items-center"
                 >
-                  <Link href="/"><BrandIcon /></Link>
+                  <Link href="/" aria-label="Marobi home">
+                    <BrandIcon />
+                  </Link>
                 </motion.div>
+
                 <div className="flex items-center space-x-3">
-                  {categoriesLoading
-                    ? <FuturisticSkeleton count={3} height={24} />
-                    : navItems.map(item => {
-                        const active = pathname === item.href;
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`${linkBaseClasses} text-[0.75rem] text-gray-700 hover:bg-brand hover:text-white ${
-                              active ? "bg-brand text-white" : ""
-                            }`}
-                            aria-current={active ? "page" : undefined}
-                          >
-                            {item.label}
-                          </Link>
-                        );
-                      })
-                  }
+                  {categoriesLoading ? (
+                    <FuturisticSkeleton count={3} height={24} />
+                  ) : (
+                    navItems.map((item) => {
+                      const active = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`${linkBaseClasses} text-[0.75rem] text-gray-700 hover:bg-brand hover:text-white ${
+                            active ? "bg-brand text-white" : ""
+                          }`}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -252,7 +285,9 @@ export const Header: React.FC = () => {
                       </button>
                     </motion.div>
                   </TooltipTrigger>
-                  <TooltipContent><p>Search Products</p></TooltipContent>
+                  <TooltipContent>
+                    <p>Search Products</p>
+                  </TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -265,16 +300,22 @@ export const Header: React.FC = () => {
                       <PencilRuler className="w-5 h-5" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent><p>View Size Chart</p></TooltipContent>
+                  <TooltipContent>
+                    <p>View Size Chart</p>
+                  </TooltipContent>
                 </Tooltip>
 
                 <UserIndicator />
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div><CartSheet /></div>
+                    <div>
+                      <CartSheet />
+                    </div>
                   </TooltipTrigger>
-                  <TooltipContent><p>View Cart</p></TooltipContent>
+                  <TooltipContent>
+                    <p>View Cart</p>
+                  </TooltipContent>
                 </Tooltip>
               </div>
             </motion.div>
@@ -288,8 +329,8 @@ export const Header: React.FC = () => {
                   animate={isCollapsed ? "collapsed" : "expanded"}
                   className="flex items-center"
                 >
-                  <Link href="/" className="text-2xl font-bold text-gray-900">
-                    MAROB!
+                  <Link href="/" aria-label="Marobi home">
+                    <BrandWordmark />
                   </Link>
                 </motion.div>
 
@@ -317,16 +358,22 @@ export const Header: React.FC = () => {
                         <PencilRuler className="w-5 h-5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent><p>View Size Chart</p></TooltipContent>
+                    <TooltipContent>
+                      <p>View Size Chart</p>
+                    </TooltipContent>
                   </Tooltip>
 
                   <UserIndicator />
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div><CartSheet /></div>
+                      <div>
+                        <CartSheet />
+                      </div>
                     </TooltipTrigger>
-                    <TooltipContent><p>View Cart</p></TooltipContent>
+                    <TooltipContent>
+                      <p>View Cart</p>
+                    </TooltipContent>
                   </Tooltip>
                 </div>
               </div>
@@ -338,16 +385,16 @@ export const Header: React.FC = () => {
                 initial="expanded"
                 animate={isCollapsed ? "collapsed" : "expanded"}
               >
-                <div className="py-5 flex justify-center">
-                  {renderNavItems(false)}
-                </div>
+                <div className="py-5 flex justify-center">{renderNavItems(false)}</div>
               </motion.nav>
             </motion.div>
           </div>
 
           {/* Mobile */}
           <div className="flex lg:hidden items-center justify-between h-16">
-            <Link href="/"><BrandIcon /></Link>
+            <Link href="/" aria-label="Marobi home">
+              <BrandIcon />
+            </Link>
             <div className="flex items-center space-x-2">
               <CurrencySelector />
               <Tooltip>
@@ -360,7 +407,9 @@ export const Header: React.FC = () => {
                     <SearchIcon className="w-5 h-5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent><p>Search Products</p></TooltipContent>
+                <TooltipContent>
+                  <p>Search Products</p>
+                </TooltipContent>
               </Tooltip>
               <CartSheet />
               <MobileMenuSheet />

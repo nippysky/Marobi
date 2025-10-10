@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa6";
 
@@ -14,7 +15,19 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* About */}
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold">About Marob!</h2>
+            {/* Brand wordmark (white) */}
+            <Link href="/" aria-label="Marobi home" className="inline-block">
+              <Image
+                src="/Marobi_Logo_White.svg"
+                alt="Marobi — premium fashion & accessories"
+                width={220}
+                height={32}
+                className="h-8 w-auto"
+                priority={false}
+              />
+            </Link>
+
+            <h2 className="text-lg font-semibold">About Us</h2>
             <p className="text-sm/6 text-white/80 max-w-prose">
               Marob! is a growing fashion styling platform dedicated to
               showcasing luxury fashion through the lens of modesty.
