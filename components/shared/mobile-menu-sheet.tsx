@@ -9,6 +9,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetClose, // close sheet on link click
 } from "@/components/ui/sheet";
 import { AlignJustify, PencilRuler, UserRound, LogOut } from "lucide-react";
 import { useSizeChart } from "@/lib/context/sizeChartcontext";
@@ -36,7 +37,10 @@ export const MobileMenuSheet: React.FC<{ tone?: "light" | "dark" }> = ({ tone = 
     staleTime: 300_000,
   });
 
+  // Top-level + dynamic categories
   const navItems: { label: string; href: string }[] = [
+    { label: "Home", href: "/" },
+    { label: "About Marobi", href: "/about-marobi" }, // “About Us”
     { label: "All Products", href: "/all-products" },
     ...categories.map((cat) => ({ label: cat.name, href: `/categories/${cat.slug}` })),
   ];
@@ -59,20 +63,27 @@ export const MobileMenuSheet: React.FC<{ tone?: "light" | "dark" }> = ({ tone = 
 
         <nav className="mt-8 px-4 space-y-6">
           {categoriesLoading ? (
-            <Skeleton className="h-4 w-32" />
+            <>
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </>
           ) : (
             navItems.map(({ label, href }) => {
               const isActive = pathname === href;
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`block text-base font-medium text-gray-700 dark:text-gray-300 hover:underline ${
-                    isActive ? "underline font-semibold" : ""
-                  }`}
-                >
-                  {label}
-                </Link>
+                <SheetClose asChild key={href}>
+                  <Link
+                    href={href}
+                    className={clsx(
+                      "block text-base font-medium text-gray-700 dark:text-gray-300 hover:underline",
+                      isActive && "underline font-semibold"
+                    )}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {label}
+                  </Link>
+                </SheetClose>
               );
             })
           )}
@@ -84,22 +95,26 @@ export const MobileMenuSheet: React.FC<{ tone?: "light" | "dark" }> = ({ tone = 
           {status === "loading" ? (
             <Skeleton className="h-8 w-32" />
           ) : !session ? (
-            <Link
-              href="/auth/login"
-              className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
-            >
-              <UserRound className="w-5 h-5" />
-              <span>Login</span>
-            </Link>
-          ) : (
-            <>
+            <SheetClose asChild>
               <Link
-                href="/account"
+                href="/auth/login"
                 className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
               >
                 <UserRound className="w-5 h-5" />
-                <span>Profile</span>
+                <span>Login</span>
               </Link>
+            </SheetClose>
+          ) : (
+            <>
+              <SheetClose asChild>
+                <Link
+                  href="/account"
+                  className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"
+                >
+                  <UserRound className="w-5 h-5" />
+                  <span>Profile</span>
+                </Link>
+              </SheetClose>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex w-full items-center space-x-2 text-gray-700 dark:text-gray-300 hover:underline"

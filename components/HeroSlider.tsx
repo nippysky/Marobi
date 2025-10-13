@@ -23,6 +23,10 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
   const [paused, setPaused] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
+  // Touch swipe
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
+
   const goTo = (n: number) =>
     setCurrent(((n % slides.length) + slides.length) % slides.length);
   const next = () => goTo(current + 1);
@@ -43,11 +47,30 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
     <div className="w-full max-w-[1920px] mx-auto">
       <div
         className={
-          // Shorter fixed heights across breakpoints
-          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[36rem] overflow-hidden"
+          // Responsive hero heights
+          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[34rem] overflow-hidden"
         }
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+          touchDeltaX.current = 0;
+          setPaused(true);
+        }}
+        onTouchMove={(e) => {
+          if (touchStartX.current !== null) {
+            touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+          }
+        }}
+        onTouchEnd={() => {
+          setPaused(false);
+          if (Math.abs(touchDeltaX.current) > 40) {
+            if (touchDeltaX.current > 0) prev();
+            else next();
+          }
+          touchStartX.current = null;
+          touchDeltaX.current = 0;
+        }}
       >
         {slides.map((s, idx) => {
           const active = idx === current;
@@ -60,55 +83,113 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
               ].join(" ")}
               style={{ backgroundImage: `url(${s.imageUrl})` }}
             >
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-12 lg:px-24 text-left">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg max-w-2xl">
-                  {s.heading}
-                </h1>
-                {s.subtext && (
-                  <p className="mt-3 text-base md:text-lg text-white/95 drop-shadow-md max-w-xl">
-                    {s.subtext}
-                  </p>
-                )}
-                {s.buttonText && s.buttonHref && (
-                  <Link
-                    href={s.buttonHref}
-                    className="mt-5 inline-block bg-brand hover:bg-brand/90 text-white font-semibold px-6 py-2.5 rounded-full transition-colors duration-200 text-sm md:text-base"
+              {/* Rich overlay for readable text on any image */}
+              <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-black/25" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+              </div>
+
+              {/* Content block */}
+              <div
+                className={[
+                  // Safe paddings so arrows never overlap text on mobile:
+                  // base uses pl/pr-16 to clear 36–40px arrow buttons + margin
+                  "relative z-20 flex h-full flex-col justify-center",
+                  "px-16 sm:px-10 md:px-12 lg:px-24",
+                ].join(" ")}
+              >
+                <div className="max-w-[40rem]">
+                  <h1
+                    className={[
+                      "font-extrabold text-white drop-shadow-lg",
+                      // Strong, responsive headline
+                      "text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight",
+                      "tracking-tight",
+                    ].join(" ")}
                   >
-                    {s.buttonText}
-                  </Link>
-                )}
+                    {s.heading}
+                  </h1>
+
+                  {s.subtext && (
+                    <p
+                      className={[
+                        "mt-3 md:mt-4",
+                        "text-[0.95rem] sm:text-base md:text-lg",
+                        "text-white/90 drop-shadow",
+                        "max-w-prose",
+                      ].join(" ")}
+                    >
+                      {s.subtext}
+                    </p>
+                  )}
+
+                  {s.buttonText && s.buttonHref && (
+                    <div className="mt-5 md:mt-6">
+                      <Link
+                        href={s.buttonHref}
+                        className={[
+                          // Elevated “primary” CTA
+                          "inline-flex items-center justify-center",
+                          "rounded-full px-6 py-2.5 md:px-7 md:py-3",
+                          "font-semibold",
+                          "bg-brand text-white",
+                          "shadow-[0_8px_20px_-8px_rgba(0,0,0,0.45)]",
+                          "ring-1 ring-white/20",
+                          "transition-all duration-200",
+                          "hover:bg-brand/90 hover:shadow-[0_12px_24px_-10px_rgba(0,0,0,0.5)] active:scale-[0.99]",
+                        ].join(" ")}
+                      >
+                        {s.buttonText}
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
 
-        {/* Prev arrow — middle left */}
+        {/* Prev arrow — smaller & tucked in on mobile */}
         <button
           aria-label="Previous"
           onClick={() => {
             if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
             prev();
           }}
-          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/75 hover:bg-white shadow-md flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          className={[
+            "absolute z-30 flex items-center justify-center",
+            "top-1/2 -translate-y-1/2",
+            // mobile-safe inset; scales up at sm+
+            "left-2 sm:left-4",
+            "h-9 w-9 sm:h-10 sm:w-10 rounded-full",
+            "bg-white/80 hover:bg-white shadow-md",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80",
+          ].join(" ")}
         >
           <ChevronLeft className="h-5 w-5 text-gray-900" />
         </button>
 
-        {/* Next arrow — middle right */}
+        {/* Next arrow — smaller & tucked in on mobile */}
         <button
           aria-label="Next"
           onClick={() => {
             if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
             next();
           }}
-          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-white/75 hover:bg-white shadow-md flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          className={[
+            "absolute z-30 flex items-center justify-center",
+            "top-1/2 -translate-y-1/2",
+            "right-2 sm:right-4",
+            "h-9 w-9 sm:h-10 sm:w-10 rounded-full",
+            "bg-white/80 hover:bg-white shadow-md",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80",
+          ].join(" ")}
         >
           <ChevronRight className="h-5 w-5 text-gray-900" />
         </button>
 
         {/* Indicators — bottom center */}
-        <div className="absolute inset-x-0 bottom-3 sm:bottom-4 z-20 flex items-center justify-center gap-2">
+        <div className="absolute inset-x-0 bottom-3 sm:bottom-4 z-30 flex items-center justify-center gap-2">
           {slides.map((_, i) => {
             const active = i === current;
             return (
