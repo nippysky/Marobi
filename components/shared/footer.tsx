@@ -27,8 +27,8 @@ export default function Footer() {
               />
             </Link>
 
-            <h2 className="text-lg font-semibold">About Us</h2>
-            <p className="text-sm/6 text-white/80 max-w-prose">
+            <h2 className="text-lg font-semibold ml-2">About Us</h2>
+            <p className="text-sm/6 text-white/80 max-w-prose ml-2">
               Marob! is a growing fashion styling platform dedicated to
               showcasing luxury fashion through the lens of modesty.
             </p>
