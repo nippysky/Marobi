@@ -17,7 +17,6 @@ export interface Filters {
   priceRange: [number, number];
   colors: string[];
   sizes: string[];
-  onSale: boolean;
 }
 
 interface SidebarProps {
@@ -74,7 +73,6 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
   const [priceRange, setPriceRange] = useState<[number, number]>([min, max]);
   const [selColors, setSelColors] = useState<string[]>([]);
   const [selSizes, setSelSizes] = useState<string[]>([]);
-  const [onSale, setOnSale] = useState(false);
 
   // Reset slider when span changes
   useEffect(() => {
@@ -87,16 +85,14 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
       priceRange,
       colors: selColors,
       sizes: selSizes,
-      onSale,
     });
-  }, [priceRange, selColors, selSizes, onSale, onChange]);
+  }, [priceRange, selColors, selSizes, onChange]);
 
   // Reset all
   const handleReset = useCallback(() => {
     setPriceRange([min, max]);
     setSelColors([]);
     setSelSizes([]);
-    setOnSale(false);
   }, [min, max]);
 
   return (
@@ -123,7 +119,9 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
       >
         {/* PRICE */}
         <AccordionItem value="price">
-          <AccordionTrigger className="text-sm">Price ({symbol})</AccordionTrigger>
+          <AccordionTrigger className="text-sm">
+            Price ({symbol})
+          </AccordionTrigger>
           <AccordionContent>
             <SliderPrimitive.Root
               className="relative flex w-full items-center"
@@ -153,12 +151,19 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
           <AccordionContent>
             <div className="flex flex-wrap gap-2">
               {colors.map((c) => (
-                <label key={c} className="inline-flex items-center gap-2 cursor-pointer">
+                <label
+                  key={c}
+                  className="inline-flex items-center gap-2 cursor-pointer"
+                >
                   <Checkbox
                     checked={selColors.includes(c)}
                     onCheckedChange={(checked: CheckedState) => {
                       const isChecked = checked === true;
-                      setSelColors((prev) => (isChecked ? [...prev, c] : prev.filter((x) => x !== c)));
+                      setSelColors((prev) =>
+                        isChecked
+                          ? [...prev, c]
+                          : prev.filter((x) => x !== c)
+                      );
                     }}
                   />
                   <span className="text-sm text-muted-foreground">{c}</span>
@@ -174,32 +179,25 @@ export default function FilterSidebar({ products, onChange }: SidebarProps) {
           <AccordionContent>
             <div className="flex flex-wrap gap-2">
               {sizes.map((s) => (
-                <label key={s} className="inline-flex items-center gap-2 cursor-pointer">
+                <label
+                  key={s}
+                  className="inline-flex items-center gap-2 cursor-pointer"
+                >
                   <Checkbox
                     checked={selSizes.includes(s)}
                     onCheckedChange={(checked: CheckedState) => {
                       const isChecked = checked === true;
-                      setSelSizes((prev) => (isChecked ? [...prev, s] : prev.filter((x) => x !== s)));
+                      setSelSizes((prev) =>
+                        isChecked
+                          ? [...prev, s]
+                          : prev.filter((x) => x !== s)
+                      );
                     }}
                   />
                   <span className="text-sm text-muted-foreground">{s}</span>
                 </label>
               ))}
             </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* ON SALE */}
-        <AccordionItem value="onSale">
-          <AccordionTrigger className="text-sm">On Sale</AccordionTrigger>
-          <AccordionContent>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={onSale}
-                onCheckedChange={(checked: CheckedState) => setOnSale(checked === true)}
-              />
-              <span className="text-sm text-muted-foreground">Only show discounted</span>
-            </label>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

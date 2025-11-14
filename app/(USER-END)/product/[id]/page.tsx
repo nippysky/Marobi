@@ -4,6 +4,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
+import Link from "next/link";
 
 import { getCategoryBySlug } from "@/lib/categories";
 import {
@@ -37,6 +38,84 @@ import {
 } from "@/components/ui/breadcrumb";
 import ProductCard from "@/components/shared/product-card";
 
+// ─────────────────────────────────────────────────────────────
+// Per-product SEO metadata (no assumptions about extra fields)
+// ─────────────────────────────────────────────────────────────
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  const product = await getProductById(id);
+  if (!product) {
+    return {
+      title: "Product not found | Marobi",
+      description: "This Marobi piece is no longer available.",
+    };
+  }
+
+  const category = await getCategoryBySlug(product.category);
+  const categoryName = category?.name ?? product.category;
+
+  const title = `${product.name} — ${categoryName} | Marobi`;
+  const description = `Discover ${product.name} from Marobi's ${categoryName} collection — premium everyday wear for the modern working woman.`;
+  const url = `https://marobionline.com/product/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/product/${id}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Marobi",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Minimal Product JSON-LD, only using real fields we know
+// ─────────────────────────────────────────────────────────────
+function ProductJsonLd({
+  product,
+  categoryName,
+}: {
+  product: Product;
+  categoryName: string;
+}) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    category: categoryName,
+    sku: product.id,
+    url: `https://marobionline.com/product/${product.id}`,
+    brand: {
+      "@type": "Brand",
+      name: "Marobi",
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -64,6 +143,9 @@ export default async function ProductPage({
       <Header />
 
       <main className="mt-20 px-5 md:px-10 lg:px-40 flex-1 space-y-12">
+        {/* JSON-LD for this product */}
+        <ProductJsonLd product={product} categoryName={categoryName} />
+
         {/* Breadcrumb (shadcn/ui) */}
         <Breadcrumb>
           <BreadcrumbList>
@@ -125,9 +207,9 @@ export default async function ProductPage({
           {related.length > 0 ? (
             <div className="grid gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               {related.map((p) => (
-                <a key={p.id} href={`/product/${p.id}`} className="block">
+                <Link key={p.id} href={`/product/${p.id}`} className="block">
                   <ProductCard product={p} />
-                </a>
+                </Link>
               ))}
             </div>
           ) : (

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Session } from "next-auth";
@@ -32,7 +33,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Switch } from "./ui/switch";
-import { Input } from "./ui/input"; // ← added
+import { Input } from "./ui/input";
 
 const CUSTOM_SIZE_FIELDS = [
   { name: "chest", label: "Chest/Bust (in)" },
@@ -49,7 +50,7 @@ interface Props {
 
 const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => {
   const router = useRouter();
-  const { openSizeChart } = useSizeChart(); // ✅ hook at top-level
+  const { openSizeChart } = useSizeChart();
 
   // media
   const media = useMemo(() => [...(product.images || [])], [product.images]);
@@ -69,7 +70,12 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
     const idx = media.findIndex((m) => m === featuredImage);
     if (idx >= 0) {
       const el = thumbRefs.current[idx];
-      if (el) el.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      if (el)
+        el.scrollIntoView({
+          block: "nearest",
+          inline: "center",
+          behavior: "smooth",
+        });
     }
   }, [featuredImage, media]);
 
@@ -81,27 +87,45 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
   const totalStock = useMemo(
     () =>
       product.variants.reduce(
-        (sum, v) => sum + (typeof (v as any).inStock === "number" ? (v as any).inStock : 0),
+        (sum, v) =>
+          sum +
+          (typeof (v as any).inStock === "number" ? (v as any).inStock : 0),
         0
       ),
     [product.variants]
   );
 
   // variants
-  const colors = useMemo(() => Array.from(new Set(product.variants.map((v) => v.color))), [product.variants]);
-  const sizes = useMemo(() => Array.from(new Set(product.variants.map((v) => v.size))), [product.variants]);
+  const colors = useMemo(
+    () => Array.from(new Set(product.variants.map((v) => v.color))),
+    [product.variants]
+  );
+  const sizes = useMemo(
+    () => Array.from(new Set(product.variants.map((v) => v.size))),
+    [product.variants]
+  );
   const hasColor = colors.length > 1 || (colors[0] ?? "") !== "";
   const hasSize = sizes.length > 1 || (sizes[0] ?? "") !== "";
 
-  const [selectedColor, setSelectedColor] = useState(hasColor ? colors[0] : "");
+  const [selectedColor, setSelectedColor] = useState(
+    hasColor ? colors[0] : ""
+  );
   const availableSizes = useMemo(
     () =>
       hasColor
-        ? Array.from(new Set(product.variants.filter((v) => v.color === selectedColor).map((v) => v.size)))
+        ? Array.from(
+            new Set(
+              product.variants
+                .filter((v) => v.color === selectedColor)
+                .map((v) => v.size)
+            )
+          )
         : sizes,
     [hasColor, product.variants, selectedColor, sizes]
   );
-  const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || "");
+  const [selectedSize, setSelectedSize] = useState<string>(
+    availableSizes[0] || ""
+  );
   useEffect(() => setSelectedSize(availableSizes[0] || ""), [availableSizes]);
 
   const enableSizeMod = product.sizeMods;
@@ -139,12 +163,16 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
     (product as any).prices?.[currency] ??
     Object.values((product as any).prices ?? {})[0] ??
     0;
-  const sizeModFee = customSizeEnabled ? parseFloat((basePrice * 0.05).toFixed(2)) : 0;
+  const sizeModFee = customSizeEnabled
+    ? parseFloat((basePrice * 0.05).toFixed(2))
+    : 0;
   const finalPrice = parseFloat((basePrice + sizeModFee).toFixed(2));
   const currentPrice = formatAmount(finalPrice, currency);
 
   const unitWeight =
-    typeof (selectedVariant as any)?.weight === "number" ? (selectedVariant as any).weight : 0;
+    typeof (selectedVariant as any)?.weight === "number"
+      ? (selectedVariant as any).weight
+      : 0;
 
   // wishlist
   const [wishLoading, setWishLoading] = useState(false);
@@ -168,11 +196,15 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
     setWishLoading(true);
     try {
       if (isWishlisted) {
-        await fetch(`/api/account/wishlist/${product.id}`, { method: "DELETE" });
+        await fetch(`/api/account/wishlist/${product.id}`, {
+          method: "DELETE",
+        });
         setIsWishlisted(false);
         toast("Removed from wishlist");
       } else {
-        await fetch(`/api/account/wishlist/${product.id}`, { method: "POST" });
+        await fetch(`/api/account/wishlist/${product.id}`, {
+          method: "POST",
+        });
         setIsWishlisted(true);
         toast.success("Added to wishlist");
       }
@@ -189,10 +221,14 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
     if (outOfStock) return toast.error("Out of stock"), false;
     if (hasColor && !selectedColor) return toast.error("Select a color"), false;
     if (hasSize && !selectedSize) return toast.error("Select a size"), false;
-    if (quantity < 1) return toast.error("Quantity must be at least 1"), false;
+    if (quantity < 1)
+      return toast.error("Quantity must be at least 1"), false;
     if (customSizeEnabled) {
-      const any = CUSTOM_SIZE_FIELDS.some((f) => (customMods[f.name] ?? "").toString().trim());
-      if (!any) return toast.error("Enter at least one custom measurement"), false;
+      const any = CUSTOM_SIZE_FIELDS.some((f) =>
+        (customMods[f.name] ?? "").toString().trim()
+      );
+      if (!any)
+        return toast.error("Enter at least one custom measurement"), false;
     }
     return true;
   };
@@ -251,20 +287,31 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
     setImgLoading(true);
   };
 
+  const mainAlt = featuredImage
+    ? `${product.name} — Marobi womenswear`
+    : `${product.name} — product image`;
+
   return (
     <section className="grid gap-10 lg:grid-cols-[minmax(280px,520px)_1fr] mt-10">
       {/* Main image (keep these arrows) */}
       <div className="lg:sticky lg:top-28">
         <div className="relative w-full mx-auto max-w-[520px] aspect-[3/4] rounded-2xl bg-gray-100 overflow-hidden shadow-sm">
-          <Skeleton className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`} />
+          <Skeleton
+            className={`absolute inset-0 ${imgLoading ? "" : "hidden"}`}
+          />
           {featuredImage ? (
             <Image
               src={featuredImage}
-              alt={product.name}
+              alt={mainAlt}
               fill
-              className="object-cover"
-              onLoad={() => setImgLoading(false)}
               priority
+              loading="eager"
+              decoding="async"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className={`object-cover transition-opacity duration-300 ${
+                imgLoading ? "opacity-0" : "opacity-100"
+              }`}
+              onLoad={() => setImgLoading(false)}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
@@ -325,13 +372,26 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
                   aria-label={`View image ${i + 1}`}
                   type="button"
                 >
-                  <Image src={url} alt="" fill className="object-cover" />
+                  <Image
+                    src={url}
+                    alt=""
+                    fill
+                    loading="lazy"
+                    decoding="async"
+                    sizes="96px"
+                    className="object-cover"
+                    aria-hidden="true"
+                  />
                 </button>
               ))}
             </div>
 
             {hasVideo && (
-              <Button variant="outline" className="w-full" onClick={() => setIsVideoOpen(true)}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsVideoOpen(true)}
+              >
                 <Play className="mr-2" /> Play Video
               </Button>
             )}
@@ -340,10 +400,17 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
 
         {/* Facts */}
         <div className="flex flex-wrap lg:gap-20 gap-10 text-sm text-gray-700">
-          <a href={`/categories/${product.category}`} className="flex items-center gap-1 underline">
+          <Link
+            href={`/categories/${product.category}`}
+            className="flex items-center gap-1 underline"
+          >
             <LayoutGrid /> {categoryName}
-          </a>
-          <button onClick={openSizeChart} className="flex items-center gap-1 underline" type="button">
+          </Link>
+          <button
+            onClick={openSizeChart}
+            className="flex items-center gap-1 underline"
+            type="button"
+          >
             <PencilRuler /> Size Chart
           </button>
           <div className="flex items-center gap-1">
@@ -355,7 +422,9 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
               <span className="font-medium">Weight:</span>
               <span>{unitWeight.toFixed(3)}kg</span>
               {quantity > 1 && (
-                <span className="text-gray-500">(Total: {(unitWeight * quantity).toFixed(3)}kg)</span>
+                <span className="text-gray-500">
+                  (Total: {(unitWeight * quantity).toFixed(3)}kg)
+                </span>
               )}
             </div>
           )}
@@ -363,7 +432,9 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
 
         {/* Title & description */}
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{product.name}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {product.name}
+          </h1>
           <p className="text-gray-600">{product.description}</p>
         </div>
 
@@ -383,8 +454,14 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
           <div className="flex flex-col md:flex-row md:gap-4 gap-4">
             {hasColor && (
               <div className="flex-1">
-                <label className="block text-sm text-gray-700 mb-1">Color</label>
-                <Select value={selectedColor} onValueChange={setSelectedColor} aria-label="Select color">
+                <label className="block text-sm text-gray-700 mb-1">
+                  Color
+                </label>
+                <Select
+                  value={selectedColor}
+                  onValueChange={setSelectedColor}
+                  aria-label="Select color"
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select color" />
                   </SelectTrigger>
@@ -400,11 +477,13 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
             )}
             {hasSize && (
               <div className="flex-1">
-                <label className="block text-sm text-gray-700 mb-1">Size</label>
+                <label className="block text-sm text-gray-700 mb-1">
+                  Size
+                </label>
                 <Select
                   value={selectedSize}
                   onValueChange={setSelectedSize}
-                  disabled={customSizeEnabled || (hasColor && !selectedColor)} 
+                  disabled={customSizeEnabled || (hasColor && !selectedColor)}
                   aria-label="Select size"
                 >
                   <SelectTrigger>
@@ -422,7 +501,9 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
             )}
             {enableSizeMod && (
               <div className="flex-1 flex flex-col justify-end">
-                <label className="block text-sm text-gray-700 mb-1">Custom Size Mods</label>
+                <label className="block text-sm text-gray-700 mb-1">
+                  Custom Size Mods
+                </label>
                 <Switch
                   checked={customSizeEnabled}
                   onCheckedChange={(v) => {
@@ -435,7 +516,6 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
             )}
           </div>
 
-          {/* ← ADDED BACK: custom size inputs */}
           {enableSizeMod && customSizeEnabled && (
             <div className="rounded-xl border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
@@ -445,7 +525,9 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {CUSTOM_SIZE_FIELDS.map((f) => (
                   <div key={f.name} className="space-y-1.5">
-                    <label className="block text-xs text-gray-600">{f.label}</label>
+                    <label className="block text-xs text-gray-600">
+                      {f.label}
+                    </label>
                     <Input
                       type="number"
                       inputMode="decimal"
@@ -454,14 +536,18 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
                       placeholder="e.g. 36.5"
                       value={customMods[f.name] ?? ""}
                       onChange={(e) =>
-                        setCustomMods((m) => ({ ...m, [f.name]: e.target.value }))
+                        setCustomMods((m) => ({
+                          ...m,
+                          [f.name]: e.target.value,
+                        }))
                       }
                     />
                   </div>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                Provide any that apply — leave others blank. A 5% tailoring fee is added automatically.
+                Provide any that apply — leave others blank. A 5% tailoring fee
+                is added automatically.
               </p>
             </div>
           )}
@@ -481,22 +567,34 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setQuantity((q) => Math.min(q + 1, inStock))}
+              onClick={() =>
+                setQuantity((q) => Math.min(q + 1, inStock))
+              }
               disabled={quantity >= inStock}
               aria-label="Increase quantity"
             >
               +
             </Button>
-            <span className="ml-2 text-xs text-gray-500">{inStock} left</span>
+            <span className="ml-2 text-xs text-gray-500">
+              {inStock} left
+            </span>
           </div>
         </div>
 
         {/* CTAs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Button className="bg-gradient-to-r from-brand to-green-700" onClick={handleBuyNow} disabled={outOfStock}>
+          <Button
+            className="bg-gradient-to-r from-brand to-green-700"
+            onClick={handleBuyNow}
+            disabled={outOfStock}
+          >
             <Tag className="mr-2" /> Buy Now
           </Button>
-          <Button variant="outline" onClick={handleAddToCart} disabled={outOfStock}>
+          <Button
+            variant="outline"
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+          >
             <BsBag className="mr-2" /> Add to Cart
           </Button>
         </div>
@@ -516,7 +614,10 @@ const ProductDetailHero: React.FC<Props> = ({ product, user, categoryName }) => 
       </div>
 
       {isVideoOpen && product.videoUrl && (
-        <VideoModal onClose={() => setIsVideoOpen(false)} videoUrl={product.videoUrl} />
+        <VideoModal
+          onClose={() => setIsVideoOpen(false)}
+          videoUrl={product.videoUrl}
+        />
       )}
     </section>
   );

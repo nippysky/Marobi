@@ -1,4 +1,25 @@
 // lib/mail.ts
+//
+// Centralised email utilities for Marobi.
+//
+// This version is configured for a *custom SMTP provider*
+// such as Hostinger business email, instead of Gmail.
+//
+// You should set at least:
+//
+//   EMAIL_HOST=smtp.hostinger.com
+//   EMAIL_PORT=465
+//   EMAIL_USER=no-reply@marobionline.com
+//   EMAIL_PASS=***********
+//   EMAIL_FROM="Marobi <no-reply@marobionline.com>"
+//
+// Optionally, if you want replies to go to a different inbox
+// (e.g. support), you can set:
+//
+//   EMAIL_REPLY_TO="Marobi Support <support@marobionline.com>"
+//
+// If EMAIL_REPLY_TO is not set, it will fall back to EMAIL_FROM.
+
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/db";
 import { generateInvoicePDF } from "@/lib/pdf/invoice";
@@ -14,17 +35,29 @@ const TEXT_COLOR = "#111827";
 const MUTED_COLOR = "#6b7280";
 const BORDER_RADIUS = "8px";
 
-/* ---------- Transporter ---------- */
-/**
- * Use Gmail (or any SMTP that supports SSL on 465).
- * If you want a custom From domain (e.g., no-reply@yourdomain.com),
- * either configure "Send mail as" in Gmail or switch to a provider
- * like Resend/Mailgun/SendGrid with proper SPF/DKIM.
- */
-const smtpHost = process.env.EMAIL_HOST || "smtp.gmail.com";
+/* ---------- SMTP Transporter (Hostinger-friendly) ---------- */
+
+// Host / port / credentials come from env so we can swap providers without code changes.
+// Defaults are chosen to match Hostinger's SMTP settings (SSL on 465).
+const smtpHost = process.env.EMAIL_HOST || "smtp.hostinger.com";
 const smtpPort = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : 465;
 const smtpUser = process.env.EMAIL_USER;
 const smtpPass = process.env.EMAIL_PASS;
+
+// From address used in all outbound emails.
+// Typically: "Marobi <no-reply@marobionline.com>"
+const FROM_ADDRESS =
+  process.env.EMAIL_FROM ||
+  (smtpUser ? `Marobi <${smtpUser}>` : "Marobi <no-reply@example.com>");
+
+// Where replies should go. If you want a strict "no-reply" inbox,
+// you can either:
+//  - Leave EMAIL_REPLY_TO undefined and simply not monitor the inbox.
+//  - Or set EMAIL_REPLY_TO to a different address (e.g. support@...).
+const REPLY_TO_ADDRESS =
+  process.env.EMAIL_REPLY_TO && process.env.EMAIL_REPLY_TO.trim().length > 0
+    ? process.env.EMAIL_REPLY_TO
+    : FROM_ADDRESS;
 
 if (!smtpUser || !smtpPass) {
   console.warn(
@@ -35,7 +68,7 @@ if (!smtpUser || !smtpPass) {
 export const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: smtpPort,
-  secure: true, // SSL on 465 is most reliable across networks
+  secure: true, // Hostinger screenshot shows SSL; port 465 + secure: true
   auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
 
   // Small connection pool improves reliability during bursts
@@ -52,12 +85,16 @@ export const transporter = nodemailer.createTransport({
   tls: { minVersion: "TLSv1.2" },
 });
 
+// Log a one-time verification so we notice configuration problems early.
 transporter
   .verify()
   .then(() => console.info("[mail] SMTP transporter verified and ready."))
-  .catch((err) => console.warn("⚠️ Email transporter verification failed:", err));
+  .catch((err) =>
+    console.warn("⚠️ [mail] Email transporter verification failed:", err)
+  );
 
 /* ---------- Generic templated email shell ---------- */
+
 interface RenderEmailOptions {
   title: string;
   intro?: string;
@@ -69,9 +106,18 @@ interface RenderEmailOptions {
   headerColor?: string;
   preheader?: string;
 }
+
 export function renderEmail(opts: RenderEmailOptions): string {
   const {
-    title, intro, bodyHtml, highlightCode, note, button, footerNote, headerColor, preheader,
+    title,
+    intro,
+    bodyHtml,
+    highlightCode,
+    note,
+    button,
+    footerNote,
+    headerColor,
+    preheader,
   } = opts;
 
   const year = new Date().getFullYear();
@@ -165,9 +211,12 @@ export function renderEmail(opts: RenderEmailOptions): string {
 }
 
 /* ---------- Specific emails (verification, reset, generic, status) ---------- */
+
 export async function sendVerificationEmail(email: string, token: string) {
   const base = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const verifyUrl = `${base}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+  const verifyUrl = `${base}/auth/verify-email?token=${token}&email=${encodeURIComponent(
+    email
+  )}`;
   const html = renderEmail({
     title: "Verify Your Email",
     intro: `Welcome to <strong>${BRAND_NAME}</strong>! Use the code below or click the button to verify your account.`,
@@ -180,15 +229,20 @@ export async function sendVerificationEmail(email: string, token: string) {
     button: { label: "Verify My Email", url: verifyUrl },
     preheader: "Verify your email to finish setting up your Marobi account.",
   });
+
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    from: FROM_ADDRESS,
     to: email,
     subject: `Verify your ${BRAND_NAME} account`,
     html,
+    replyTo: REPLY_TO_ADDRESS,
   });
 }
 
-export async function sendResetPasswordEmail(email: string, opts: { resetUrl: string }) {
+export async function sendResetPasswordEmail(
+  email: string,
+  opts: { resetUrl: string }
+) {
   const { resetUrl } = opts;
   const html = renderEmail({
     title: "Reset Your Password",
@@ -202,29 +256,64 @@ export async function sendResetPasswordEmail(email: string, opts: { resetUrl: st
     button: { label: "Reset Password", url: resetUrl, color: BRAND_ACCENT },
     preheader: "Reset your Marobi password securely.",
   });
+
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    from: FROM_ADDRESS,
     to: email,
     subject: `Reset your ${BRAND_NAME} password`,
     html,
+    replyTo: REPLY_TO_ADDRESS,
   });
 }
 
 export async function sendGenericEmail(args: {
-  to: string; subject: string; title: string; intro?: string; bodyHtml?: string;
-  button?: { label: string; url: string; color?: string }; footerNote?: string; preheader?: string;
+  to: string;
+  subject: string;
+  title: string;
+  intro?: string;
+  bodyHtml?: string;
+  button?: { label: string; url: string; color?: string };
+  footerNote?: string;
+  preheader?: string;
 }) {
-  const { to, subject, title, intro, bodyHtml, button, footerNote, preheader } = args;
-  const html = renderEmail({ title, intro, bodyHtml, button, footerNote, preheader });
+  const {
+    to,
+    subject,
+    title,
+    intro,
+    bodyHtml,
+    button,
+    footerNote,
+    preheader,
+  } = args;
+
+  const html = renderEmail({
+    title,
+    intro,
+    bodyHtml,
+    button,
+    footerNote,
+    preheader,
+  });
+
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to, subject, html,
+    from: FROM_ADDRESS,
+    to,
+    subject,
+    html,
+    replyTo: REPLY_TO_ADDRESS,
   });
 }
 
-export async function sendStatusEmail(params: { to: string; name: string; orderId: string; status: string }) {
+export async function sendStatusEmail(params: {
+  to: string;
+  name: string;
+  orderId: string;
+  status: string;
+}) {
   const { to, name, orderId, status } = params;
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
   await sendGenericEmail({
     to,
     subject: `Your order ${orderId} Status: ${status}`,
@@ -233,21 +322,36 @@ export async function sendStatusEmail(params: { to: string; name: string; orderI
     bodyHtml: `<p>Your order <strong>${orderId}</strong> has been <strong>${status}</strong>.</p>`,
     button: { label: "View Your Orders", url: `${baseUrl}/account` },
     preheader: `Your order has been ${status}`,
-    footerNote: "Questions? Just reply to this email and we’ll help.",
+    // Since this typically comes from a no-reply address, avoid telling
+    // users to "just reply to this email". Direct them to the site instead.
+    footerNote:
+      "Questions about your order? Visit your Marobi account or contact our support team from the website.",
   });
 }
 
 /* ---------- Receipt sending (shared renderer + PDF) ---------- */
+
 function computeBackoffSeconds(attempts: number) {
-  const base = 60, max = 3600;
+  const base = 60,
+    max = 3600;
   return Math.min(base * Math.pow(2, attempts - 1), max);
 }
 
 export async function sendReceiptEmailWithRetry({
-  order, recipient, currency, deliveryFee,
+  order,
+  recipient,
+  currency,
+  deliveryFee,
 }: {
   order: any;
-  recipient: { firstName: string; lastName: string; email: string; phone?: string; deliveryAddress?: string; billingAddress?: string; };
+  recipient: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    deliveryAddress?: string;
+    billingAddress?: string;
+  };
   currency: string;
   deliveryFee: number;
 }) {
@@ -271,32 +375,68 @@ export async function sendReceiptEmailWithRetry({
 
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      from: FROM_ADDRESS,
       to,
       subject: `Invoice for order ${order.id}`,
       html,
-      attachments: [{ filename: `invoice-${order.id}.pdf`, content: pdfBuffer, contentType: "application/pdf" }],
+      replyTo: REPLY_TO_ADDRESS,
+      attachments: [
+        {
+          filename: `invoice-${order.id}.pdf`,
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     await prisma.receiptEmailStatus.upsert({
       where: { orderId: order.id },
-      create: { orderId: order.id, attempts: 1, sent: true, deliveryFee },
-      update: { attempts: { increment: 1 }, sent: true, lastError: null, nextRetryAt: null, deliveryFee },
+      create: {
+        orderId: order.id,
+        attempts: 1,
+        sent: true,
+        deliveryFee,
+      },
+      update: {
+        attempts: { increment: 1 },
+        sent: true,
+        lastError: null,
+        nextRetryAt: null,
+        deliveryFee,
+      },
     });
   } catch (err: any) {
     const msg = (err?.message || String(err)).slice(0, 1000);
-    const existing = await prisma.receiptEmailStatus.findUnique({ where: { orderId: order.id } });
+    const existing = await prisma.receiptEmailStatus.findUnique({
+      where: { orderId: order.id },
+    });
     const attempts = (existing?.attempts ?? 0) + 1;
     const backoff = computeBackoffSeconds(attempts);
     const nextRetry = new Date(Date.now() + backoff * 1000);
 
     await prisma.receiptEmailStatus.upsert({
       where: { orderId: order.id },
-      create: { orderId: order.id, attempts, lastError: msg, nextRetryAt: nextRetry, sent: false, deliveryFee },
-      update: { attempts, lastError: msg, nextRetryAt: nextRetry, sent: false, deliveryFee },
+      create: {
+        orderId: order.id,
+        attempts,
+        lastError: msg,
+        nextRetryAt: nextRetry,
+        sent: false,
+        deliveryFee,
+      },
+      update: {
+        attempts,
+        lastError: msg,
+        nextRetryAt: nextRetry,
+        sent: false,
+        deliveryFee,
+      },
     });
 
-    console.warn(`Receipt email send failed for order ${order.id}, retry at ${nextRetry.toISOString()}`, err);
+    console.warn(
+      `Receipt email send failed for order ${order.id}, retry at ${nextRetry.toISOString()}`,
+      err
+    );
     throw err;
   }
 }

@@ -1,5 +1,5 @@
-// app/layout.tsx (or app/layout.jsx)
-import type { Metadata } from "next";
+// app/layout.tsx
+import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { Toaster as HotToaster } from "react-hot-toast";
@@ -19,40 +19,78 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   metadataBase: new URL("https://marobionline.com"),
   title: {
-    default: "Marobi – Curated Women's Fashion",
-    template: "%s | Female-Only Fashion Store",
+    default: "Marobi — Your Look. Your Power.",
+    template: "%s | Marobi",
   },
-  robots: { index: true, follow: true },
-  // You already add a <link rel="manifest"> below, so you can remove this if you like:
-  // manifest: "https://marobionline.com/site.webmanifest",
   description:
-    "Marobi is a female-only fashion e-commerce boutique offering the latest curated styles, accessories, and must-have pieces for women everywhere. Discover your next favorite look.",
+    "Marobi is a Nigerian fashion brand creating premium everyday wear for the modern working woman. Clean tailoring, rich textures, and quietly powerful silhouettes for women who own every room they walk into.",
   keywords: [
     "Marobi",
-    "Women's Fashion",
-    "Female-Only Boutique",
-    "E-commerce",
-    "Style",
-    "Accessories",
+    "Nigerian fashion brand",
+    "women's fashion",
+    "modern working woman",
+    "premium everyday wear",
+    "African fashion",
+    "quiet luxury",
+    "office dresses",
+    "workwear for women",
   ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  alternates: {
+    canonical: "/",
+  },
+  manifest: "/site.webmanifest",
   twitter: {
     card: "summary_large_image",
-    title: "Marobi",
+    title: "Marobi — Your Look. Your Power.",
+    site: "@MarobiOfficial",
     creator: "@MarobiOfficial",
     description:
-      "Discover Marobi: a female-only fashion boutique with curated styles and accessories just for women.",
+      "Premium everyday wear from Nigeria, crafted for modern women who lead with presence, confidence, and quiet wealth.",
     images: ["/opengraph-image.png"],
   },
   openGraph: {
-    title: "Marobi",
+    title: "Marobi — Premium Everyday Wear for the Modern Working Woman",
     description:
-      "Marobi is a female-only fashion boutique offering the latest curated styles and accessories for women.",
+      "Marobi designs clean, tailored, quietly luxurious pieces that help women step into every room with confidence and elegance.",
     url: "https://marobionline.com",
     siteName: "Marobi",
-    images: ["/opengraph-image.png"],
-    locale: "en_US",
     type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Marobi — premium everyday wear for the modern working woman",
+      },
+    ],
   },
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+// 👇 Move themeColor here, as Next wants
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f9fafb" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
 };
 
 export default function RootLayout({
@@ -61,19 +99,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Let the browser know we support both themes for better rendering */}
+        <meta name="color-scheme" content="light dark" />
+
+        {/* Fallbacks (metadata.icons + manifest already cover these, but keeping is harmless) */}
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className={`${montserrat.className} antialiased w-full max-w-[1920px] mx-auto`}>
+      <body
+        className={`${montserrat.className} antialiased w-full max-w-[1920px] mx-auto`}
+      >
         <NextAuthSessionProvider>
           <ReactQueryProvider>
             <UserProvider>
               <CurrencyProvider>
-                  <SizeChartProvider>
-                    {children}
-                  </SizeChartProvider>
+                <SizeChartProvider>{children}</SizeChartProvider>
               </CurrencyProvider>
             </UserProvider>
           </ReactQueryProvider>

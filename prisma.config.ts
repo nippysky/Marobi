@@ -5,6 +5,6 @@ import { defineConfig } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',      // be explicit; avoids surprises
   migrations: {
-    seed: 'node prisma/seed.cjs' // this is why your seed runs
+    seed: 'node scripts/seed.cjs' // this is why your seed runs
   }
 });

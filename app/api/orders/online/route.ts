@@ -12,7 +12,10 @@ import { sendReceiptEmailWithRetry } from "@/lib/mail";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { verifyTransaction, PaystackError } from "@/lib/paystack";
-import type { CartItemPayload, CustomerPayload } from "@/lib/hooks/useCheckout";
+import type {
+  CartItemPayload,
+  CustomerPayload,
+} from "@/lib/hooks/useCheckout";
 
 const ALLOWED_CURRENCIES = ["NGN", "USD", "EUR", "GBP"] as const;
 type AllowedCurrency = (typeof ALLOWED_CURRENCIES)[number];
@@ -20,6 +23,17 @@ type AllowedCurrency = (typeof ALLOWED_CURRENCIES)[number];
 function toLowest(amount: number): number {
   return Math.round(amount * 100);
 }
+
+// Shape of shipping.shipbubble that the frontend sends
+type ShipbubbleShippingPayload = {
+  requestToken: string;
+  serviceCode: string;
+  courierId?: string; // comes from selected rate
+  fee?: number;
+  currency?: "NGN" | "USD" | "EUR" | "GBP";
+  courierName?: string;
+  meta?: any;
+};
 
 interface OnlineOrderPayload {
   items: CartItemPayload[];
@@ -30,6 +44,11 @@ interface OnlineOrderPayload {
   deliveryFee?: number;
   deliveryOptionId?: string | null;
   paymentReference: string;
+  // optional shipping block (backward-compatible)
+  shipping?: {
+    source?: "shipbubble" | string;
+    shipbubble?: ShipbubbleShippingPayload;
+  };
 }
 
 function generateOrderId(): string {
@@ -57,10 +76,22 @@ export async function POST(req: NextRequest) {
       deliveryFee = 0,
       deliveryOptionId,
       paymentReference,
+      shipping,
     } = payload;
 
-    // keep a safe copy for later
     requestPaymentReference = paymentReference;
+
+    console.log("[OrderOnline] Incoming payload:", {
+      itemsCount: Array.isArray(items) ? items.length : 0,
+      paymentMethod,
+      currency,
+      deliveryFee,
+      deliveryOptionId,
+      paymentReference,
+      hasShipping: !!shipping,
+      shippingSource: shipping?.source,
+      hasShipbubble: !!shipping?.shipbubble,
+    });
 
     // --- Validations
     if (!Array.isArray(items) || items.length === 0)
@@ -89,7 +120,7 @@ export async function POST(req: NextRequest) {
     try {
       paystackTx = await verifyTransaction(paymentReference);
     } catch (err: any) {
-      console.error("Payment verification failed:", err);
+      console.error("[OrderOnline] Payment verification failed:", err);
       const msg =
         err instanceof PaystackError
           ? `Payment verification failed: ${err.message}`
@@ -106,8 +137,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Validate delivery option (courier-only system)
-    if (deliveryOptionId) {
+    // --- Is this a Shipbubble shipping flow?
+    const isShipbubble =
+      shipping?.source === "shipbubble" && !!shipping?.shipbubble;
+    if (isShipbubble) {
+      console.log("[OrderOnline] Shipbubble shipping payload:", {
+        requestToken:
+          shipping!.shipbubble!.requestToken?.slice(0, 10) + "…" ||
+          "(none)",
+        serviceCode: shipping!.shipbubble!.serviceCode,
+        courierId: shipping!.shipbubble!.courierId,
+        fee: shipping!.shipbubble!.fee,
+        currency: shipping!.shipbubble!.currency || normalizedCurrency,
+        courierName: shipping!.shipbubble!.courierName,
+      });
+    }
+
+    // --- Validate delivery option (courier-only system) when provided.
+    // If frontend is using Shipbubble (shipping.shipbubble present),
+    // it should NOT send a DB deliveryOptionId; we tolerate either flow.
+    if (deliveryOptionId && !isShipbubble) {
       const deliveryOpt = await prisma.deliveryOption.findUnique({
         where: { id: deliveryOptionId },
       });
@@ -132,6 +181,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingOrder) {
+      console.log("[OrderOnline] Idempotent hit, existing order:", {
+        orderId: existingOrder.id,
+        paymentReference,
+      });
+
       const updates: Record<string, any> = {};
       if (!existingOrder.paymentVerified) updates.paymentVerified = true;
       if (existingOrder.paymentProviderId !== String(paystackTx.id)) {
@@ -156,7 +210,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // --- Precompute items (no reliance on i.customSize)
+    // --- Precompute items
     let itemsSubtotal = 0;
     let totalNGN = 0;
     let aggregatedWeight = 0;
@@ -222,7 +276,6 @@ export async function POST(req: NextRequest) {
           : 0;
       aggregatedWeight += unitWeight * i.quantity;
 
-      // Accept either `customMods` or `customSize` if present in the payload (not part of CartItemPayload type)
       const customMeasurements =
         (i as any).customMods ?? (i as any).customSize ?? undefined;
 
@@ -246,12 +299,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const orderTotal = itemsSubtotal + (typeof deliveryFee === "number" ? deliveryFee : 0);
+    const orderTotal =
+      itemsSubtotal + (typeof deliveryFee === "number" ? deliveryFee : 0);
+
+    console.log("[OrderOnline] Totals computed:", {
+      itemsSubtotal,
+      deliveryFee,
+      orderTotal,
+      currency: normalizedCurrency,
+      aggregatedWeight,
+    });
 
     // Verify captured amount === expected
     const expectedLowest = toLowest(orderTotal);
     if (paystackTx.amount !== expectedLowest) {
-      console.warn("Payment amount mismatch", {
+      console.warn("[OrderOnline] Payment amount mismatch", {
         expected: expectedLowest,
         actual: paystackTx.amount,
         paymentReference,
@@ -278,7 +340,10 @@ export async function POST(req: NextRequest) {
           },
         });
       } catch (e) {
-        console.warn("Failed to upsert orphan payment for mismatch:", e);
+        console.warn(
+          "[OrderOnline] Failed to upsert orphan payment for mismatch:",
+          e
+        );
       }
 
       return NextResponse.json(
@@ -331,9 +396,9 @@ export async function POST(req: NextRequest) {
           state: customer.state ?? null,
         };
       }
-    } else if (customer.id) {
+    } else if ((customer as any).id) {
       const found = await prisma.customer.findUnique({
-        where: { id: customer.id },
+        where: { id: (customer as any).id },
       });
       if (found) {
         customerId = found.id;
@@ -364,6 +429,28 @@ export async function POST(req: NextRequest) {
         billingAddress: customer.billingAddress ?? null,
         country: customer.country ?? null,
         state: customer.state ?? null,
+      };
+    }
+
+    // --- Build initial deliveryDetails object
+    const deliveryDetailsData: any = {
+      aggregatedWeight: parseFloat(aggregatedWeight.toFixed(3)),
+      deliveryOptionId: deliveryOptionId ?? null,
+    };
+
+    // If the caller sent Shipbubble shipping info, save a snapshot now
+    if (isShipbubble) {
+      deliveryDetailsData.shipbubble = {
+        requestToken: shipping!.shipbubble!.requestToken,
+        serviceCode: shipping!.shipbubble!.serviceCode,
+        courierId: shipping!.shipbubble!.courierId || null,
+        fee:
+          typeof shipping!.shipbubble!.fee === "number"
+            ? shipping!.shipbubble!.fee
+            : deliveryFee,
+        currency: shipping!.shipbubble!.currency || normalizedCurrency,
+        courierName: shipping!.shipbubble!.courierName || null,
+        meta: shipping!.shipbubble!.meta || null,
       };
     }
 
@@ -412,13 +499,11 @@ export async function POST(req: NextRequest) {
         items: { create: itemsCreateData },
         channel: OrderChannel.ONLINE,
         deliveryFee: typeof deliveryFee === "number" ? deliveryFee : 0,
-        deliveryDetails: {
-          aggregatedWeight: parseFloat(aggregatedWeight.toFixed(3)),
-          deliveryOptionId: deliveryOptionId ?? null,
-        },
-        ...(deliveryOptionId && {
-          deliveryOption: { connect: { id: deliveryOptionId } },
-        }),
+        deliveryDetails: deliveryDetailsData,
+        ...(deliveryOptionId &&
+          !isShipbubble && {
+            deliveryOption: { connect: { id: deliveryOptionId } },
+          }),
       };
 
       if (customerId) {
@@ -451,6 +536,18 @@ export async function POST(req: NextRequest) {
       return { order: createdOrder };
     });
 
+    console.log("[OrderOnline] Order created:", {
+      orderId: order.id,
+      hasShipbubbleDetails: !!(order as any).deliveryDetails?.shipbubble,
+      currency: normalizedCurrency,
+      totalAmount: order.totalAmount,
+    });
+
+    // NOTE:
+    // We NO LONGER call Shipbubble's label API here.
+    // The label is created later via POST /api/shipping/shipbubble/labels
+    // using the requestToken + serviceCode + courierId snapshot saved above.
+
     // --- Receipt recipient
     const recipient = existingCustomer
       ? {
@@ -479,7 +576,7 @@ export async function POST(req: NextRequest) {
         deliveryFee: typeof deliveryFee === "number" ? deliveryFee : 0,
       });
     } catch (emailErr) {
-      console.warn("Failed to send receipt email:", emailErr);
+      console.warn("[OrderOnline] Failed to send receipt email:", emailErr);
     }
 
     return NextResponse.json(
@@ -491,7 +588,11 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err: any) {
-    console.error("Online order POST error:", err, err?.meta || "");
+    console.error(
+      "[OrderOnline] Online order POST error:",
+      err,
+      err?.meta || ""
+    );
 
     // Unique constraint on paymentReference — return the found order if possible
     if (err?.code === "P2002" && Array.isArray(err?.meta?.target)) {

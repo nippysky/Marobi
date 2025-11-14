@@ -28,7 +28,7 @@ export const ProductCardShowcase: React.FC<ProductCardProps> = ({
         {/* 1. Skeleton placeholder */}
         {isLoading && <Skeleton className="absolute inset-0 h-full w-full" />}
 
-        {/* 2. Next.js Image (with onLoad instead of onLoadingComplete) */}
+        {/* 2. Next.js Image (with onLoad instead of onLoad) */}
         <Image
           src={product.imageUrl}
           alt={product.name}

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export interface Slide {
   id: string;
@@ -46,10 +47,11 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
   return (
     <div className="w-full max-w-[1920px] mx-auto">
       <div
-        className={
-          // Responsive hero heights
-          "relative w-full h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[34rem] overflow-hidden"
-        }
+        className={`
+          relative w-full
+          h-[18rem] sm:h-[22rem] md:h-[26rem] lg:h-[30rem] xl:h-[34rem]
+          overflow-hidden
+        `}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={(e) => {
@@ -74,15 +76,30 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
       >
         {slides.map((s, idx) => {
           const active = idx === current;
+          const altText =
+            s.heading?.trim() ||
+            "Marobi hero banner — premium everyday wear for the modern working woman";
+
           return (
             <div
               key={s.id}
               className={[
-                "absolute inset-0 bg-cover bg-center transition-opacity duration-700 ease-out",
+                "absolute inset-0 transition-opacity duration-700 ease-out",
                 active ? "opacity-100" : "opacity-0",
               ].join(" ")}
-              style={{ backgroundImage: `url(${s.imageUrl})` }}
             >
+              {/* Optimized hero image */}
+              <Image
+                src={s.imageUrl}
+                alt={altText}
+                fill
+                priority={idx === 0}
+                loading={idx === 0 ? "eager" : "lazy"}
+                decoding="async"
+                sizes="100vw"
+                className="object-cover"
+              />
+
               {/* Rich overlay for readable text on any image */}
               <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-black/25" />
@@ -92,8 +109,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
               {/* Content block */}
               <div
                 className={[
-                  // Safe paddings so arrows never overlap text on mobile:
-                  // base uses pl/pr-16 to clear 36–40px arrow buttons + margin
                   "relative z-20 flex h-full flex-col justify-center",
                   "px-16 sm:px-10 md:px-12 lg:px-24",
                 ].join(" ")}
@@ -102,7 +117,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
                   <h1
                     className={[
                       "font-extrabold text-white drop-shadow-lg",
-                      // Strong, responsive headline
                       "text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight",
                       "tracking-tight",
                     ].join(" ")}
@@ -128,7 +142,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
                       <Link
                         href={s.buttonHref}
                         className={[
-                          // Elevated “primary” CTA
                           "inline-flex items-center justify-center",
                           "rounded-full px-6 py-2.5 md:px-7 md:py-3",
                           "font-semibold",
@@ -149,7 +162,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
           );
         })}
 
-        {/* Prev arrow — smaller & tucked in on mobile */}
+        {/* Prev arrow */}
         <button
           aria-label="Previous"
           onClick={() => {
@@ -159,7 +172,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
           className={[
             "absolute z-30 flex items-center justify-center",
             "top-1/2 -translate-y-1/2",
-            // mobile-safe inset; scales up at sm+
             "left-2 sm:left-4",
             "h-9 w-9 sm:h-10 sm:w-10 rounded-full",
             "bg-white/80 hover:bg-white shadow-md",
@@ -169,7 +181,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
           <ChevronLeft className="h-5 w-5 text-gray-900" />
         </button>
 
-        {/* Next arrow — smaller & tucked in on mobile */}
+        {/* Next arrow */}
         <button
           aria-label="Next"
           onClick={() => {
@@ -188,7 +200,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ slides, intervalMs = 7000 }) =>
           <ChevronRight className="h-5 w-5 text-gray-900" />
         </button>
 
-        {/* Indicators — bottom center */}
+        {/* Indicators */}
         <div className="absolute inset-x-0 bottom-3 sm:bottom-4 z-30 flex items-center justify-center gap-2">
           {slides.map((_, i) => {
             const active = i === current;

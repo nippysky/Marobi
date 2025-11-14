@@ -18,8 +18,7 @@ interface ShowcaseProps {
 }
 
 const ProductShowcase: React.FC<ShowcaseProps> = ({ categories }) => {
-  const isMobile = useMediaQuery("(max-width: 639px)");       // < 640px
-  const is2xlUp = useMediaQuery("(min-width: 1536px)");       // >= 1536px
+  const is2xlUp = useMediaQuery("(min-width: 1536px)"); // >= 1536px
 
   return (
     <section className="py-20 space-y-20 max-w-[1920px] mx-auto px-5 md:px-10 lg:px-40">
@@ -59,7 +58,9 @@ const ProductShowcase: React.FC<ShowcaseProps> = ({ categories }) => {
                   <Link
                     key={product.id}
                     href={`/product/${product.id}`}
+                    prefetch={false}
                     className="block"
+                    aria-label={product.name}
                   >
                     <ProductCard product={product} />
                   </Link>

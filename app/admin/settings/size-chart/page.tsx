@@ -2,34 +2,26 @@ import { prisma } from "@/lib/db";
 import SizeChartManager from "./SizeChartManager";
 
 export default async function SizeChartPage() {
-  // 1) Try to fetch your one-and-only chart
   let chart = await prisma.sizeChart.findFirst({
-    include: { entries: true },
+    include: { rows: { orderBy: { order: "asc" } } },
   });
 
-  // 2) If none exists yet, create a blank one
   if (!chart) {
     chart = await prisma.sizeChart.create({
-      data: {
-        name: "",
-        entries: { create: [] },
-      },
-      include: { entries: true },
+      data: { name: "" },
+      include: { rows: true },
     });
   }
 
-  // 3) shape into the Chart interface
   const initialChart = {
     id: chart.id,
-    entries: chart.entries.map((e) => ({
-      id: e.id,
-      sizeLabel: e.sizeLabel,
-      chestMin: e.chestMin,
-      chestMax: e.chestMax,
-      waistMin: e.waistMin,
-      waistMax: e.waistMax,
-      hipMin: e.hipMin ?? 0,
-      hipMax: e.hipMax ?? 0,
+    name: chart.name,
+    rows: chart.rows.map((r) => ({
+      id: r.id,
+      order: r.order,
+      bodySize: r.bodySize,
+      productSize: r.productSize,
+      code: r.code,
     })),
   };
 

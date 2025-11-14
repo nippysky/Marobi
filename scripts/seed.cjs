@@ -3,8 +3,7 @@
 const { PrismaClient } = require("../lib/generated/prisma-client");
 const db = new PrismaClient();
 
-async function main() {
-  // ── Categories (dynamic; initial four) ─────────────────────────
+async function seedCategories() {
   const initialCategories = [
     {
       slug: "corporate-wears",
@@ -48,63 +47,59 @@ async function main() {
       create: cat,
     });
   }
+
   console.log("✅ Seeded initial categories");
+}
 
-  // ── Delivery Options (no pickup) ───────────────────────────────
-  // Local: FIXED fee (example NGN 1500); International: EXTERNAL (quote from provider)
-  const deliveryOptions = [
-    {
-      id: "local-courier",
-      name: "Local Courier",
-      provider: "LocalCourier",
-      pricingMode: "FIXED",
-      baseFee: 1500,
-      baseCurrency: "NGN",
-      active: true,
-      metadata: {
-        coverage: "Within Nigeria",
-        estimatedDeliveryDays: 1,
-      },
+async function seedDeliveryOptions() {
+  // Single EXTERNAL (dynamic) option via Shipbubble.
+  // Keep this minimal—checkout pulls live quotes and stores details on the order.
+  const shipbubble = {
+    id: "shipbubble",
+    name: "Shipbubble (Dynamic Rates)",
+    provider: "Shipbubble",
+    pricingMode: "EXTERNAL", // <- key: quotes fetched at checkout
+    baseFee: null,
+    baseCurrency: null,
+    active: true,
+    metadata: {
+      note: "Quotes fetched from Shipbubble at checkout",
+      // You can stash provider flags here later if needed
     },
-    {
-      id: "intl-courier",
-      name: "International Courier",
-      provider: process.env.DEFAULT_INTL_PROVIDER || "DHL",
-      pricingMode: "EXTERNAL",
-      baseFee: null,
-      baseCurrency: null,
-      active: true,
-      metadata: {
-        note: "Quoted dynamically via provider API at checkout",
-        providersAllowed: ["DHL", "FedEx"],
-      },
-    },
-  ];
+  };
 
-  for (const opt of deliveryOptions) {
-    await db.deliveryOption.upsert({
-      where: { id: opt.id },
-      update: {
-        name: opt.name,
-        provider: opt.provider,
-        pricingMode: opt.pricingMode,
-        baseFee: opt.baseFee,
-        baseCurrency: opt.baseCurrency,
-        active: opt.active,
-        metadata: opt.metadata,
-      },
-      create: opt,
-    });
-  }
-  console.log("✅ Seeded delivery options");
- 
+  await db.deliveryOption.upsert({
+    where: { id: shipbubble.id },
+    update: {
+      name: shipbubble.name,
+      provider: shipbubble.provider,
+      pricingMode: shipbubble.pricingMode,
+      baseFee: shipbubble.baseFee,
+      baseCurrency: shipbubble.baseCurrency,
+      active: shipbubble.active,
+      metadata: shipbubble.metadata,
+    },
+    create: shipbubble,
+  });
+
+  console.log("✅ Seeded delivery option: Shipbubble (EXTERNAL)");
+}
+
+async function main() {
+  await seedCategories();
+  await seedDeliveryOptions();
+
+  // If you later want a Nigerian flat-rate fallback:
+  // await db.deliveryOption.upsert({ ...localCourier });
 }
 
 main()
-  .catch((e) => {
-    console.error("❌ Seeding failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
+    console.log("🎉 Seed complete");
     await db.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error("❌ Seeding failed:", e);
+    await db.$disconnect();
+    process.exit(1);
   });
