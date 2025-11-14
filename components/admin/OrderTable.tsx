@@ -393,23 +393,29 @@ export default function OrderTable({
         return <span className="text-gray-500">Guest</span>;
       },
     },
-    {
-      id: "delivery",
-      header: "Delivery",
-      cell: ({ row }) => (
-        <div className="text-sm">
-          <div>{row.original.deliveryOption?.name ?? "—"}</div>
-          {typeof row.original.deliveryFee === "number" && (
-            <div className="text-xs text-gray-500">
-              Fee: ₦{row.original.deliveryFee.toLocaleString()}
-            </div>
-          )}
-          <div className="text-xs mt-1 text-gray-600">
-            {displayDeliveryDetails(row.original.deliveryDetails)}
-          </div>
+ {
+  id: "delivery",
+  header: "Delivery",
+  cell: ({ row }) => (
+    <div className="text-sm">
+      {/* Only show the courier name if present; no fallback dash */}
+      {row.original.deliveryOption?.name ? (
+        <div>{row.original.deliveryOption.name}</div>
+      ) : null}
+
+      {typeof row.original.deliveryFee === "number" && (
+        <div className="text-xs text-gray-500">
+          Fee: ₦{row.original.deliveryFee.toLocaleString()}
         </div>
-      ),
-    },
+      )}
+
+      <div className="text-xs mt-1 text-gray-600">
+        {displayDeliveryDetails(row.original.deliveryDetails)}
+      </div>
+    </div>
+  ),
+}
+,
     {
       id: "actions",
       header: "Actions",

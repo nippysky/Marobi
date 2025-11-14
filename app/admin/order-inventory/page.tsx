@@ -53,37 +53,79 @@ function normalizeAddress(o: {
   return "—";
 }
 
+/** Extract a numeric kg weight from common fields in provider payloads. */
+function extractWeightKg(obj: Record<string, any>): string | null {
+  const cand =
+    obj.aggregatedWeight ??
+    obj.weight ??
+    obj.totalWeight ??
+    obj.packageWeight ??
+    obj.pkg_weight;
+
+  if (cand === undefined || cand === null) return null;
+  const asStr = String(cand).trim();
+  const n = parseFloat(asStr.replace(/[^0-9.]/g, ""));
+  if (!isFinite(n)) return null;
+  // Keep original unit if already includes 'kg', else append kg
+  const hasKg = /kg/i.test(asStr);
+  return hasKg ? asStr : `${n}kg`;
+}
+
+/**
+ * Summarize delivery details for the table/CSV.
+ * - Prefer short human text.
+ * - For Shipbubble: "Shipbubble • Weight: 2kg • ETA: Within 32 hrs" (pieces only if present).
+ * - Otherwise: "<CourierName> • Weight: 2kg".
+ */
 function humanizeDeliveryDetails(
   raw: unknown,
   deliveryOption?: { name?: string | null }
 ): string {
-  if (!raw) return "—";
+  const baseLabel = (deliveryOption?.name || "—").trim();
 
+  if (!raw) return baseLabel;
+
+  // Strings: try JSON; otherwise return short string or base label
   if (typeof raw === "string") {
     try {
-      raw = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return humanizeDeliveryDetails(parsed, deliveryOption);
     } catch {
-      return raw as string;
+      const s = raw.trim();
+      return s.length <= 64 ? s : baseLabel;
     }
   }
-  if (typeof raw !== "object" || Array.isArray(raw)) return String(raw);
+
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    const s = String(raw).trim();
+    return s.length <= 64 ? s : baseLabel;
+  }
 
   const obj = raw as Record<string, any>;
-  const parts: string[] = [];
+  const pieces: string[] = [];
 
-  if (obj.aggregatedWeight) {
-    parts.push(`Weight: ${parseFloat(obj.aggregatedWeight).toLocaleString()}kg`);
-  }
-  if (deliveryOption?.name) {
-    parts.push(`Courier: ${deliveryOption.name}`);
-  }
+  const isShipbubble =
+    /shipbubble/i.test(baseLabel) ||
+    Boolean(obj.shipbubble) ||
+    typeof obj.meta === "object" ||
+    typeof obj.raw === "object";
 
-  for (const [k, v] of Object.entries(obj)) {
-    if (k === "aggregatedWeight" || k === "deliveryOptionId") continue;
-    if (v === null || v === undefined || v === "") continue;
-    parts.push(`${k[0].toUpperCase()}${k.slice(1)}: ${typeof v === "object" ? JSON.stringify(v) : v}`);
-  }
-  return parts.length ? parts.join(" • ") : "—";
+  // Label
+  pieces.push(isShipbubble ? "Shipbubble" : baseLabel);
+
+  // Weight
+  const weight = extractWeightKg(obj) ??
+    (obj.meta && extractWeightKg(obj.meta)) ??
+    (obj.raw && extractWeightKg(obj.raw));
+  if (weight) pieces.push(`Weight: ${weight}`);
+
+  // ETA (nice-to-have, Shipbubble often has meta/raw.eta)
+  const eta =
+    (obj.meta && (obj.meta.eta || obj.meta.ETA)) ||
+    (obj.raw && (obj.raw.eta || obj.raw.ETA));
+  if (isShipbubble && eta) pieces.push(`ETA: ${String(eta)}`);
+
+  return pieces.join(" • ");
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -123,7 +165,12 @@ async function fetchOrders(): Promise<OrderRow[]> {
           variant: {
             select: {
               product: {
-                select: { priceNGN: true, images: true, name: true, categorySlug: true },
+                select: {
+                  priceNGN: true,
+                  images: true,
+                  name: true,
+                  categorySlug: true,
+                },
               },
             },
           },
@@ -158,7 +205,7 @@ async function fetchOrders(): Promise<OrderRow[]> {
       customerObj = { id: null, name: "Guest", email: "", phone: "", address: "—" };
     }
 
-    // NGN ledger subtotal (INCLUDES size-mod fee when order currency is NGN).
+    // NGN ledger subtotal (includes size-mod fee when order currency is NGN).
     const totalNGN: number = o.items.reduce((sum, it) => {
       const base = (it.variant?.product.priceNGN ?? 0) * it.quantity;
       const sizeFeeNGN = o.currency === "NGN" ? (it.sizeModFee ?? 0) * it.quantity : 0;
@@ -181,14 +228,19 @@ async function fetchOrders(): Promise<OrderRow[]> {
     }));
 
     const deliveryOption: OrderRow["deliveryOption"] = o.deliveryOption
-      ? { id: o.deliveryOption.id, name: o.deliveryOption.name, provider: o.deliveryOption.provider ?? null, type: "COURIER" }
+      ? {
+          id: o.deliveryOption.id,
+          name: o.deliveryOption.name,
+          provider: o.deliveryOption.provider ?? null,
+          type: "COURIER",
+        }
       : null;
 
     return {
       id: o.id,
       status: o.status,
       currency: o.currency,
-      totalAmount: o.totalAmount, // items subtotal in order currency (already includes fees)
+      totalAmount: o.totalAmount,
       totalNGN,
       paymentMethod: o.paymentMethod,
       createdAt: o.createdAt.toISOString(),
@@ -197,7 +249,10 @@ async function fetchOrders(): Promise<OrderRow[]> {
       channel: o.channel,
       deliveryOption,
       deliveryFee: o.deliveryFee ?? 0,
-      deliveryDetails: humanizeDeliveryDetails(o.deliveryDetails, deliveryOption ?? undefined),
+      deliveryDetails: humanizeDeliveryDetails(
+        o.deliveryDetails,
+        deliveryOption ?? undefined
+      ),
     };
   });
 }
